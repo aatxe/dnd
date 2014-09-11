@@ -1,3 +1,7 @@
+extern crate irc;
+
 fn main() {
-    println!("Hello, world!")
+    let mut pickle = irc::Bot::new().unwrap();
+    pickle.identify().unwrap();
+    pickle.output();
 }
