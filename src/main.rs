@@ -7,9 +7,9 @@ fn main() {
         match (command, args) {
             ("PRIVMSG", [chan, msg]) => {
                 if msg.contains("pickles") && msg.contains("hi") {
-                    try!(irc::conn::send(&bot.conn, Message::new(None, "PRIVMSG", [chan.as_slice(), "hi"])));
+                    try!(bot.send_privmsg(chan, "hi"))
                 } else if msg.starts_with(". ") {
-                    try!(irc::conn::send(&bot.conn, Message::new(None, "PRIVMSG", [chan.as_slice(), msg.slice_from(2)])));
+                    try!(bot.send_privmsg(chan, msg.slice_from(2)));
                 };
             },
             _ => ()
