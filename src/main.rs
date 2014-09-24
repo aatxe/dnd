@@ -1,7 +1,5 @@
 extern crate irc;
 
-use irc::data::Message;
-
 fn main() {
     let process = |bot: &irc::Bot, source: &str, command: &str, args: &[&str]| {
         match (command, args) {
