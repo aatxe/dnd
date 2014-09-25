@@ -1,7 +1,9 @@
 extern crate irc;
+extern crate serialize;
 
-use std::string::String;
+mod data;
 
+#[cfg(not(test))]
 fn main() {
     let process = |bot: &irc::Bot, source: &str, command: &str, args: &[&str]| {
         match (command, args) {
@@ -36,7 +38,7 @@ fn main() {
                     try!(bot.send_privmsg(resp, s.as_slice()));
                 };
             },
-            _ => ()
+            _ => (),
         }
         Ok(())
     };
