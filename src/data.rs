@@ -1,6 +1,30 @@
+use std::collections::HashMap;
 use std::io::fs::File;
 use std::io::{InvalidInput, IoError, IoResult};
 use serialize::json::{decode, encode};
+
+pub struct Game {
+    pub name: String,
+    pub users: HashMap<String, Player>,
+}
+
+impl Game {
+    pub fn new(name: &str) -> IoResult<Game> {
+        Ok(Game {
+            name: String::from_str(name),
+            users: HashMap::new(),
+        })
+    }
+
+    pub fn login(&mut self, account: Player, nickname: &str, password: &str) -> IoResult<&str> {
+        if account.password.as_slice().eq(&password) {
+            self.users.insert(String::from_str(nickname), account);
+            Ok("Login successful.")
+        } else {
+            Ok("Password incorrect.")
+        }
+    }
+}
 
 #[deriving(Decodable, Encodable, Show, PartialEq)]
 pub struct Player {
