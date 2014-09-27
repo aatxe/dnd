@@ -21,6 +21,7 @@ fn do_create(bot: &irc::Bot, resp: &str, games: &mut HashMap<String, Game>, para
         for word in params.slice_from(2).iter() {
             name.push_str(*word);
         }
+        try!(bot.send_topic(params[1], name.as_slice()));
         let game = try!(Game::new(name.as_slice()));
         games.insert(String::from_str(params[1]), game);
         try!(bot.send_invite(resp, params[1]));
