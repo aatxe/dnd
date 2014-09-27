@@ -1,7 +1,7 @@
 extern crate irc;
 extern crate serialize;
 
-use data::{Game, Player};
+use data::{Game, Player, World};
 use std::collections::HashMap;
 use std::io::IoResult;
 
@@ -25,14 +25,13 @@ fn join_from(words: Vec<&str>, pos: uint) -> String {
     res
 }
 
-fn do_create(bot: &irc::Bot, resp: &str, games: &mut HashMap<String, Game>, params: Vec<&str>) -> IoResult<()> {
+fn do_create(bot: &irc::Bot, resp: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if params.len() >= 3 {
         try!(bot.send_join(params[1]));
         let name = join_from(params.clone(), 2);
         try!(bot.send_topic(params[1], name.as_slice()));
         try!(bot.send_mode(params[1], "+i"));
-        let game = try!(Game::new(name.as_slice()));
-        games.insert(String::from_str(params[1]), game);
+        world.add_game(name.as_slice(), params[1]);
         try!(bot.send_invite(resp, params[1]));
     } else {
         try!(bot.send_privmsg(resp, "Incorrect format for game creation. Format is:"));
@@ -67,12 +66,13 @@ fn do_register(bot: &irc::Bot, resp: &str, params: Vec<&str>) -> IoResult<()> {
     Ok(())
 }
 
-fn do_login(bot: &irc::Bot, resp: &str, games: &mut HashMap<String, Game>, params: Vec<&str>) -> IoResult<()> {
+fn do_login(bot: &irc::Bot, resp: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if params.len() == 4 {
         let pr = Player::load(params[1]);
-        if pr.is_ok() {
+        if pr.is_ok() && !world.is_user_logged_in(resp) {
             let p = try!(pr);
-            match games.find_mut(&String::from_str(params[3])) {
+            world.add_user(resp, p.clone());
+            match world.games.find_mut(&String::from_str(params[3])) {
                 Some(game) => {
                     let res = try!(game.login(p, resp, params[2]));
                     try!(bot.send_privmsg(resp, res));
@@ -82,8 +82,11 @@ fn do_login(bot: &irc::Bot, resp: &str, games: &mut HashMap<String, Game>, param
                 },
                 None => try!(bot.send_privmsg(resp, "Game not found on that channel.")),
             };
-        } else {
+        } else if pr.is_err() {
             try!(bot.send_privmsg(resp, "Account does not exist, or could not be loaded."));
+        } else {
+            try!(bot.send_privmsg(resp, "You can only be logged into one account at once."));
+            try!(bot.send_privmsg(resp, "Use logout to log out."));
         }
     } else {
         try!(bot.send_privmsg(resp, "Incorrect format for login: Format is:"));
@@ -92,9 +95,23 @@ fn do_login(bot: &irc::Bot, resp: &str, games: &mut HashMap<String, Game>, param
     Ok(())
 }
 
+fn do_logout(bot: &irc::Bot, resp: &str, world: &mut World) -> IoResult<()> {
+    if world.is_user_logged_in(resp) {
+        try!(world.remove_user(resp));
+        try!(bot.send_privmsg(resp, "You've been logged out."));
+    } else {
+        try!(bot.send_privmsg(resp, "You're not currently logged in."));
+    }
+    Ok(())
+}
+
+fn do_add_feat(bot: &irc::Bot) {
+
+}
+
 #[cfg(not(test))]
 fn main() {
-    let mut games: HashMap<String, Game> = HashMap::new();
+    let mut world = World::new().unwrap();
     let process = |bot: &irc::Bot, source: &str, command: &str, args: &[&str]| {
         match (command, args) {
             ("PRIVMSG", [chan, msg]) => {
@@ -110,9 +127,11 @@ fn main() {
                     if msg.starts_with("register") {
                         try!(do_register(bot, resp.clone(), msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with("login") {
-                        try!(do_login(bot, resp.clone(), &mut games, msg.clone().split_str(" ").collect()));
+                        try!(do_login(bot, resp.clone(), &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with("create") {
-                        try!(do_create(bot, resp.clone(), &mut games, msg.clone().split_str(" ").collect()));
+                        try!(do_create(bot, resp.clone(), &mut world, msg.clone().split_str(" ").collect()));
+                    } else if msg.starts_with("logout") {
+                        try!(do_logout(bot, resp.clone(), &mut world));
                     }
                 } else {
                     if msg.starts_with(".list") {

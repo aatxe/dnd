@@ -3,6 +3,47 @@ use std::io::fs::File;
 use std::io::{InvalidInput, IoError, IoResult};
 use serialize::json::{decode, encode};
 
+pub struct World {
+    pub users: HashMap<String, Player>,
+    pub games: HashMap<String, Game>,
+}
+
+impl World {
+    pub fn new() -> IoResult<World> {
+        Ok(World {
+            users: HashMap::new(),
+            games: HashMap::new(),
+        })
+    }
+
+    pub fn is_user_logged_in(&mut self, nickname: &str) -> bool {
+        for user in self.users.keys() {
+            if user.as_slice().eq(&nickname) {
+                return true;
+            }
+        };
+        false
+    }
+
+    pub fn add_user(&mut self, nickname: &str, player: Player) -> IoResult<()> {
+        self.users.insert(String::from_str(nickname), player);
+        Ok(())
+    }
+
+    pub fn remove_user(&mut self, nickname: &str) -> IoResult<()> {
+        let nick = String::from_str(nickname);
+        try!(self.users.get(&nick).save());
+        self.users.remove(&nick);
+        Ok(())
+    }
+
+    pub fn add_game(&mut self, name: &str, chan: &str) -> IoResult<()> {
+        let game = try!(Game::new(name.as_slice()));
+        self.games.insert(String::from_str(chan), game);
+        Ok(())
+    }
+}
+
 pub struct Game {
     pub name: String,
     pub users: HashMap<String, Player>,
@@ -26,7 +67,7 @@ impl Game {
     }
 }
 
-#[deriving(Decodable, Encodable, Show, PartialEq)]
+#[deriving(Decodable, Encodable, Show, PartialEq, Clone)]
 pub struct Stats {
     pub strength: u8,
     pub dexterity: u8,
@@ -50,15 +91,12 @@ impl Stats {
     }
 }
 
-#[deriving(Decodable, Encodable, Show, PartialEq)]
+#[deriving(Decodable, Encodable, Show, PartialEq, Clone)]
 pub struct Player {
     pub username: String,
     pub password: String,
 
-    // Core Stats
     pub stats: Stats,
-
-    // Additional Information
     pub feats: Vec<String>,
 }
 
@@ -88,6 +126,10 @@ impl Player {
         let path = self.username.clone().append(".json");
         let mut f = File::create(&Path::new(path.as_slice()));
         f.write_str(encode(self).as_slice())
+    }
+
+    pub fn add_feat(&mut self, feat: &str) {
+        self.feats.push(String::from_str(feat))
     }
 }
 
