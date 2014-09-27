@@ -30,6 +30,7 @@ fn do_create(bot: &irc::Bot, resp: &str, games: &mut HashMap<String, Game>, para
         try!(bot.send_join(params[1]));
         let name = join_from(params.clone(), 2);
         try!(bot.send_topic(params[1], name.as_slice()));
+        try!(bot.send_mode(params[1], "+i"));
         let game = try!(Game::new(name.as_slice()));
         games.insert(String::from_str(params[1]), game);
         try!(bot.send_invite(resp, params[1]));
@@ -75,6 +76,9 @@ fn do_login(bot: &irc::Bot, resp: &str, games: &mut HashMap<String, Game>, param
                 Some(game) => {
                     let res = try!(game.login(p, resp, params[2]));
                     try!(bot.send_privmsg(resp, res));
+                    if "Login successful.".eq(&res) {
+                        try!(bot.send_invite(resp, params[3]));
+                    };
                 },
                 None => try!(bot.send_privmsg(resp, "Game not found on that channel.")),
             };
