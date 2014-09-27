@@ -14,13 +14,21 @@ fn str_to_u8(s: &str) -> u8 {
     }
 }
 
+fn join_from(words: Vec<&str>, pos: uint) -> String {
+    let mut res = String::new();
+    for word in words.slice_from(pos).iter() {
+        res.push_str(*word);
+        res.push_char(' ');
+    }
+    let len = res.len() - 1;
+    res.truncate(len);
+    res
+}
+
 fn do_create(bot: &irc::Bot, resp: &str, games: &mut HashMap<String, Game>, params: Vec<&str>) -> IoResult<()> {
     if params.len() >= 3 {
         try!(bot.send_join(params[1]));
-        let mut name = String::new();
-        for word in params.slice_from(2).iter() {
-            name.push_str(*word);
-        }
+        let name = join_from(params.clone(), 2);
         try!(bot.send_topic(params[1], name.as_slice()));
         let game = try!(Game::new(name.as_slice()));
         games.insert(String::from_str(params[1]), game);
