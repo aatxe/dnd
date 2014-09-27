@@ -27,10 +27,7 @@ impl Game {
 }
 
 #[deriving(Decodable, Encodable, Show, PartialEq)]
-pub struct Player {
-    pub username: String,
-    pub password: String,
-
+pub struct Stats {
     pub strength: u8,
     pub dexterity: u8,
     pub constitution: u8,
@@ -39,18 +36,40 @@ pub struct Player {
     pub charisma: u8,
 }
 
-impl Player {
-    pub fn create(username: &str, password: &str, strength: u8, dexterity: u8, constitution: u8,
-                  wisdom: u8, intellect: u8, charisma: u8) -> IoResult<Player> {
-        Ok(Player {
-            username: String::from_str(username),
-            password: String::from_str(password),
+impl Stats {
+    pub fn new(strength: u8, dexterity: u8, constitution: u8, wisdom: u8,
+               intellect: u8, charisma: u8) -> IoResult<Stats> {
+        Ok(Stats {
             strength: strength,
             dexterity: dexterity,
             constitution: constitution,
             wisdom: wisdom,
             intellect: intellect,
             charisma: charisma,
+        })
+    }
+}
+
+#[deriving(Decodable, Encodable, Show, PartialEq)]
+pub struct Player {
+    pub username: String,
+    pub password: String,
+
+    // Core Stats
+    pub stats: Stats,
+
+    // Additional Information
+    pub feats: Vec<String>,
+}
+
+impl Player {
+    pub fn create(username: &str, password: &str, strength: u8, dexterity: u8, constitution: u8,
+                  wisdom: u8, intellect: u8, charisma: u8) -> IoResult<Player> {
+        Ok(Player {
+            username: String::from_str(username),
+            password: String::from_str(password),
+            stats: try!(Stats::new(strength, dexterity, constitution, wisdom, intellect, charisma)),
+            feats: Vec::new(),
         })
     }
 
@@ -78,12 +97,8 @@ fn create_player_test() {
     let m = Player {
         username: String::from_str("test"),
         password: String::from_str("test"),
-        strength: 12,
-        dexterity: 12,
-        constitution: 12,
-        wisdom: 12,
-        intellect: 12,
-        charisma: 12,
+        stats: Stats::new(12, 12, 12, 12, 12, 12).unwrap(),
+        feats: Vec::new(),
     };
     assert_eq!(p, m);
 }
