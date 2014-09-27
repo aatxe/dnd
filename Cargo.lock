@@ -2,11 +2,11 @@
 name = "dnd"
 version = "0.0.1"
 dependencies = [
- "irc 0.0.1 (git+https://github.com/aaronweiss74/irc.git#0ad2411c143e6426b0c17cd8e48956cd79eb585d)",
+ "irc 0.0.1 (git+https://github.com/aaronweiss74/irc.git#e0c2c1174b2d6dc91337bd29b6e7d5ceee53e18f)",
 ]
 
 [[package]]
 name = "irc"
 version = "0.0.1"
-source = "git+https://github.com/aaronweiss74/irc.git#0ad2411c143e6426b0c17cd8e48956cd79eb585d"
+source = "git+https://github.com/aaronweiss74/irc.git#e0c2c1174b2d6dc91337bd29b6e7d5ceee53e18f"
 
