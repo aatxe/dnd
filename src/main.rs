@@ -7,6 +7,7 @@ use data::{Basic, Game, Player, RollType, World};
 
 mod data;
 
+#[cfg(not(test))]
 fn str_to_u8(s: &str) -> u8 {
     match from_str(s) {
         Some(n) => n,
@@ -14,6 +15,7 @@ fn str_to_u8(s: &str) -> u8 {
     }
 }
 
+#[cfg(not(test))]
 fn join_from(words: Vec<&str>, pos: uint) -> String {
     let mut res = String::new();
     for word in words.slice_from(pos).iter() {
@@ -25,6 +27,7 @@ fn join_from(words: Vec<&str>, pos: uint) -> String {
     res
 }
 
+#[cfg(not(test))]
 fn do_create(bot: &irc::Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if params.len() >= 3 {
         try!(bot.send_join(params[1]));
@@ -41,6 +44,7 @@ fn do_create(bot: &irc::Bot, user: &str, world: &mut World, params: Vec<&str>) -
     Ok(())
 }
 
+#[cfg(not(test))]
 fn do_register(bot: &irc::Bot, user: &str, params: Vec<&str>) -> IoResult<()> {
     if params.len() == 9 {
         let mut valid = true;
@@ -67,6 +71,7 @@ fn do_register(bot: &irc::Bot, user: &str, params: Vec<&str>) -> IoResult<()> {
     Ok(())
 }
 
+#[cfg(not(test))]
 fn do_login(bot: &irc::Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if params.len() == 4 {
         let pr = Player::load(params[1]);
@@ -96,6 +101,7 @@ fn do_login(bot: &irc::Bot, user: &str, world: &mut World, params: Vec<&str>) ->
     Ok(())
 }
 
+#[cfg(not(test))]
 fn do_logout(bot: &irc::Bot, user: &str, world: &mut World) -> IoResult<()> {
     if world.is_user_logged_in(user) {
         try!(world.remove_user(user));
@@ -106,6 +112,7 @@ fn do_logout(bot: &irc::Bot, user: &str, world: &mut World) -> IoResult<()> {
     Ok(())
 }
 
+#[cfg(not(test))]
 fn do_add_feat(bot: &irc::Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if params.len() > 1 {
         let res = world.get_user(user);
@@ -124,6 +131,7 @@ fn do_add_feat(bot: &irc::Bot, user: &str, world: &mut World, params: Vec<&str>)
     Ok(())
 }
 
+#[cfg(not(test))]
 fn do_roll(bot: &irc::Bot, user: &str, chan: &str,
            world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if params.len() == 1 {
@@ -159,6 +167,7 @@ fn do_roll(bot: &irc::Bot, user: &str, chan: &str,
     Ok(())
 }
 
+#[cfg(not(test))]
 fn do_private_roll(bot: &irc::Bot, user: &str) -> IoResult<()> {
     try!(bot.send_privmsg(user, format!("You rolled {}.", Game::roll()).as_slice()));
     Ok(())

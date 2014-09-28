@@ -133,6 +133,7 @@ impl Stats {
     }
 }
 
+#[deriving(Show, PartialEq)]
 pub enum RollType {
     Basic,
     Strength,
@@ -246,6 +247,15 @@ fn save_load_player_test() {
 }
 
 #[test]
+fn add_feat_test() {
+    let mut p = Player::create("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
+    assert_eq!(p.feats.len(), 0);
+    p.add_feat("Test Feat");
+    assert_eq!(p.feats.len(), 1);
+    assert_eq!(p.feats[0].as_slice(), "Test Feat");
+}
+
+#[test]
 fn password_hash_test() {
     let s = String::from_str("9ece086e9bac491fac5c1d1046ca11d737b92a2b2ebd93f005d7b710110c0a678288166e7fbe796883a4f2e9b3ca9f484f521d0ce464345cc1aec96779149c14");
     let h = Game::password_hash("test").unwrap();
@@ -254,11 +264,18 @@ fn password_hash_test() {
 
 
 #[test]
+fn worldless_roll_test() {
+    for _ in range(0i, 1000i) {
+        let r = Game::roll();
+        assert!(r >= 1 && r <= 20);
+    }
+}
+
+#[test]
 fn basic_roll_test() {
     let p = Player::create("test", "test", 12, 12, 8, 12, 12, 12).unwrap();
-    for n in range(0i, 1000i) {
+    for _ in range(0i, 1000i) {
         let r = p.roll(Basic);
-        println!("{}", r)
         assert!(r >= 1 && r <= 20);
     }
 }
@@ -266,7 +283,7 @@ fn basic_roll_test() {
 #[test]
 fn positive_stat_roll_test() {
     let p = Player::create("test", "test", 12, 12, 8, 12, 12, 12).unwrap();
-    for n in range(0i, 1000i) {
+    for _ in range(0i, 1000i) {
         let r = p.roll(Dexterity);
         println!("{}", r)
         assert!(r >= 1 && r <= 21);
@@ -276,9 +293,45 @@ fn positive_stat_roll_test() {
 #[test]
 fn negative_stat_roll_test() {
     let p = Player::create("test", "test", 12, 12, 8, 12, 12, 12).unwrap();
-    for n in range(0i, 1000i) {
+    for _ in range(0i, 1000i) {
         let r = p.roll(Constitution);
         println!("{}", r)
         assert!(r >= 1 && r <= 19);
     }
+}
+
+#[test]
+fn to_roll_type_test() {
+    assert_eq!(RollType::to_roll_type("str"), Some(Strength));
+    assert_eq!(RollType::to_roll_type("WISDOM"), Some(Wisdom));
+    assert_eq!(RollType::to_roll_type("Intellect"), Some(Intellect));
+    assert_eq!(RollType::to_roll_type("test"), None);
+}
+
+#[test]
+fn login_test() {
+    let p = Player::create("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
+    p.save().unwrap();
+    let mut g = Game::new("test", "test").unwrap();
+    g.login(p, "test", "test").unwrap();
+}
+
+#[test]
+fn world_user_test() {
+    let mut w = World::new().unwrap();
+    let p = Player::create("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
+    assert_eq!(w.is_user_logged_in("test"), false);
+    w.add_user("test", p.clone()).unwrap();
+    assert_eq!(*w.get_user("test").unwrap(), p);
+    assert_eq!(w.is_user_logged_in("test"), true);
+    w.remove_user("test").unwrap();
+    assert_eq!(w.is_user_logged_in("test"), false);
+    assert!(w.get_user("test").is_err());
+
+}
+
+#[test]
+fn world_game_test() {
+    let mut w = World::new().unwrap();
+    assert!(w.add_game("Dungeons and Tests", "test", "#test").is_ok());
 }
