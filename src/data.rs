@@ -127,6 +127,24 @@ impl Stats {
         })
     }
 
+    pub fn get_stat(&self, stat: &str) -> Option<u8> {
+        match stat.to_ascii_lower().as_slice() {
+            "strength" => Some(self.strength),
+            "str" => Some(self.strength),
+            "dexterity" => Some(self.dexterity),
+            "dex" => Some(self.dexterity),
+            "constitution" => Some(self.constitution),
+            "con" => Some(self.constitution),
+            "wisdom" => Some(self.wisdom),
+            "wis" => Some(self.wisdom),
+            "intellect" => Some(self.intellect),
+            "int" => Some(self.intellect),
+            "charisma" => Some(self.charisma),
+            "cha" => Some(self.charisma),
+            _ => None,
+        }
+    }
+
     pub fn calc_bonus(stat: u8) -> i8 {
         let st = stat as i8;
         (st - 10) / 2
@@ -325,6 +343,21 @@ fn login_test() {
     p.save().unwrap();
     let mut g = Game::new("test", "test").unwrap();
     g.login(p, "test", "test").unwrap();
+}
+
+#[test]
+fn get_stat_test() {
+    let s = Stats::new(12, 12, 8, 12, 14, 12).unwrap();
+    assert_eq!(s.get_stat("str"), Some(12));
+    assert_eq!(s.get_stat("constitution"), Some(8));
+    assert_eq!(s.get_stat("INTELLECT"), Some(14));
+}
+
+#[test]
+fn calc_bonus_test() {
+    assert_eq!(Stats::calc_bonus(14), 2i8);
+    assert_eq!(Stats::calc_bonus(11), 0i8);
+    assert_eq!(Stats::calc_bonus(8), -1i8);
 }
 
 #[test]

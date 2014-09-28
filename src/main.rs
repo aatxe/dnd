@@ -77,17 +77,21 @@ fn do_login(bot: &irc::Bot, user: &str, world: &mut World, params: Vec<&str>) ->
         let pr = Player::load(params[1]);
         if pr.is_ok() && !world.is_user_logged_in(user) {
             let p = try!(pr);
-            try!(world.add_user(user, p.clone()));
+            let mut success = false;
             match world.games.find_mut(&String::from_str(params[3])) {
                 Some(game) => {
-                    let res = try!(game.login(p, user, params[2]));
+                    let res = try!(game.login(p.clone(), user, params[2]));
                     try!(bot.send_privmsg(user, res));
                     if "Login successful.".eq(&res) {
                         try!(bot.send_invite(user, params[3]));
+                        success = true;
                     };
                 },
-                None => try!(bot.send_privmsg(user, format!("Game not found on channel {}.", params[2]).as_slice())),
+                None => try!(bot.send_privmsg(user, format!("Game not found on channel {}.", params[3]).as_slice())),
             };
+            if success {
+                try!(world.add_user(user, p));
+            }
         } else if pr.is_err() {
             try!(bot.send_privmsg(user, format!("Account {} does not exist, or could not be loaded.", params[1]).as_slice()));
         } else {
@@ -189,6 +193,31 @@ fn do_save(bot: &irc::Bot, user: &str, world: &mut World) -> IoResult<()> {
 }
 
 #[cfg(not(test))]
+fn do_look_up(bot: &irc::Bot, resp: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
+    if params.len() == 2 || params.len() == 3 {
+        let res = world.get_user(params[1]);
+        if res.is_ok() {
+            let p = try!(res);
+            if params.len() == 2 {
+                try!(bot.send_privmsg(resp, format!("{} ({}): {}", p.username, params[1], p.stats).as_slice()));
+            } else {
+                let s = match p.stats.get_stat(params[2]) {
+                        Some(x) => format!("{} ({}): {} {}", p.username, params[1], x, params[2]),
+                        None => format!("{} is not a valid stat.", params[2]),
+                };
+                try!(bot.send_privmsg(resp, s.as_slice()));
+            }
+        } else {
+            try!(bot.send_privmsg(resp, format!("{} is not logged in.", params[1]).as_slice()))
+        }
+    } else {
+        try!(bot.send_privmsg(resp, "Invalid format for lookup. Format is:"));
+        try!(bot.send_privmsg(resp, "lookup user [stat]"))
+    }
+    Ok(())
+}
+
+#[cfg(not(test))]
 fn main() {
     let mut world = World::new().unwrap();
     let process = |bot: &irc::Bot, source: &str, command: &str, args: &[&str]| {
@@ -213,10 +242,14 @@ fn main() {
                         try!(do_private_roll(bot, user.clone()));
                     } else if msg.starts_with("save") {
                         try!(do_save(bot, user.clone(), &mut world));
+                    } else if msg.starts_with("lookup") {
+                        try!(do_look_up(bot, user.clone(), &mut world, msg.clone().split_str(" ").collect()));
                     }
                 } else {
                     if msg.starts_with(".roll") {
                         try!(do_roll(bot, user, chan, &mut world, msg.clone().split_str(" ").collect()));
+                    } else if msg.starts_with(".lookup") {
+                        try!(do_look_up(bot, chan.clone(), &mut world, msg.clone().split_str(" ").collect()));
                     }
                 }
             },
