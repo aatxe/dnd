@@ -32,13 +32,26 @@ impl World {
 
     pub fn remove_user(&mut self, nickname: &str) -> IoResult<()> {
         let nick = String::from_str(nickname);
-        try!(self.users.get(&nick).save());
+        try!(self.users[nick].save());
         self.users.remove(&nick);
         Ok(())
     }
 
-    pub fn add_game(&mut self, name: &str, chan: &str) -> IoResult<()> {
-        let game = try!(Game::new(name.as_slice()));
+    pub fn get_user(&mut self, nickname: &str) -> IoResult<&mut Player> {
+        let nick = String::from_str(nickname);
+        if self.users.contains_key(&nick) {
+            Ok(self.users.get_mut(&nick))
+        } else {
+            Err(IoError {
+                    kind: InvalidInput,
+                    desc: "User not found.",
+                    detail: None,
+            })
+        }
+    }
+
+    pub fn add_game(&mut self, name: &str, dm_nick: &str, chan: &str) -> IoResult<()> {
+        let game = try!(Game::new(name.as_slice(), dm_nick.as_slice()));
         self.games.insert(String::from_str(chan), game);
         Ok(())
     }
@@ -46,13 +59,15 @@ impl World {
 
 pub struct Game {
     pub name: String,
+    pub dm_nick: String,
     pub users: HashMap<String, Player>,
 }
 
 impl Game {
-    pub fn new(name: &str) -> IoResult<Game> {
+    pub fn new(name: &str, dm_nick: &str) -> IoResult<Game> {
         Ok(Game {
             name: String::from_str(name),
+            dm_nick: String::from_str(dm_nick),
             users: HashMap::new(),
         })
     }
