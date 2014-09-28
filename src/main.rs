@@ -174,6 +174,21 @@ fn do_private_roll(bot: &irc::Bot, user: &str) -> IoResult<()> {
 }
 
 #[cfg(not(test))]
+fn do_save(bot: &irc::Bot, user: &str, world: &mut World) -> IoResult<()> {
+    let res = world.get_user(user);
+    if res.is_ok() {
+        let player = try!(res);
+        match player.save() {
+            Ok(_) => try!(bot.send_privmsg(user, format!("Saved {}.", player.username).as_slice())),
+            Err(_) => try!(bot.send_privmsg(user, format!("Failed to save {}.", player.username).as_slice())),
+        }
+    } else {
+        try!(bot.send_privmsg(user, "You must be logged in to save."));
+    }
+    Ok(())
+}
+
+#[cfg(not(test))]
 fn main() {
     let mut world = World::new().unwrap();
     let process = |bot: &irc::Bot, source: &str, command: &str, args: &[&str]| {
@@ -196,6 +211,8 @@ fn main() {
                         try!(do_add_feat(bot, user.clone(), &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with("roll") {
                         try!(do_private_roll(bot, user.clone()));
+                    } else if msg.starts_with("save") {
+                        try!(do_save(bot, user.clone(), &mut world));
                     }
                 } else {
                     if msg.starts_with(".roll") {
