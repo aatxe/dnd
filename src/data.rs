@@ -184,6 +184,17 @@ impl Player {
         })
     }
 
+    #[cfg(test)]
+    fn create_test(username: &str, password: &str, strength: u8, dexterity: u8, constitution: u8,
+                  wisdom: u8, intellect: u8, charisma: u8) -> IoResult<Player> {
+        Ok(Player {
+            username: String::from_str(username),
+            password: String::from_str(password),
+            stats: try!(Stats::new(strength, dexterity, constitution, wisdom, intellect, charisma)),
+            feats: Vec::new(),
+        })
+    }
+
     pub fn load(username: &str) -> IoResult<Player> {
         let mut path = String::from_str(username);
         path.push_str(".json");
@@ -240,7 +251,7 @@ fn create_player_test() {
 
 #[test]
 fn save_load_player_test() {
-    let p = Player::create("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
+    let p = Player::create_test("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
     p.save().unwrap();
     let l = Player::load("test").unwrap();
     assert_eq!(l, p);
@@ -248,7 +259,7 @@ fn save_load_player_test() {
 
 #[test]
 fn add_feat_test() {
-    let mut p = Player::create("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
+    let mut p = Player::create_test("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
     assert_eq!(p.feats.len(), 0);
     p.add_feat("Test Feat");
     assert_eq!(p.feats.len(), 1);
@@ -273,7 +284,7 @@ fn worldless_roll_test() {
 
 #[test]
 fn basic_roll_test() {
-    let p = Player::create("test", "test", 12, 12, 8, 12, 12, 12).unwrap();
+    let p = Player::create_test("test", "test", 12, 12, 8, 12, 12, 12).unwrap();
     for _ in range(0i, 1000i) {
         let r = p.roll(Basic);
         assert!(r >= 1 && r <= 20);
@@ -282,7 +293,7 @@ fn basic_roll_test() {
 
 #[test]
 fn positive_stat_roll_test() {
-    let p = Player::create("test", "test", 12, 12, 8, 12, 12, 12).unwrap();
+    let p = Player::create_test("test", "test", 12, 12, 8, 12, 12, 12).unwrap();
     for _ in range(0i, 1000i) {
         let r = p.roll(Dexterity);
         println!("{}", r)
@@ -292,7 +303,7 @@ fn positive_stat_roll_test() {
 
 #[test]
 fn negative_stat_roll_test() {
-    let p = Player::create("test", "test", 12, 12, 8, 12, 12, 12).unwrap();
+    let p = Player::create_test("test", "test", 12, 12, 8, 12, 12, 12).unwrap();
     for _ in range(0i, 1000i) {
         let r = p.roll(Constitution);
         println!("{}", r)
@@ -319,7 +330,7 @@ fn login_test() {
 #[test]
 fn world_user_test() {
     let mut w = World::new().unwrap();
-    let p = Player::create("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
+    let p = Player::create_test("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
     assert_eq!(w.is_user_logged_in("test"), false);
     w.add_user("test", p.clone()).unwrap();
     assert_eq!(*w.get_user("test").unwrap(), p);
