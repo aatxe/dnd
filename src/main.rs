@@ -31,6 +31,7 @@ fn do_create(bot: &irc::Bot, resp: &str, world: &mut World, params: Vec<&str>) -
         try!(bot.send_topic(params[1], name.as_slice()));
         try!(bot.send_mode(params[1], "+i"));
         try!(world.add_game(name.as_slice(), resp, params[1]));
+        try!(bot.send_privmsg(resp, format!("Campaign created named {}.", name).as_slice()));
         try!(bot.send_invite(resp, params[1]));
     } else {
         try!(bot.send_privmsg(resp, "Incorrect format for game creation. Format is:"));
@@ -53,7 +54,7 @@ fn do_register(bot: &irc::Bot, resp: &str, params: Vec<&str>) -> IoResult<()> {
                 str_to_u8(params[5]), str_to_u8(params[6]),
                 str_to_u8(params[7]), str_to_u8(params[8])));
             try!(p.save());
-            try!(bot.send_privmsg(resp, "Your account has been created."));
+            try!(bot.send_privmsg(resp, format!("Your account ({}) has been created.", params[1]).as_slice()));
         } else {
             try!(bot.send_privmsg(resp, "Stats must be non-zero positive integers. Format is: "))
             try!(bot.send_privmsg(resp, "register username password str dex con wis int cha"));
@@ -79,10 +80,10 @@ fn do_login(bot: &irc::Bot, resp: &str, world: &mut World, params: Vec<&str>) ->
                         try!(bot.send_invite(resp, params[3]));
                     };
                 },
-                None => try!(bot.send_privmsg(resp, "Game not found on that channel.")),
+                None => try!(bot.send_privmsg(resp, format!("Game not found on channel {}.", params[2]).as_slice())),
             };
         } else if pr.is_err() {
-            try!(bot.send_privmsg(resp, "Account does not exist, or could not be loaded."));
+            try!(bot.send_privmsg(resp, format!("Account {} does not exist, or could not be loaded.", params[1]).as_slice()));
         } else {
             try!(bot.send_privmsg(resp, "You can only be logged into one account at once."));
             try!(bot.send_privmsg(resp, "Use logout to log out."));
@@ -111,9 +112,9 @@ fn do_add_feat(bot: &irc::Bot, resp: &str, world: &mut World, params: Vec<&str>)
             let name = join_from(params.clone(), 1);
             let player = try!(res);
             player.add_feat(name.as_slice());
-            try!(bot.send_privmsg(resp, "Feat added."));
+            try!(bot.send_privmsg(resp, format!("Added {} feat.", name).as_slice()));
         } else {
-            try!(bot.send_privmsg(resp, "User not found."));
+            try!(bot.send_privmsg(resp, "You must be logged in to add a feat."));
         }
     } else {
         try!(bot.send_privmsg(resp, "Can't add feat without a name. Format is:"));
