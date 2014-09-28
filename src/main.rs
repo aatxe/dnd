@@ -1,8 +1,8 @@
 extern crate irc;
 extern crate serialize;
 
-use data::{Player, World};
 use std::io::IoResult;
+use data::{Player, World};
 
 mod data;
 
