@@ -3,7 +3,7 @@ extern crate irc;
 extern crate serialize;
 
 use std::io::IoResult;
-use data::{Basic, Player, RollType, World};
+use data::{Basic, Game, Player, RollType, World};
 
 mod data;
 
@@ -159,6 +159,11 @@ fn do_roll(bot: &irc::Bot, user: &str, chan: &str,
     Ok(())
 }
 
+fn do_private_roll(bot: &irc::Bot, user: &str) -> IoResult<()> {
+    try!(bot.send_privmsg(user, format!("You rolled {}.", Game::roll()).as_slice()));
+    Ok(())
+}
+
 #[cfg(not(test))]
 fn main() {
     let mut world = World::new().unwrap();
@@ -180,6 +185,8 @@ fn main() {
                         try!(do_logout(bot, user.clone(), &mut world));
                     } else if msg.starts_with("addfeat") {
                         try!(do_add_feat(bot, user.clone(), &mut world, msg.clone().split_str(" ").collect()));
+                    } else if msg.starts_with("roll") {
+                        try!(do_private_roll(bot, user.clone()));
                     }
                 } else {
                     if msg.starts_with(".roll") {

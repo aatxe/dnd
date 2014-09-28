@@ -92,6 +92,16 @@ impl Game {
         try!(hash::<DefaultAllocator>(Sha3_512, password.as_bytes(), data));
         Ok(data.to_hex())
     }
+
+    pub fn roll() -> u8 {
+        let d20 = Range::new(1i8, 21i8);
+        let mut rng = task_rng();
+        match d20.ind_sample(&mut rng).to_u8() {
+            Some(0) => 1,
+            Some(n) => n,
+            None => 1,
+        }
+    }
 }
 
 #[deriving(Decodable, Encodable, Show, PartialEq, Clone)]
