@@ -4,7 +4,7 @@ use std::io::fs::File;
 use std::io::{InvalidInput, IoError, IoResult};
 use std::rand::task_rng;
 use std::rand::distributions::{IndependentSample, Range};
-use crypto::sbuf::DefaultAllocator;
+use crypto::sbuf::StdHeapAllocator;
 use crypto::sha3::{hash, Sha3_512};
 use serialize::hex::ToHex;
 use serialize::json::{decode, encode};
@@ -89,7 +89,7 @@ impl Game {
 
     fn password_hash(password: &str) -> IoResult<String> {
         let mut data = [0u8, ..64];
-        try!(hash::<DefaultAllocator>(Sha3_512, password.as_bytes(), data));
+        try!(hash::<StdHeapAllocator>(Sha3_512, password.as_bytes(), data));
         Ok(data.to_hex())
     }
 
