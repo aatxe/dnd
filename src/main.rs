@@ -18,7 +18,7 @@ fn join_from(words: Vec<&str>, pos: uint) -> String {
     let mut res = String::new();
     for word in words.slice_from(pos).iter() {
         res.push_str(*word);
-        res.push_char(' ');
+        res.push(' ');
     }
     let len = res.len() - 1;
     res.truncate(len);
@@ -157,7 +157,7 @@ fn main() {
                             Some(vec) => {
                                 for user in vec.iter() {
                                     s.push_str(user.as_slice());
-                                    s.push_char(' ');
+                                    s.push(' ');
                                 }
                                 let len = s.len() - 1;
                                 s.truncate(len);

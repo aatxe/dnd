@@ -76,7 +76,7 @@ impl Game {
     }
 
     pub fn login(&mut self, account: Player, nickname: &str, password: &str) -> IoResult<&str> {
-        if account.password.as_slice().eq(&Game::password_hash(password).as_slice()) {
+        if account.password.as_slice().eq(&try!(Game::password_hash(password)).as_slice()) {
             self.users.insert(String::from_str(nickname), account);
             Ok("Login successful.")
         } else {
@@ -84,10 +84,10 @@ impl Game {
         }
     }
 
-    fn password_hash(password: &str) -> String {
+    fn password_hash(password: &str) -> IoResult<String> {
         let mut data = [0u8, ..64];
-        hash::<DefaultAllocator>(Sha3_512, password.as_bytes(), data);
-        data.to_hex()
+        try!(hash::<DefaultAllocator>(Sha3_512, password.as_bytes(), data));
+        Ok(data.to_hex())
     }
 }
 
@@ -129,14 +129,15 @@ impl Player {
                   wisdom: u8, intellect: u8, charisma: u8) -> IoResult<Player> {
         Ok(Player {
             username: String::from_str(username),
-            password: Game::password_hash(password),
+            password: try!(Game::password_hash(password)),
             stats: try!(Stats::new(strength, dexterity, constitution, wisdom, intellect, charisma)),
             feats: Vec::new(),
         })
     }
 
     pub fn load(username: &str) -> IoResult<Player> {
-        let path = String::from_str(username).append(".json");
+        let mut path = String::from_str(username);
+        path.push_str(".json");
         let mut file = try!(File::open(&Path::new(path.as_slice())));
         let data = try!(file.read_to_string());
         decode(data.as_slice()).map_err(|e| IoError {
@@ -147,7 +148,8 @@ impl Player {
     }
 
     pub fn save(&self) -> IoResult<()> {
-        let path = self.username.clone().append(".json");
+        let mut path = self.username.clone();
+        path.push_str(".json");
         let mut f = File::create(&Path::new(path.as_slice()));
         f.write_str(encode(self).as_slice())
     }
