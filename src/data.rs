@@ -178,3 +178,10 @@ fn save_load_player_test() {
     let l = Player::load("test").unwrap();
     assert_eq!(l, p);
 }
+
+#[test]
+fn password_hash_test() {
+    let s = String::from_str("9ece086e9bac491fac5c1d1046ca11d737b92a2b2ebd93f005d7b710110c0a678288166e7fbe796883a4f2e9b3ca9f484f521d0ce464345cc1aec96779149c14");
+    let h = Game::password_hash("test").unwrap();
+    assert_eq!(s, h);
+}
