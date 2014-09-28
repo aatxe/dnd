@@ -2,6 +2,7 @@ extern crate crypto;
 extern crate irc;
 extern crate serialize;
 
+use std::ascii::AsciiExt;
 use std::io::IoResult;
 use data::{Basic, Game, Player, RollType, World};
 
@@ -199,7 +200,9 @@ fn do_look_up(bot: &irc::Bot, resp: &str, world: &mut World, params: Vec<&str>) 
         if res.is_ok() {
             let p = try!(res);
             if params.len() == 2 {
-                try!(bot.send_privmsg(resp, format!("{} ({}): {}", p.username, params[1], p.stats).as_slice()));
+                try!(bot.send_privmsg(resp, format!("{} ({}): {} Feats {}", p.username, params[1], p.stats, p.feats).as_slice()));
+            } else if params[2].eq_ignore_ascii_case("feats") || params[2].eq_ignore_ascii_case("feat") {
+                try!(bot.send_privmsg(resp, format!("{} ({}): {}", p.username, params[1], p.feats).as_slice()));
             } else {
                 let s = match p.stats.get_stat(params[2]) {
                         Some(x) => format!("{} ({}): {} {}", p.username, params[1], x, params[2]),
