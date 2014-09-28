@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 use std::io::fs::File;
 use std::io::{InvalidInput, IoError, IoResult};
+use crypto::sbuf::DefaultAllocator;
+use crypto::sha3::{hash, Sha3_512};
+use serialize::hex::ToHex;
 use serialize::json::{decode, encode};
 
 pub struct World {
@@ -73,12 +76,18 @@ impl Game {
     }
 
     pub fn login(&mut self, account: Player, nickname: &str, password: &str) -> IoResult<&str> {
-        if account.password.as_slice().eq(&password) {
+        if account.password.as_slice().eq(&Game::password_hash(password).as_slice()) {
             self.users.insert(String::from_str(nickname), account);
             Ok("Login successful.")
         } else {
             Ok("Password incorrect.")
         }
+    }
+
+    fn password_hash(password: &str) -> String {
+        let mut data = [0u8, ..64];
+        hash::<DefaultAllocator>(Sha3_512, password.as_bytes(), data);
+        data.to_hex()
     }
 }
 
@@ -120,7 +129,7 @@ impl Player {
                   wisdom: u8, intellect: u8, charisma: u8) -> IoResult<Player> {
         Ok(Player {
             username: String::from_str(username),
-            password: String::from_str(password),
+            password: Game::password_hash(password),
             stats: try!(Stats::new(strength, dexterity, constitution, wisdom, intellect, charisma)),
             feats: Vec::new(),
         })
