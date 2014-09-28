@@ -182,23 +182,7 @@ fn main() {
                         try!(do_add_feat(bot, user.clone(), &mut world, msg.clone().split_str(" ").collect()));
                     }
                 } else {
-                    if msg.starts_with(".list") {
-                        let mut s = String::new();
-                        match bot.chanlists.find(&String::from_str(chan)) {
-                            Some(vec) => {
-                                for user in vec.iter() {
-                                    s.push_str(user.as_slice());
-                                    s.push(' ');
-                                }
-                                let len = s.len() - 1;
-                                s.truncate(len);
-                            },
-                            None => {
-                                s.push_str("None.");
-                            }
-                        }
-                        try!(bot.send_privmsg(chan, s.as_slice()));
-                    } else if msg.starts_with(".roll") {
+                    if msg.starts_with(".roll") {
                         try!(do_roll(bot, user, chan, &mut world, msg.clone().split_str(" ").collect()));
                     }
                 }
