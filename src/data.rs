@@ -164,7 +164,7 @@ fn create_player_test() {
     let p = Player::create("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
     let m = Player {
         username: String::from_str("test"),
-        password: String::from_str("test"),
+        password: Game::password_hash("test").unwrap(),
         stats: Stats::new(12, 12, 12, 12, 12, 12).unwrap(),
         feats: Vec::new(),
     };
