@@ -3,7 +3,7 @@ extern crate irc;
 extern crate serialize;
 
 use std::io::IoResult;
-use data::{Player, World};
+use data::{Basic, Player, RollType, World};
 
 mod data;
 
@@ -124,6 +124,41 @@ fn do_add_feat(bot: &irc::Bot, resp: &str, world: &mut World, params: Vec<&str>)
     Ok(())
 }
 
+fn do_roll(bot: &irc::Bot, user: &str, chan: &str,
+           world: &mut World, params: Vec<&str>) -> IoResult<()> {
+    if params.len() == 1 {
+        let res = world.get_user(user);
+        if res.is_ok() {
+            let player = try!(res);
+            let r = player.roll(Basic);
+            try!(bot.send_privmsg(chan, format!("{} rolled {}.", user, r).as_slice()));
+        } else {
+            try!(bot.send_privmsg(chan, format!("{} is not logged in.", user).as_slice()));
+        }
+    } else if params.len() == 2 {
+        let res = world.get_user(user);
+        if res.is_ok() {
+            let player = try!(res);
+            let rt = RollType::to_roll_type(params[1]);
+            match rt {
+                Some(roll_type) => {
+                    let r = player.roll(roll_type);
+                    try!(bot.send_privmsg(chan, format!("{} rolled {}.", user, r).as_slice()));
+                },
+                None => {
+                    try!(bot.send_privmsg(chan, format!("{} is not a valid stat.", params[1]).as_slice()));
+                    try!(bot.send_privmsg(chan, "Options: str dex con wis int cha (or their full names)."));
+                }
+            }
+        } else {
+            try!(bot.send_privmsg(chan, format!("{} is not logged in.", user).as_slice()));
+        }
+    } else {
+        try!(bot.send_privmsg(chan, "Invalid format. Use '.roll' or '.roll (stat)'."));
+    }
+    Ok(())
+}
+
 #[cfg(not(test))]
 fn main() {
     let mut world = World::new().unwrap();
@@ -167,6 +202,12 @@ fn main() {
                             }
                         }
                         try!(bot.send_privmsg(resp, s.as_slice()));
+                    } else if msg.starts_with(".roll") {
+                        let user = match source.find('!') {
+                            Some(i) => source.slice_to(i),
+                            None => chan,
+                        };
+                        try!(do_roll(bot, user, resp, &mut world, msg.clone().split_str(" ").collect()));
                     }
                 }
             },

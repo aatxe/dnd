@@ -1,6 +1,9 @@
+use std::ascii::AsciiExt;
 use std::collections::HashMap;
 use std::io::fs::File;
 use std::io::{InvalidInput, IoError, IoResult};
+use std::rand::task_rng;
+use std::rand::distributions::{IndependentSample, Range};
 use crypto::sbuf::DefaultAllocator;
 use crypto::sha3::{hash, Sha3_512};
 use serialize::hex::ToHex;
@@ -113,6 +116,41 @@ impl Stats {
             charisma: charisma,
         })
     }
+
+    pub fn calc_bonus(stat: u8) -> i8 {
+        let st = stat as i8;
+        (st - 10) / 2
+    }
+}
+
+pub enum RollType {
+    Basic,
+    Strength,
+    Dexterity,
+    Constitution,
+    Wisdom,
+    Intellect,
+    Charisma
+}
+
+impl RollType {
+    pub fn to_roll_type(roll_type: &str) -> Option<RollType> {
+        match roll_type.to_ascii_lower().as_slice() {
+            "strength" => Some(Strength),
+            "str" => Some(Strength),
+            "dexterity" => Some(Dexterity),
+            "dex" => Some(Dexterity),
+            "constitution" => Some(Constitution),
+            "con" => Some(Constitution),
+            "wisdom" => Some(Wisdom),
+            "wis" => Some(Wisdom),
+            "intellect" => Some(Intellect),
+            "int" => Some(Intellect),
+            "charisma" => Some(Charisma),
+            "cha" => Some(Charisma),
+            _ => None,
+        }
+    }
 }
 
 #[deriving(Decodable, Encodable, Show, PartialEq, Clone)]
@@ -157,6 +195,24 @@ impl Player {
     pub fn add_feat(&mut self, feat: &str) {
         self.feats.push(String::from_str(feat))
     }
+
+    pub fn roll(&self, roll_type: RollType) -> u8 {
+        let d20 = Range::new(1i8, 21i8);
+        let mut rng = task_rng();
+        match match roll_type {
+            Basic => d20.ind_sample(&mut rng),
+            Strength => d20.ind_sample(&mut rng) + Stats::calc_bonus(self.stats.strength),
+            Dexterity => d20.ind_sample(&mut rng) + Stats::calc_bonus(self.stats.dexterity),
+            Constitution => d20.ind_sample(&mut rng) + Stats::calc_bonus(self.stats.constitution),
+            Wisdom => d20.ind_sample(&mut rng) + Stats::calc_bonus(self.stats.wisdom),
+            Intellect => d20.ind_sample(&mut rng) + Stats::calc_bonus(self.stats.intellect),
+            Charisma => d20.ind_sample(&mut rng) + Stats::calc_bonus(self.stats.charisma),
+        }.to_u8() {
+            Some(0) => 1,
+            Some(n) => n,
+            None => 1,
+        }
+    }
 }
 
 #[test]
@@ -184,4 +240,35 @@ fn password_hash_test() {
     let s = String::from_str("9ece086e9bac491fac5c1d1046ca11d737b92a2b2ebd93f005d7b710110c0a678288166e7fbe796883a4f2e9b3ca9f484f521d0ce464345cc1aec96779149c14");
     let h = Game::password_hash("test").unwrap();
     assert_eq!(s, h);
+}
+
+
+#[test]
+fn basic_roll_test() {
+    let p = Player::create("test", "test", 12, 12, 8, 12, 12, 12).unwrap();
+    for n in range(0i, 1000i) {
+        let r = p.roll(Basic);
+        println!("{}", r)
+        assert!(r >= 1 && r <= 20);
+    }
+}
+
+#[test]
+fn positive_stat_roll_test() {
+    let p = Player::create("test", "test", 12, 12, 8, 12, 12, 12).unwrap();
+    for n in range(0i, 1000i) {
+        let r = p.roll(Dexterity);
+        println!("{}", r)
+        assert!(r >= 1 && r <= 21);
+    }
+}
+
+#[test]
+fn negative_stat_roll_test() {
+    let p = Player::create("test", "test", 12, 12, 8, 12, 12, 12).unwrap();
+    for n in range(0i, 1000i) {
+        let r = p.roll(Constitution);
+        println!("{}", r)
+        assert!(r >= 1 && r <= 19);
+    }
 }
