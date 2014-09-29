@@ -354,6 +354,7 @@ impl Player {
     }
 }
 
+#[cfg(test)]
 mod test {
     use super::{Game, Player, RollType, Stats, World};
     use super::{Basic, Strength, Dexterity, Constitution, Wisdom, Intellect};
