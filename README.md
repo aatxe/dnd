@@ -4,4 +4,4 @@ An IRC bot in Rust for playing Dungeons and Dragons. Subject to serious change.
 ## TODO ##
 Here are some of the features to be implemented soon:
 * More player inquiry tools
-* Temporary stats system
+* Battle maps!

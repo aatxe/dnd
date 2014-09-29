@@ -49,9 +49,9 @@ impl World {
             Ok(self.users.get_mut(&nick))
         } else {
             Err(IoError {
-                    kind: InvalidInput,
-                    desc: "User not found.",
-                    detail: None,
+                kind: InvalidInput,
+                desc: "User not found.",
+                detail: None,
             })
         }
     }
@@ -60,6 +60,19 @@ impl World {
         let game = try!(Game::new(name.as_slice(), dm_nick.as_slice()));
         self.games.insert(String::from_str(chan), game);
         Ok(())
+    }
+
+    pub fn get_game(&mut self, chan: &str) -> IoResult<&mut Game> {
+        let ch = String::from_str(chan);
+        if self.games.contains_key(&ch) {
+            Ok(self.games.get_mut(&ch))
+        } else {
+            Err(IoError {
+                kind: InvalidInput,
+                desc: "Game not found.",
+                detail: None,
+            })
+        }
     }
 }
 
@@ -101,6 +114,11 @@ impl Game {
             Some(n) => n,
             None => 1,
         }
+    }
+
+    pub fn is_dm(&self, nickname: &str) -> bool {
+        let nick = String::from_str(nickname);
+        nick.eq(&self.dm_nick)
     }
 }
 
@@ -225,6 +243,7 @@ pub struct Player {
 
     pub stats: Stats,
     pub feats: Vec<String>,
+    pub temp_stats: Option<Stats>,
 }
 
 impl Player {
@@ -235,6 +254,7 @@ impl Player {
             password: try!(Game::password_hash(password)),
             stats: try!(Stats::new(strength, dexterity, constitution, wisdom, intellect, charisma)),
             feats: Vec::new(),
+            temp_stats: None,
         })
     }
 
@@ -246,6 +266,7 @@ impl Player {
             password: String::from_str(password),
             stats: try!(Stats::new(strength, dexterity, constitution, wisdom, intellect, charisma)),
             feats: Vec::new(),
+            temp_stats: None,
         })
     }
 
@@ -289,6 +310,24 @@ impl Player {
             None => 1,
         }
     }
+
+    pub fn stats(&self) -> Stats {
+        match self.temp_stats {
+            Some(stats) => stats,
+            None => self.stats,
+        }
+    }
+
+    pub fn has_temp_stats(&self) -> bool {
+        match self.temp_stats {
+            Some(_) => true,
+            None => false,
+        }
+    }
+
+    pub fn set_temp_stats(&mut self, stats: Stats) {
+        self.temp_stats = Some(stats);
+    }
 }
 
 #[test]
@@ -299,6 +338,7 @@ fn create_player_test() {
         password: Game::password_hash("test").unwrap(),
         stats: Stats::new(12, 12, 12, 12, 12, 12).unwrap(),
         feats: Vec::new(),
+        temp_stats: None,
     };
     assert_eq!(p, m);
 }
@@ -436,4 +476,45 @@ fn world_user_test() {
 fn world_game_test() {
     let mut w = World::new().unwrap();
     assert!(w.add_game("Dungeons and Tests", "test", "#test").is_ok());
+}
+
+#[test]
+fn get_game_test() {
+    let mut w = World::new().unwrap();
+    w.add_game("Dungeons and Tests", "test", "#test").unwrap();
+    assert!(w.get_game("#test").is_ok());
+    assert!(w.get_game("#test2").is_err());
+}
+
+#[test]
+fn is_dm_test() {
+    let g = Game::new("Dungeons and Tests", "test").unwrap();
+    assert!(g.is_dm("test"));
+    assert!(!g.is_dm("test2"));
+}
+
+#[test]
+fn set_temp_stats_test() {
+    let mut p = Player::create_test("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
+    let s = Stats::new(10, 10, 10, 10, 10, 10).unwrap();
+    p.set_temp_stats(s);
+    assert_eq!(p.temp_stats, Some(s));
+}
+
+#[test]
+fn stats_fn_test() {
+    let mut p = Player::create_test("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
+    let s = Stats::new(10, 10, 10, 10, 10, 10).unwrap();
+    assert_eq!(p.stats(), Stats::new(12, 12, 12, 12, 12, 12).unwrap());
+    p.set_temp_stats(s);
+    assert_eq!(p.stats(), s);
+}
+
+#[test]
+fn has_temp_stats_test() {
+    let mut p = Player::create_test("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
+    let s = Stats::new(10, 10, 10, 10, 10, 10).unwrap();
+    assert!(!p.has_temp_stats());
+    p.set_temp_stats(s);
+    assert!(p.has_temp_stats());
 }

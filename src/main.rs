@@ -4,7 +4,7 @@ extern crate serialize;
 
 use std::ascii::AsciiExt;
 use std::io::IoResult;
-use data::{Basic, Game, Player, RollType, World};
+use data::{Basic, Game, Player, RollType, Stats, World};
 
 mod data;
 
@@ -199,19 +199,25 @@ fn do_look_up(bot: &irc::Bot, resp: &str, world: &mut World, params: Vec<&str>) 
         let res = world.get_user(params[1]);
         if res.is_ok() {
             let p = try!(res);
+            let tmp_msg = if p.has_temp_stats() {
+                "Temp. "
+            } else {
+                ""
+            };
             if params.len() == 2 {
-                try!(bot.send_privmsg(resp, format!("{} ({}): {} Feats {}", p.username, params[1], p.stats, p.feats).as_slice()));
+                let s = format!("{} ({}): {}{} Feats {}", p.username, params[1], tmp_msg, p.stats(), p.feats);
+                try!(bot.send_privmsg(resp, s.as_slice()));
             } else if params[2].eq_ignore_ascii_case("feats") || params[2].eq_ignore_ascii_case("feat") {
                 try!(bot.send_privmsg(resp, format!("{} ({}): {}", p.username, params[1], p.feats).as_slice()));
             } else {
-                let s = match p.stats.get_stat(params[2]) {
-                        Some(x) => format!("{} ({}): {} {}", p.username, params[1], x, params[2]),
+                let s = match p.stats().get_stat(params[2]) {
+                        Some(x) => format!("{} ({}): {}{} {}", p.username, params[1], tmp_msg, x, params[2]),
                         None => format!("{} is not a valid stat.", params[2]),
                 };
                 try!(bot.send_privmsg(resp, s.as_slice()));
             }
         } else {
-            try!(bot.send_privmsg(resp, format!("{} is not logged in.", params[1]).as_slice()))
+            try!(bot.send_privmsg(resp, format!("{} is not logged in.", params[1]).as_slice()));
         }
     } else {
         let dot = if resp.starts_with("#") {
@@ -261,6 +267,48 @@ fn do_add_update(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, para
 }
 
 #[cfg(not(test))]
+fn do_set_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
+    {
+        let res = world.get_game(chan);
+        if res.is_err() {
+            try!(bot.send_privmsg(chan, format!("There is no game in {}.", chan).as_slice()));
+            return Ok(());
+        } else if !try!(res).is_dm(user) {
+            try!(bot.send_privmsg(chan, "You must be the DM to do that!"));
+            return Ok(());
+        }
+    }
+    if params.len() == 8 {
+        let p_res = world.get_user(user);
+        if p_res.is_ok() {
+            let p = try!(p_res);
+            let mut valid = true;
+            for s in params.slice_from(3).iter() {
+                if str_to_u8(*s) == 0 {
+                    valid = false;
+                }
+            }
+            if valid {
+                p.set_temp_stats(try!(Stats::new(str_to_u8(params[2]), str_to_u8(params[3]),
+                                                 str_to_u8(params[4]), str_to_u8(params[5]),
+                                                 str_to_u8(params[6]), str_to_u8(params[7]))));
+                try!(p.save());
+                try!(bot.send_privmsg(chan, format!("{} ({}) now has temporary stats: {}.", p.username, params[1], p.stats()).as_slice()));
+            } else {
+                try!(bot.send_privmsg(chan, "Stats must be non-zero positive integers. Format is: "))
+                try!(bot.send_privmsg(chan, ".temp target str dex con wis int cha"));
+            }
+        } else {
+            try!(bot.send_privmsg(chan, format!("{} is not logged in or does not exist.", user).as_slice()));
+        }
+    } else {
+        try!(bot.send_privmsg(chan, "Invalid format for setting temporary stats. Format is:"));
+        try!(bot.send_privmsg(chan, ".temp target str dex con wis int cha"));
+    }
+    Ok(())
+}
+
+#[cfg(not(test))]
 fn main() {
     let mut world = World::new().unwrap();
     let process = |bot: &irc::Bot, source: &str, command: &str, args: &[&str]| {
@@ -297,6 +345,8 @@ fn main() {
                         try!(do_add_update(bot, user, chan, &mut world, msg.clone().split_str(" ").collect(), true));
                     } else if msg.starts_with(".increase") {
                         try!(do_add_update(bot, user, chan, &mut world, msg.clone().split_str(" ").collect(), false));
+                    } else if msg.starts_with(".temp") {
+                        try!(do_set_temp_stats(bot, user, chan, &mut world, msg.clone().split_str(" ").collect()));
                     }
                 }
             },
