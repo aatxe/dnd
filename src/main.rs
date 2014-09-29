@@ -272,31 +272,31 @@ fn main() {
                 };
                 if !chan.starts_with("#") {
                     if msg.starts_with("register") {
-                        try!(do_register(bot, user.clone(), msg.clone().split_str(" ").collect()));
+                        try!(do_register(bot, user, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with("login") {
-                        try!(do_login(bot, user.clone(), &mut world, msg.clone().split_str(" ").collect()));
+                        try!(do_login(bot, user, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with("create") {
-                        try!(do_create(bot, user.clone(), &mut world, msg.clone().split_str(" ").collect()));
+                        try!(do_create(bot, user, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with("logout") {
-                        try!(do_logout(bot, user.clone(), &mut world));
+                        try!(do_logout(bot, user, &mut world));
                     } else if msg.starts_with("addfeat") {
-                        try!(do_add_feat(bot, user.clone(), &mut world, msg.clone().split_str(" ").collect()));
+                        try!(do_add_feat(bot, user, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with("roll") {
-                        try!(do_private_roll(bot, user.clone()));
+                        try!(do_private_roll(bot, user));
                     } else if msg.starts_with("save") {
-                        try!(do_save(bot, user.clone(), &mut world));
+                        try!(do_save(bot, user, &mut world));
                     } else if msg.starts_with("lookup") {
-                        try!(do_look_up(bot, user.clone(), &mut world, msg.clone().split_str(" ").collect()));
+                        try!(do_look_up(bot, user, &mut world, msg.clone().split_str(" ").collect()));
                     }
                 } else {
                     if msg.starts_with(".roll") {
                         try!(do_roll(bot, user, chan, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with(".lookup") {
-                        try!(do_look_up(bot, chan.clone(), &mut world, msg.clone().split_str(" ").collect()));
+                        try!(do_look_up(bot, chan, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with(".update") {
-                        try!(do_add_update(bot, user.clone(), chan.clone(), &mut world, msg.clone().split_str(" ").collect(), true));
+                        try!(do_add_update(bot, user, chan, &mut world, msg.clone().split_str(" ").collect(), true));
                     } else if msg.starts_with(".increase") {
-                        try!(do_add_update(bot, user.clone(), chan.clone(), &mut world, msg.clone().split_str(" ").collect(), false));
+                        try!(do_add_update(bot, user, chan, &mut world, msg.clone().split_str(" ").collect(), false));
                     }
                 }
             },
