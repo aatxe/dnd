@@ -328,6 +328,10 @@ impl Player {
     pub fn set_temp_stats(&mut self, stats: Stats) {
         self.temp_stats = Some(stats);
     }
+
+    pub fn clear_temp_stats(&mut self) {
+        self.temp_stats = None;
+    }
 }
 
 #[test]
@@ -517,4 +521,14 @@ fn has_temp_stats_test() {
     assert!(!p.has_temp_stats());
     p.set_temp_stats(s);
     assert!(p.has_temp_stats());
+}
+
+#[test]
+fn clear_temp_stats_test() {
+    let mut p = Player::create_test("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
+    let s = Stats::new(10, 10, 10, 10, 10, 10).unwrap();
+    p.set_temp_stats(s);
+    assert!(p.has_temp_stats());
+    p.clear_temp_stats();
+    assert!(!p.has_temp_stats());
 }

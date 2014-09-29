@@ -279,9 +279,9 @@ fn do_set_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, 
         }
     }
     if params.len() == 8 {
-        let p_res = world.get_user(user);
-        if p_res.is_ok() {
-            let p = try!(p_res);
+        let res = world.get_user(user);
+        if res.is_ok() {
+            let p = try!(res);
             let mut valid = true;
             for s in params.slice_from(3).iter() {
                 if str_to_u8(*s) == 0 {
@@ -293,7 +293,7 @@ fn do_set_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, 
                                                  str_to_u8(params[4]), str_to_u8(params[5]),
                                                  str_to_u8(params[6]), str_to_u8(params[7]))));
                 try!(p.save());
-                try!(bot.send_privmsg(chan, format!("{} ({}) now has temporary stats: {}.", p.username, params[1], p.stats()).as_slice()));
+                try!(bot.send_privmsg(chan, format!("{} ({}) now has temporary {}.", p.username, params[1], p.stats()).as_slice()));
             } else {
                 try!(bot.send_privmsg(chan, "Stats must be non-zero positive integers. Format is: "))
                 try!(bot.send_privmsg(chan, ".temp target str dex con wis int cha"));
@@ -304,6 +304,34 @@ fn do_set_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, 
     } else {
         try!(bot.send_privmsg(chan, "Invalid format for setting temporary stats. Format is:"));
         try!(bot.send_privmsg(chan, ".temp target str dex con wis int cha"));
+    }
+    Ok(())
+}
+
+#[cfg(not(test))]
+fn do_clear_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
+    {
+        let res = world.get_game(chan);
+        if res.is_err() {
+            try!(bot.send_privmsg(chan, format!("There is no game in {}.", chan).as_slice()));
+            return Ok(());
+        } else if !try!(res).is_dm(user) {
+            try!(bot.send_privmsg(chan, "You must be the DM to do that!"));
+            return Ok(());
+        }
+    }
+    if params.len() == 2 {
+        let res = world.get_user(params[1]);
+        if res.is_ok() {
+            let p = try!(res);
+            p.clear_temp_stats();
+            try!(bot.send_privmsg(chan, format!("{} ({}) has reverted to {}.", p.username, params[1], p.stats()).as_slice()));
+        } else {
+            try!(bot.send_privmsg(chan, format!("{} is not logged in or does not exist.", user).as_slice()));
+        }
+    } else {
+        try!(bot.send_privmsg(chan, "Invalid format for setting temporary stats. Format is:"));
+        try!(bot.send_privmsg(chan, ".cleartemp target"));
     }
     Ok(())
 }
@@ -347,6 +375,8 @@ fn main() {
                         try!(do_add_update(bot, user, chan, &mut world, msg.clone().split_str(" ").collect(), false));
                     } else if msg.starts_with(".temp") {
                         try!(do_set_temp_stats(bot, user, chan, &mut world, msg.clone().split_str(" ").collect()));
+                    } else if msg.starts_with(".cleartemp") {
+                        try!(do_clear_temp_stats(bot, user, chan, &mut world, msg.clone().split_str(" ").collect()));
                     }
                 }
             },
