@@ -214,8 +214,48 @@ fn do_look_up(bot: &irc::Bot, resp: &str, world: &mut World, params: Vec<&str>) 
             try!(bot.send_privmsg(resp, format!("{} is not logged in.", params[1]).as_slice()))
         }
     } else {
+        let dot = if resp.starts_with("#") {
+            "."
+        } else {
+            ""
+        };
         try!(bot.send_privmsg(resp, "Invalid format for lookup. Format is:"));
-        try!(bot.send_privmsg(resp, "lookup user [stat]"))
+        try!(bot.send_privmsg(resp, format!("{}lookup user [stat]", dot).as_slice()))
+    }
+    Ok(())
+}
+
+#[cfg(not(test))]
+fn do_add_update(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>, update: bool) -> IoResult<()> {
+    if params.len() == 3 {
+        let res = world.get_user(user);
+        if res.is_ok() {
+            let p = try!(res);
+            match from_str(params[2]) {
+                Some(n) => {
+                    if update {
+                        p.stats.update_stat(params[1], n);
+                        try!(bot.send_privmsg(chan, format!("{} ({}) now has {} {}.", p.username, user, n, params[1]).as_slice()));
+                    } else {
+                        p.stats.increase_stat(params[1], n);
+                        let k = match p.stats.get_stat(params[1]) {
+                            Some(i) => i,
+                            None => 0,
+                        };
+                        try!(bot.send_privmsg(chan, format!("{} ({}) now has {} {}.", p.username, user, k, params[1]).as_slice()));
+                    }
+                },
+                None => try!(bot.send_privmsg(chan, format!("{} is not a valid positive integer.", params[2]).as_slice())),
+            };
+        } else {
+            try!(bot.send_privmsg(chan, "You're not logged in."));
+        }
+    } else if update {
+        try!(bot.send_privmsg(chan, "Invalid format for update. Format is:"));
+        try!(bot.send_privmsg(chan, ".update stat value"))
+    } else {
+        try!(bot.send_privmsg(chan, "Invalid format for increase. Format is:"));
+        try!(bot.send_privmsg(chan, ".increase stat value"))
     }
     Ok(())
 }
@@ -253,6 +293,10 @@ fn main() {
                         try!(do_roll(bot, user, chan, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with(".lookup") {
                         try!(do_look_up(bot, chan.clone(), &mut world, msg.clone().split_str(" ").collect()));
+                    } else if msg.starts_with(".update") {
+                        try!(do_add_update(bot, user.clone(), chan.clone(), &mut world, msg.clone().split_str(" ").collect(), true));
+                    } else if msg.starts_with(".increase") {
+                        try!(do_add_update(bot, user.clone(), chan.clone(), &mut world, msg.clone().split_str(" ").collect(), false));
                     }
                 }
             },

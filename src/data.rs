@@ -145,6 +145,42 @@ impl Stats {
         }
     }
 
+    pub fn update_stat(&mut self, stat: &str, value: u8) {
+        match stat.to_ascii_lower().as_slice() {
+            "strength" => self.strength = value,
+            "str" => self.strength = value,
+            "dexterity" => self.dexterity = value,
+            "dex" => self.dexterity = value,
+            "constitution" => self.constitution = value,
+            "con" => self.constitution = value,
+            "wisdom" => self.wisdom = value,
+            "wis" => self.wisdom = value,
+            "intellect" => self.intellect = value,
+            "int" => self.intellect = value,
+            "charisma" => self.charisma = value,
+            "cha" => self.charisma = value,
+            _ => (),
+        }
+    }
+
+    pub fn increase_stat(&mut self, stat: &str, value: u8) {
+        match stat.to_ascii_lower().as_slice() {
+            "strength" => self.strength += value,
+            "str" => self.strength += value,
+            "dexterity" => self.dexterity += value,
+            "dex" => self.dexterity += value,
+            "constitution" => self.constitution += value,
+            "con" => self.constitution += value,
+            "wisdom" => self.wisdom += value,
+            "wis" => self.wisdom += value,
+            "intellect" => self.intellect += value,
+            "int" => self.intellect += value,
+            "charisma" => self.charisma += value,
+            "cha" => self.charisma += value,
+            _ => (),
+        }
+    }
+
     pub fn calc_bonus(stat: u8) -> i8 {
         let st = stat as i8;
         (st - 10) / 2
@@ -351,6 +387,28 @@ fn get_stat_test() {
     assert_eq!(s.get_stat("str"), Some(12));
     assert_eq!(s.get_stat("constitution"), Some(8));
     assert_eq!(s.get_stat("INTELLECT"), Some(14));
+}
+
+#[test]
+fn update_stat_test() {
+    let mut s = Stats::new(12, 12, 12, 12, 12, 12).unwrap();
+    s.update_stat("str", 10);
+    assert_eq!(s.get_stat("str"), Some(10));
+    s.update_stat("Con", 8);
+    assert_eq!(s.get_stat("constitution"), Some(8));
+    s.update_stat("InTeLlEcT", 14);
+    assert_eq!(s.get_stat("INTELLECT"), Some(14));
+}
+
+#[test]
+fn increase_stat_test() {
+    let mut s = Stats::new(12, 12, 7, 12, 12, 12).unwrap();
+    s.increase_stat("str", 2);
+    assert_eq!(s.get_stat("str"), Some(14));
+    s.increase_stat("Con", 1);
+    assert_eq!(s.get_stat("constitution"), Some(8));
+    s.increase_stat("InTeLlEcT", 6);
+    assert_eq!(s.get_stat("INTELLECT"), Some(18));
 }
 
 #[test]
