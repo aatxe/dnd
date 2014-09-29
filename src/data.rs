@@ -9,10 +9,23 @@ use crypto::sha3::{hash, Sha3_512};
 use serialize::hex::ToHex;
 use serialize::json::{decode, encode};
 
-pub fn str_to_u8(s: &str) -> u8 {
-    match from_str(s) {
-        Some(n) => n,
-        None => 0,
+pub mod utils {
+    pub fn join_from(words: Vec<&str>, pos: uint) -> String {
+        let mut res = String::new();
+        for word in words.slice_from(pos).iter() {
+            res.push_str(*word);
+            res.push(' ');
+        }
+        let len = res.len() - 1;
+        res.truncate(len);
+        res
+    }
+
+    pub fn str_to_u8(s: &str) -> u8 {
+        match from_str(s) {
+            Some(n) => n,
+            None => 0,
+        }
     }
 }
 
@@ -342,8 +355,9 @@ impl Player {
 }
 
 mod test {
-    use super::{Game, Player, RollType, Stats, World, str_to_u8};
+    use super::{Game, Player, RollType, Stats, World};
     use super::{Basic, Strength, Dexterity, Constitution, Wisdom, Intellect};
+    use super::utils::{join_from, str_to_u8};
 
     #[test]
     fn create_player_test() {
@@ -548,5 +562,11 @@ mod test {
         assert_eq!(str_to_u8("4"), 4);
         assert_eq!(str_to_u8("-4"), 0);
         assert_eq!(str_to_u8("x"), 0);
+    }
+
+    #[test]
+    fn join_from_test() {
+        assert_eq!(join_from(vec!["hi","there","friend"], 0).as_slice(), "hi there friend");
+            assert_eq!(join_from(vec!["hi","their","friend"], 1).as_slice(), "their friend");
     }
 }

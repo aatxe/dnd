@@ -4,22 +4,10 @@ extern crate serialize;
 
 use std::ascii::AsciiExt;
 use std::io::IoResult;
-use data::{Basic, Game, Player, RollType, Stats, World, str_to_u8};
+use data::{Basic, Game, Player, RollType, Stats, World};
+use data::utils::{join_from, str_to_u8};
 
 mod data;
-
-
-#[cfg(not(test))]
-fn join_from(words: Vec<&str>, pos: uint) -> String {
-    let mut res = String::new();
-    for word in words.slice_from(pos).iter() {
-        res.push_str(*word);
-        res.push(' ');
-    }
-    let len = res.len() - 1;
-    res.truncate(len);
-    res
-}
 
 #[cfg(not(test))]
 fn do_create(bot: &irc::Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
