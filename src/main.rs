@@ -279,7 +279,7 @@ fn do_set_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, 
         }
     }
     if params.len() == 8 {
-        let res = world.get_user(user);
+        let res = world.get_user(params[1]);
         if res.is_ok() {
             let p = try!(res);
             let mut valid = true;
@@ -299,7 +299,7 @@ fn do_set_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, 
                 try!(bot.send_privmsg(chan, ".temp target str dex con wis int cha"));
             }
         } else {
-            try!(bot.send_privmsg(chan, format!("{} is not logged in or does not exist.", user).as_slice()));
+            try!(bot.send_privmsg(chan, format!("{} is not logged in or does not exist.", params[1]).as_slice()));
         }
     } else {
         try!(bot.send_privmsg(chan, "Invalid format for setting temporary stats. Format is:"));
