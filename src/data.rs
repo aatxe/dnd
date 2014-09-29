@@ -9,6 +9,13 @@ use crypto::sha3::{hash, Sha3_512};
 use serialize::hex::ToHex;
 use serialize::json::{decode, encode};
 
+pub fn str_to_u8(s: &str) -> u8 {
+    match from_str(s) {
+        Some(n) => n,
+        None => 0,
+    }
+}
+
 pub struct World {
     pub users: HashMap<String, Player>,
     pub games: HashMap<String, Game>,
@@ -335,7 +342,7 @@ impl Player {
 }
 
 mod test {
-    use super::{Game, Player, RollType, Stats, World};
+    use super::{Game, Player, RollType, Stats, World, str_to_u8};
     use super::{Basic, Strength, Dexterity, Constitution, Wisdom, Intellect};
 
     #[test]
@@ -534,5 +541,12 @@ mod test {
         p.set_temp_stats(s);
         assert!(p.has_temp_stats());
         p.clear_temp_stats()
+    }
+
+    #[test]
+    fn str_to_u8_test() {
+        assert_eq!(str_to_u8("4"), 4);
+        assert_eq!(str_to_u8("-4"), 0);
+        assert_eq!(str_to_u8("x"), 0);
     }
 }

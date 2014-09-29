@@ -4,17 +4,10 @@ extern crate serialize;
 
 use std::ascii::AsciiExt;
 use std::io::IoResult;
-use data::{Basic, Game, Player, RollType, Stats, World};
+use data::{Basic, Game, Player, RollType, Stats, World, str_to_u8};
 
 mod data;
 
-#[cfg(not(test))]
-fn str_to_u8(s: &str) -> u8 {
-    match from_str(s) {
-        Some(n) => n,
-        None => 0,
-    }
-}
 
 #[cfg(not(test))]
 fn join_from(words: Vec<&str>, pos: uint) -> String {
