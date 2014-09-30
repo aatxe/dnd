@@ -4,11 +4,12 @@ extern crate serialize;
 
 use std::ascii::AsciiExt;
 use std::io::IoResult;
-use data::{Basic, RollType, World};
+use data::{Basic, RollType};
 use data::game::Game;
 use data::player::Player;
 use data::stats::Stats;
 use data::utils::{join_from, str_to_u8};
+use data::world::World;
 
 mod data;
 
