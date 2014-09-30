@@ -103,3 +103,104 @@ impl Player {
         self.temp_stats = None;
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::Player;
+    use data::{Basic, Dexterity, Constitution, Game};
+    use data::stats::Stats;
+
+    #[test]
+    fn create_player_test() {
+        let p = Player::create("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
+        let m = Player {
+            username: String::from_str("test"),
+            password: Game::password_hash("test").unwrap(),
+            stats: Stats::new(12, 12, 12, 12, 12, 12).unwrap(),
+            feats: Vec::new(),
+            temp_stats: None,
+        };
+        assert_eq!(p, m);
+    }
+
+    #[test]
+    fn save_load_player_test() {
+        let p = Player::create_test("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
+        p.save().unwrap();
+        let l = Player::load("test").unwrap();
+        assert_eq!(l, p);
+    }
+
+    #[test]
+    fn add_feat_test() {
+        let mut p = Player::create_test("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
+        assert_eq!(p.feats.len(), 0);
+        p.add_feat("Test Feat");
+        assert_eq!(p.feats.len(), 1);
+        assert_eq!(p.feats[0].as_slice(), "Test Feat");
+    }
+
+    #[test]
+    fn stats_fn_test() {
+        let mut p = Player::create_test("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
+        let s = Stats::new(10, 10, 10, 10, 10, 10).unwrap();
+        assert_eq!(p.stats(), Stats::new(12, 12, 12, 12, 12, 12).unwrap());
+        p.set_temp_stats(s);
+        assert_eq!(p.stats(), s);
+    }
+
+    #[test]
+    fn set_temp_stats_test() {
+        let mut p = Player::create_test("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
+        let s = Stats::new(10, 10, 10, 10, 10, 10).unwrap();
+        p.set_temp_stats(s);
+        assert_eq!(p.temp_stats, Some(s));
+    }
+
+    #[test]
+    fn has_temp_stats_test() {
+        let mut p = Player::create_test("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
+        let s = Stats::new(10, 10, 10, 10, 10, 10).unwrap();
+        assert!(!p.has_temp_stats());
+        p.set_temp_stats(s);
+        assert!(p.has_temp_stats());
+    }
+
+    #[test]
+    fn clear_temp_stats_test() {
+        let mut p = Player::create_test("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
+        let s = Stats::new(10, 10, 10, 10, 10, 10).unwrap();
+        p.set_temp_stats(s);
+        assert!(p.has_temp_stats());
+        p.clear_temp_stats()
+    }
+
+    #[test]
+    fn basic_roll_test() {
+        let p = Player::create_test("test", "test", 12, 12, 8, 12, 12, 12).unwrap();
+        for _ in range(0i, 1000i) {
+            let r = p.roll(Basic);
+            assert!(r >= 1 && r <= 20);
+        }
+    }
+
+    #[test]
+    fn positive_stat_roll_test() {
+        let p = Player::create_test("test", "test", 12, 12, 8, 12, 12, 12).unwrap();
+        for _ in range(0i, 1000i) {
+            let r = p.roll(Dexterity);
+            println!("{}", r)
+            assert!(r >= 1 && r <= 21);
+        }
+    }
+
+    #[test]
+    fn negative_stat_roll_test() {
+        let p = Player::create_test("test", "test", 12, 12, 8, 12, 12, 12).unwrap();
+        for _ in range(0i, 1000i) {
+            let r = p.roll(Constitution);
+            println!("{}", r)
+            assert!(r >= 1 && r <= 19);
+        }
+    }
+}
