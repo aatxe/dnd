@@ -2,7 +2,8 @@ use std::io::fs::File;
 use std::io::{InvalidInput, IoError, IoResult};
 use std::rand::task_rng;
 use std::rand::distributions::{IndependentSample, Range};
-use data::{RollType, Basic, Strength, Dexterity, Constitution, Wisdom, Intellect, Charisma, Game};
+use data::{RollType, Basic, Strength, Dexterity, Constitution, Wisdom, Intellect, Charisma};
+use data::game::Game;
 use data::stats::Stats;
 use serialize::json::{decode, encode};
 
@@ -107,7 +108,8 @@ impl Player {
 #[cfg(test)]
 mod test {
     use super::Player;
-    use data::{Basic, Dexterity, Constitution, Game};
+    use data::{Basic, Dexterity, Constitution};
+    use data::game::Game;
     use data::stats::Stats;
 
     #[test]
