@@ -81,7 +81,7 @@ mod test {
     }
 
     #[test]
-    fn monster_stats_fn_test() {
+    fn stats_fn_test() {
         let mut m = Monster::create("test", 12, 12, 12, 12, 12, 12).unwrap();
         let s = Stats::new(10, 10, 10, 10, 10, 10).unwrap();
         assert_eq!(m.stats(), Stats::new(12, 12, 12, 12, 12, 12).unwrap());
@@ -90,7 +90,7 @@ mod test {
     }
 
     #[test]
-    fn monster_set_temp_stats_test() {
+    fn set_temp_stats_test() {
         let mut m = Monster::create("test", 12, 12, 12, 12, 12, 12).unwrap();
         let s = Stats::new(10, 10, 10, 10, 10, 10).unwrap();
         m.set_temp_stats(s);
@@ -98,7 +98,7 @@ mod test {
     }
 
     #[test]
-    fn monster_has_temp_stats_test() {
+    fn has_temp_stats_test() {
         let mut m = Monster::create("test", 12, 12, 12, 12, 12, 12).unwrap();
         let s = Stats::new(10, 10, 10, 10, 10, 10).unwrap();
         assert!(!m.has_temp_stats());
@@ -107,7 +107,7 @@ mod test {
     }
 
     #[test]
-    fn monster_clear_temp_stats_test() {
+    fn clear_temp_stats_test() {
         let mut m = Monster::create("test", 12, 12, 12, 12, 12, 12).unwrap();
         let s = Stats::new(10, 10, 10, 10, 10, 10).unwrap();
         m.set_temp_stats(s);
@@ -116,7 +116,7 @@ mod test {
     }
 
     #[test]
-    fn monster_basic_roll_test() {
+    fn basic_roll_test() {
         let m = Monster::create("test", 12, 12, 8, 12, 12, 12).unwrap();
         for _ in range(0i, 1000i) {
             let r = m.roll(Basic);
@@ -125,7 +125,7 @@ mod test {
     }
 
     #[test]
-    fn monster_positive_stat_roll_test() {
+    fn positive_stat_roll_test() {
         let m = Monster::create("test", 12, 12, 8, 12, 12, 12).unwrap();
         for _ in range(0i, 1000i) {
             let r = m.roll(Dexterity);
@@ -135,7 +135,7 @@ mod test {
     }
 
     #[test]
-    fn monster_negative_stat_roll_test() {
+    fn negative_stat_roll_test() {
         let m = Monster::create("test", 12, 12, 8, 12, 12, 12).unwrap();
         for _ in range(0i, 1000i) {
             let r = m.roll(Constitution);
