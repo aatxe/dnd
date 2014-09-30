@@ -1,6 +1,7 @@
 use std::ascii::AsciiExt;
 
 pub mod game;
+pub mod monster;
 pub mod player;
 pub mod stats;
 pub mod world;
