@@ -24,6 +24,25 @@ impl Stats {
         })
     }
 
+    fn stat_func(&mut self, stat: &str, f: |&mut u8| -> Option<u8>) -> Option<u8> {
+        match stat.to_ascii_lower().as_slice() {
+            "strength" => f(&mut self.strength),
+            "str" => f(&mut self.strength),
+            "dexterity" => f(&mut self.dexterity),
+            "dex" => f(&mut self.dexterity),
+            "constitution" => f(&mut self.constitution),
+            "con" => f(&mut self.constitution),
+            "wisdom" => f(&mut self.wisdom),
+            "wis" => f(&mut self.wisdom),
+            "intellect" => f(&mut self.intellect),
+            "int" => f(&mut self.intellect),
+            "charisma" => f(&mut self.charisma),
+            "cha" => f(&mut self.charisma),
+            _ => None,
+        }
+    }
+
+    // This should be updated if there's a way to use stat_func(...) without making it mutable.
     pub fn get_stat(&self, stat: &str) -> Option<u8> {
         match stat.to_ascii_lower().as_slice() {
             "strength" => Some(self.strength),
@@ -43,39 +62,11 @@ impl Stats {
     }
 
     pub fn update_stat(&mut self, stat: &str, value: u8) {
-        match stat.to_ascii_lower().as_slice() {
-            "strength" => self.strength = value,
-            "str" => self.strength = value,
-            "dexterity" => self.dexterity = value,
-            "dex" => self.dexterity = value,
-            "constitution" => self.constitution = value,
-            "con" => self.constitution = value,
-            "wisdom" => self.wisdom = value,
-            "wis" => self.wisdom = value,
-            "intellect" => self.intellect = value,
-            "int" => self.intellect = value,
-            "charisma" => self.charisma = value,
-            "cha" => self.charisma = value,
-            _ => (),
-        }
+        self.stat_func(stat, |s: &mut u8| { *s = value; None });
     }
 
     pub fn increase_stat(&mut self, stat: &str, value: u8) {
-        match stat.to_ascii_lower().as_slice() {
-            "strength" => self.strength += value,
-            "str" => self.strength += value,
-            "dexterity" => self.dexterity += value,
-            "dex" => self.dexterity += value,
-            "constitution" => self.constitution += value,
-            "con" => self.constitution += value,
-            "wisdom" => self.wisdom += value,
-            "wis" => self.wisdom += value,
-            "intellect" => self.intellect += value,
-            "int" => self.intellect += value,
-            "charisma" => self.charisma += value,
-            "cha" => self.charisma += value,
-            _ => (),
-        }
+        self.stat_func(stat, |s: &mut u8| { *s += value; None });
     }
 
     pub fn calc_bonus(stat: u8) -> i8 {
