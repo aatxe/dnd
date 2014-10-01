@@ -78,7 +78,7 @@ mod test {
     #[test]
     fn world_user_test() {
         let mut w = World::new().unwrap();
-        let p = Player::create_test("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
+        let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
         assert_eq!(w.is_user_logged_in("test"), false);
         w.add_user("test", p.clone()).unwrap();
         assert_eq!(*w.get_user("test").unwrap(), p);

@@ -13,11 +13,12 @@ pub struct Monster {
 
 
 impl Monster {
-    pub fn create(name: &str, strength: u8, dexterity: u8, constitution: u8,
+    pub fn create(name: &str, health: u8, strength: u8, dexterity: u8, constitution: u8,
                   wisdom: u8, intellect: u8, charisma: u8) -> IoResult<Monster> {
         Ok(Monster {
             name: String::from_str(name),
-            stats: try!(Stats::new(strength, dexterity, constitution, wisdom, intellect, charisma)),
+            stats: try!(Stats::new(health, strength, dexterity, constitution,
+                                   wisdom, intellect, charisma)),
             temp_stats: None,
         })
     }
@@ -71,10 +72,10 @@ mod test {
 
     #[test]
     fn create_monster_test() {
-        let m = Monster::create("test", 12, 12, 12, 12, 12, 12).unwrap();
+        let m = Monster::create("test", 20, 12, 12, 12, 12, 12, 12).unwrap();
         let n = Monster {
             name: String::from_str("test"),
-            stats: Stats::new(12, 12, 12, 12, 12, 12).unwrap(),
+            stats: Stats::new(20, 12, 12, 12, 12, 12, 12).unwrap(),
             temp_stats: None,
         };
         assert_eq!(m, n);
@@ -82,25 +83,25 @@ mod test {
 
     #[test]
     fn stats_fn_test() {
-        let mut m = Monster::create("test", 12, 12, 12, 12, 12, 12).unwrap();
-        let s = Stats::new(10, 10, 10, 10, 10, 10).unwrap();
-        assert_eq!(m.stats(), Stats::new(12, 12, 12, 12, 12, 12).unwrap());
+        let mut m = Monster::create("test", 20, 12, 12, 12, 12, 12, 12).unwrap();
+        let s = Stats::new(20, 10, 10, 10, 10, 10, 10).unwrap();
+        assert_eq!(m.stats(), Stats::new(20, 12, 12, 12, 12, 12, 12).unwrap());
         m.set_temp_stats(s);
         assert_eq!(m.stats(), s);
     }
 
     #[test]
     fn set_temp_stats_test() {
-        let mut m = Monster::create("test", 12, 12, 12, 12, 12, 12).unwrap();
-        let s = Stats::new(10, 10, 10, 10, 10, 10).unwrap();
+        let mut m = Monster::create("test", 20, 12, 12, 12, 12, 12, 12).unwrap();
+        let s = Stats::new(20, 10, 10, 10, 10, 10, 10).unwrap();
         m.set_temp_stats(s);
         assert_eq!(m.temp_stats, Some(s));
     }
 
     #[test]
     fn has_temp_stats_test() {
-        let mut m = Monster::create("test", 12, 12, 12, 12, 12, 12).unwrap();
-        let s = Stats::new(10, 10, 10, 10, 10, 10).unwrap();
+        let mut m = Monster::create("test", 20, 12, 12, 12, 12, 12, 12).unwrap();
+        let s = Stats::new(20, 10, 10, 10, 10, 10, 10).unwrap();
         assert!(!m.has_temp_stats());
         m.set_temp_stats(s);
         assert!(m.has_temp_stats());
@@ -108,8 +109,8 @@ mod test {
 
     #[test]
     fn clear_temp_stats_test() {
-        let mut m = Monster::create("test", 12, 12, 12, 12, 12, 12).unwrap();
-        let s = Stats::new(10, 10, 10, 10, 10, 10).unwrap();
+        let mut m = Monster::create("test", 20, 12, 12, 12, 12, 12, 12).unwrap();
+        let s = Stats::new(20, 10, 10, 10, 10, 10, 10).unwrap();
         m.set_temp_stats(s);
         assert!(m.has_temp_stats());
         m.clear_temp_stats()
@@ -117,7 +118,7 @@ mod test {
 
     #[test]
     fn basic_roll_test() {
-        let m = Monster::create("test", 12, 12, 8, 12, 12, 12).unwrap();
+        let m = Monster::create("test", 20, 12, 12, 8, 12, 12, 12).unwrap();
         for _ in range(0i, 1000i) {
             let r = m.roll(Basic);
             assert!(r >= 1 && r <= 20);
@@ -126,7 +127,7 @@ mod test {
 
     #[test]
     fn positive_stat_roll_test() {
-        let m = Monster::create("test", 12, 12, 8, 12, 12, 12).unwrap();
+        let m = Monster::create("test", 20, 12, 12, 8, 12, 12, 12).unwrap();
         for _ in range(0i, 1000i) {
             let r = m.roll(Dexterity);
             println!("{}", r)
@@ -136,7 +137,7 @@ mod test {
 
     #[test]
     fn negative_stat_roll_test() {
-        let m = Monster::create("test", 12, 12, 8, 12, 12, 12).unwrap();
+        let m = Monster::create("test", 20, 12, 12, 8, 12, 12, 12).unwrap();
         for _ in range(0i, 1000i) {
             let r = m.roll(Constitution);
             println!("{}", r)

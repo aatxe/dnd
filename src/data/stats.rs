@@ -3,6 +3,7 @@ use std::io::{IoResult};
 
 #[deriving(Decodable, Encodable, Show, PartialEq, Clone)]
 pub struct Stats {
+    pub health: u8,
     pub strength: u8,
     pub dexterity: u8,
     pub constitution: u8,
@@ -12,9 +13,10 @@ pub struct Stats {
 }
 
 impl Stats {
-    pub fn new(strength: u8, dexterity: u8, constitution: u8, wisdom: u8,
+    pub fn new(health: u8, strength: u8, dexterity: u8, constitution: u8, wisdom: u8,
                intellect: u8, charisma: u8) -> IoResult<Stats> {
         Ok(Stats {
+            health: health,
             strength: strength,
             dexterity: dexterity,
             constitution: constitution,
@@ -26,6 +28,8 @@ impl Stats {
 
     fn stat_func(&mut self, stat: &str, f: |&mut u8| -> Option<u8>) -> Option<u8> {
         match stat.to_ascii_lower().as_slice() {
+            "health" => f(&mut self.health),
+            "hp" => f(&mut self.health),
             "strength" => f(&mut self.strength),
             "str" => f(&mut self.strength),
             "dexterity" => f(&mut self.dexterity),
@@ -45,6 +49,8 @@ impl Stats {
     // This should be updated if there's a way to use stat_func(...) without making it mutable.
     pub fn get_stat(&self, stat: &str) -> Option<u8> {
         match stat.to_ascii_lower().as_slice() {
+            "heath" => Some(self.health),
+            "hp" => Some(self.health),
             "strength" => Some(self.strength),
             "str" => Some(self.strength),
             "dexterity" => Some(self.dexterity),
@@ -81,7 +87,7 @@ mod test {
 
     #[test]
     fn get_stat_test() {
-        let s = Stats::new(12, 12, 8, 12, 14, 12).unwrap();
+        let s = Stats::new(20, 12, 12, 8, 12, 14, 12).unwrap();
         assert_eq!(s.get_stat("str"), Some(12));
         assert_eq!(s.get_stat("constitution"), Some(8));
         assert_eq!(s.get_stat("INTELLECT"), Some(14));
@@ -89,7 +95,7 @@ mod test {
 
     #[test]
     fn update_stat_test() {
-        let mut s = Stats::new(12, 12, 12, 12, 12, 12).unwrap();
+        let mut s = Stats::new(20, 12, 12, 12, 12, 12, 12).unwrap();
         s.update_stat("str", 10);
         assert_eq!(s.get_stat("str"), Some(10));
         s.update_stat("Con", 8);
@@ -100,7 +106,7 @@ mod test {
 
     #[test]
     fn increase_stat_test() {
-        let mut s = Stats::new(12, 12, 7, 12, 12, 12).unwrap();
+        let mut s = Stats::new(20, 12, 12, 7, 12, 12, 12).unwrap();
         s.increase_stat("str", 2);
         assert_eq!(s.get_stat("str"), Some(14));
         s.increase_stat("Con", 1);

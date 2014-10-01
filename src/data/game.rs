@@ -76,7 +76,7 @@ mod test {
 
     #[test]
     fn login_test() {
-        let p = Player::create("test", "test", 12, 12, 12, 12, 12, 12).unwrap();
+        let p = Player::create("test", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
         p.save().unwrap();
         let mut g = Game::new("test", "test").unwrap();
         g.login(p, "test", "test").unwrap();
