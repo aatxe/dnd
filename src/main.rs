@@ -253,7 +253,7 @@ fn do_add_update(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, para
 
 #[cfg(not(test))]
 fn do_set_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
-    try!(do_permissions_test(bot, user, chan, world));
+    if !try!(do_permissions_test(bot, user, chan, world)) { return Ok(()); }
     if params.len() == 9 {
         let res = world.get_user(params[1]);
         if res.is_ok() {
@@ -287,7 +287,7 @@ fn do_set_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, 
 
 #[cfg(not(test))]
 fn do_clear_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
-    try!(do_permissions_test(bot, user, chan, world));
+    if !try!(do_permissions_test(bot, user, chan, world)) { return Ok(()); }
     if params.len() == 2 {
         let res = world.get_user(params[1]);
         if res.is_ok() {
@@ -305,14 +305,17 @@ fn do_clear_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World
 }
 
 #[cfg(not(test))]
-fn do_permissions_test(bot: &irc::Bot, user: &str, chan: &str, world: &mut World) -> IoResult<()> {
+fn do_permissions_test(bot: &irc::Bot, user: &str, chan: &str, world: &mut World) -> IoResult<bool> {
+    let mut ret = true;
     let res = world.get_game(chan);
     if res.is_err() {
         try!(bot.send_privmsg(chan, format!("There is no game in {}.", chan).as_slice()));
+        ret = false;
     } else if !try!(res).is_dm(user) {
         try!(bot.send_privmsg(chan, "You must be the DM to do that!"));
+        ret = false;
     };
-    Ok(())
+    Ok(ret)
 }
 
 #[cfg(not(test))]
