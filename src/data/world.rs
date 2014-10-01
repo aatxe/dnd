@@ -1,11 +1,13 @@
 use std::collections::HashMap;
 use std::io::{InvalidInput, IoError, IoResult};
 use data::game::Game;
+use data::monster::Monster;
 use data::player::Player;
 
 pub struct World {
     pub users: HashMap<String, Player>,
     pub games: HashMap<String, Game>,
+    pub monsters: Vec<Monster>,
 }
 
 impl World {
@@ -13,6 +15,7 @@ impl World {
         Ok(World {
             users: HashMap::new(),
             games: HashMap::new(),
+            monsters: Vec::new(),
         })
     }
 

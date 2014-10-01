@@ -32,7 +32,7 @@ fn do_create(bot: &irc::Bot, user: &str, world: &mut World, params: Vec<&str>) -
 
 #[cfg(not(test))]
 fn do_register(bot: &irc::Bot, user: &str, params: Vec<&str>) -> IoResult<()> {
-    if params.len() == 9 {
+    if params.len() == 10 {
         let mut valid = true;
         for s in params.slice_from(3).iter() {
             if str_to_u8(*s) == 0 {
@@ -40,19 +40,19 @@ fn do_register(bot: &irc::Bot, user: &str, params: Vec<&str>) -> IoResult<()> {
             }
         }
         if valid {
-            let p = try!(Player::create(params[1], params[2],
-                str_to_u8(params[3]), str_to_u8(params[4]),
-                str_to_u8(params[5]), str_to_u8(params[6]),
-                str_to_u8(params[7]), str_to_u8(params[8])));
+            let p = try!(Player::create(params[1], params[2], str_to_u8(params[3]),
+                str_to_u8(params[4]), str_to_u8(params[5]),
+                str_to_u8(params[6]), str_to_u8(params[7]),
+                str_to_u8(params[8]), str_to_u8(params[9])));
             try!(p.save());
             try!(bot.send_privmsg(user, format!("Your account ({}) has been created.", params[1]).as_slice()));
         } else {
             try!(bot.send_privmsg(user, "Stats must be non-zero positive integers. Format is: "))
-            try!(bot.send_privmsg(user, "register username password str dex con wis int cha"));
+            try!(bot.send_privmsg(user, "register username password health str dex con wis int cha"));
         }
     } else {
         try!(bot.send_privmsg(user, "Incorrect format for registration. Format is:"));
-        try!(bot.send_privmsg(user, "register username password str dex con wis int cha"));
+        try!(bot.send_privmsg(user, "register username password health str dex con wis int cha"));
     }
     Ok(())
 }
@@ -253,17 +253,8 @@ fn do_add_update(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, para
 
 #[cfg(not(test))]
 fn do_set_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
-    {
-        let res = world.get_game(chan);
-        if res.is_err() {
-            try!(bot.send_privmsg(chan, format!("There is no game in {}.", chan).as_slice()));
-            return Ok(());
-        } else if !try!(res).is_dm(user) {
-            try!(bot.send_privmsg(chan, "You must be the DM to do that!"));
-            return Ok(());
-        }
-    }
-    if params.len() == 8 {
+    try!(do_permissions_test(bot, user, chan, world));
+    if params.len() == 9 {
         let res = world.get_user(params[1]);
         if res.is_ok() {
             let p = try!(res);
@@ -274,37 +265,29 @@ fn do_set_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, 
                 }
             }
             if valid {
-                p.set_temp_stats(try!(Stats::new(str_to_u8(params[2]), str_to_u8(params[3]),
-                                                 str_to_u8(params[4]), str_to_u8(params[5]),
-                                                 str_to_u8(params[6]), str_to_u8(params[7]))));
+                p.set_temp_stats(try!(Stats::new(str_to_u8(params[2]),
+                                                 str_to_u8(params[3]), str_to_u8(params[4]),
+                                                 str_to_u8(params[5]), str_to_u8(params[6]),
+                                                 str_to_u8(params[7]), str_to_u8(params[8]))));
                 try!(p.save());
                 try!(bot.send_privmsg(chan, format!("{} ({}) now has temporary {}.", p.username, params[1], p.stats()).as_slice()));
             } else {
                 try!(bot.send_privmsg(chan, "Stats must be non-zero positive integers. Format is: "))
-                try!(bot.send_privmsg(chan, ".temp target str dex con wis int cha"));
+                try!(bot.send_privmsg(chan, ".temp target health str dex con wis int cha"));
             }
         } else {
             try!(bot.send_privmsg(chan, format!("{} is not logged in or does not exist.", params[1]).as_slice()));
         }
     } else {
         try!(bot.send_privmsg(chan, "Invalid format for setting temporary stats. Format is:"));
-        try!(bot.send_privmsg(chan, ".temp target str dex con wis int cha"));
+        try!(bot.send_privmsg(chan, ".temp target health str dex con wis int cha"));
     }
     Ok(())
 }
 
 #[cfg(not(test))]
 fn do_clear_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
-    {
-        let res = world.get_game(chan);
-        if res.is_err() {
-            try!(bot.send_privmsg(chan, format!("There is no game in {}.", chan).as_slice()));
-            return Ok(());
-        } else if !try!(res).is_dm(user) {
-            try!(bot.send_privmsg(chan, "You must be the DM to do that!"));
-            return Ok(());
-        }
-    }
+    try!(do_permissions_test(bot, user, chan, world));
     if params.len() == 2 {
         let res = world.get_user(params[1]);
         if res.is_ok() {
@@ -318,6 +301,17 @@ fn do_clear_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World
         try!(bot.send_privmsg(chan, "Invalid format for setting temporary stats. Format is:"));
         try!(bot.send_privmsg(chan, ".cleartemp target"));
     }
+    Ok(())
+}
+
+#[cfg(not(test))]
+fn do_permissions_test(bot: &irc::Bot, user: &str, chan: &str, world: &mut World) -> IoResult<()> {
+    let res = world.get_game(chan);
+    if res.is_err() {
+        try!(bot.send_privmsg(chan, format!("There is no game in {}.", chan).as_slice()));
+    } else if !try!(res).is_dm(user) {
+        try!(bot.send_privmsg(chan, "You must be the DM to do that!"));
+    };
     Ok(())
 }
 
