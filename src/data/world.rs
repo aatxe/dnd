@@ -80,6 +80,7 @@ impl World {
 
 #[cfg(test)]
 mod test {
+    use data::monster::Monster;
     use data::player::Player;
     use data::world::World;
 
@@ -98,7 +99,7 @@ mod test {
     }
 
     #[test]
-    fn world_game_test() {
+    fn add_game_test() {
         let mut w = World::new().unwrap();
         assert!(w.add_game("Dungeons and Tests", "test", "#test").is_ok());
     }
@@ -109,5 +110,11 @@ mod test {
         w.add_game("Dungeons and Tests", "test", "#test").unwrap();
         assert!(w.get_game("#test").is_ok());
         assert!(w.get_game("#test2").is_err());
+    }
+
+    #[test]
+    fn add_monster_test() {
+        let mut w = World::new().unwrap();
+        assert!(w.add_monster(Monster::create("test", 20, 12, 12, 12, 12, 12, 12).unwrap()).is_ok());
     }
 }
