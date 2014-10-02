@@ -69,7 +69,7 @@ impl Entity for Monster {
 #[cfg(test)]
 mod test {
     use super::Monster;
-    use data::{Basic, Dexterity, Constitution};
+    use data::{Entity, Basic, Dexterity, Constitution};
     use data::stats::Stats;
 
     #[test]
