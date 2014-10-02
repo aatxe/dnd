@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::collections::hashmap::{Occupied, Vacant};
 use std::io::{InvalidInput, IoError, IoResult};
 use data::Entity;
 use data::game::Game;
@@ -8,7 +9,7 @@ use data::player::Player;
 pub struct World {
     pub users: HashMap<String, Player>,
     pub games: HashMap<String, Game>,
-    pub monsters: Vec<Monster>,
+    pub monsters: HashMap<String, Vec<Monster>>,
 }
 
 impl World {
@@ -16,7 +17,7 @@ impl World {
         Ok(World {
             users: HashMap::new(),
             games: HashMap::new(),
-            monsters: Vec::new(),
+            monsters: HashMap::new(),
         })
     }
 
@@ -73,23 +74,36 @@ impl World {
         }
     }
 
-    pub fn add_monster(&mut self, monster: Monster) -> IoResult<uint> {
-        self.monsters.push(monster);
-        Ok(self.monsters.len() - 1)
+    pub fn add_monster(&mut self, monster: Monster, chan: &str) -> IoResult<uint> {
+        let result = match self.monsters.entry(String::from_str(chan)) {
+            Vacant(entry) => entry.set(Vec::new()),
+            Occupied(entry) => entry.into_mut(),
+        };
+        result.push(monster);
+        Ok(result.len() - 1)
     }
 
-    pub fn get_entity(&mut self, identifier: &str) -> IoResult<&mut Entity> {
+    pub fn get_entity(&mut self, identifier: &str, chan: Option<&str>) -> IoResult<&mut Entity> {
         if identifier.starts_with("@") {
             let i = match from_str(identifier.slice_from(1)) {
                 Some(n) => n,
                 None => 0,
             };
-            if i < self.monsters.len() {
-                Ok(self.monsters.get_mut(i) as &mut Entity)
+            if chan.is_some() {
+                let chan_str = String::from_str(chan.unwrap());
+                if i < self.monsters.get_mut(&chan_str).len() {
+                    Ok(self.monsters.get_mut(&chan_str).get_mut(i) as &mut Entity)
+                } else {
+                    Err(IoError {
+                        kind: InvalidInput,
+                        desc: "No such monster.",
+                        detail: None,
+                    })
+                }
             } else {
                 Err(IoError {
                     kind: InvalidInput,
-                    desc: "No such monster.",
+                    desc: "Monsters require a channel.",
                     detail: None,
                 })
             }
