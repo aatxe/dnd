@@ -243,6 +243,40 @@ fn do_look_up(bot: &irc::Bot, resp: &str, world: &mut World, params: Vec<&str>) 
 }
 
 #[cfg(not(test))]
+fn do_monster_look_up(bot: &irc::Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
+    if (params.len() == 3 || params.len() == 4) && params[2].starts_with("@") {
+        if !try!(do_permissions_test(bot, user, params[1], world)) { return Ok(()); }
+        let res = world.get_entity(params[2]);
+        if res.is_ok() {
+            let m = try!(res);
+            let tmp_msg = if m.has_temp_stats() {
+                "Temp. "
+            } else {
+                ""
+            };
+            if params.len() == 3 {
+                let s = format!("{} ({}): {}{}", m.identifier(), params[2], tmp_msg, m.stats());
+                try!(bot.send_privmsg(user, s.as_slice()));
+            } else {
+                let s = match m.stats().get_stat(params[3]) {
+                        Some(x) => format!("{} ({}): {}{} {}", m.identifier(), params[2], tmp_msg, x, params[3]),
+                        None => format!("{} is not a valid stat.", params[3]),
+                };
+                try!(bot.send_privmsg(user, s.as_slice()));
+            }
+        } else {
+            try!(bot.send_privmsg(user, format!("{} is not a valid monster.", params[2]).as_slice()));
+        }
+    } else if params.len() == 3 || params.len() == 4 {
+        try!(bot.send_privmsg(user, format!("{} is not a valid monster.", params[2]).as_slice()));
+    } else {
+        try!(bot.send_privmsg(user, "Invalid format for mlookup. Format is:"));
+        try!(bot.send_privmsg(user, "mlookup channel target [stat]"));
+    }
+    Ok(())
+}
+
+#[cfg(not(test))]
 fn do_add_update(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>, update: bool) -> IoResult<()> {
     if params.len() == 3 {
         let res = world.get_user(user);
@@ -398,6 +432,8 @@ fn main() {
                         try!(do_save(bot, user, &mut world));
                     } else if msg.starts_with("lookup") {
                         try!(do_look_up(bot, user, &mut world, msg.clone().split_str(" ").collect()));
+                    } else if msg.starts_with("mlookup") {
+                        try!(do_monster_look_up(bot, user, &mut world, msg.clone().split_str(" ").collect()));
                     }
                 } else {
                     if msg.starts_with(".roll") {

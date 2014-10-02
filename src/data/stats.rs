@@ -49,7 +49,7 @@ impl Stats {
     // This should be updated if there's a way to use stat_func(...) without making it mutable.
     pub fn get_stat(&self, stat: &str) -> Option<u8> {
         match stat.to_ascii_lower().as_slice() {
-            "heath" => Some(self.health),
+            "health" => Some(self.health),
             "hp" => Some(self.health),
             "strength" => Some(self.strength),
             "str" => Some(self.strength),
