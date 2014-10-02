@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::io::{InvalidInput, IoError, IoResult};
+use data::Entity;
 use data::game::Game;
 use data::monster::Monster;
 use data::player::Player;
@@ -75,6 +76,35 @@ impl World {
     pub fn add_monster(&mut self, monster: Monster) -> IoResult<uint> {
         self.monsters.push(monster);
         Ok(self.monsters.len() - 1)
+    }
+
+    pub fn get_entity(&mut self, identifier: &str) -> IoResult<&mut Entity> {
+        if identifier.starts_with("@") {
+            let i = match from_str(identifier.slice_from(1)) {
+                Some(n) => n,
+                None => 0,
+            };
+            if i < self.monsters.len() {
+                Ok(self.monsters.get_mut(i))
+            } else {
+                Err(IoError {
+                    kind: InvalidInput,
+                    desc: "No such monster.",
+                    detail: None,
+                })
+            }
+        } else {
+            let nick = String::from_str(identifier);
+            if self.users.contains_key(&nick) {
+                Ok(self.users.get_mut(&nick))
+            } else {
+                Err(IoError {
+                    kind: InvalidInput,
+                    desc: "User not found.",
+                    detail: None,
+                })
+            }
+        }
     }
 }
 

@@ -27,6 +27,7 @@ pub mod utils {
 }
 
 pub trait Entity {
+    fn identifier(&self) -> &str;
     fn roll(&self, roll_type: RollType) -> u8;
     fn stats(&self) -> stats::Stats;
     fn has_temp_stats(&self) -> bool;

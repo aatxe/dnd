@@ -256,7 +256,7 @@ fn do_add_update(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, para
 fn do_set_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if !try!(do_permissions_test(bot, user, chan, world)) { return Ok(()); }
     if params.len() == 9 {
-        let res = world.get_user(params[1]);
+        let res = world.get_entity(params[1]);
         if res.is_ok() {
             let p = try!(res);
             let mut valid = true;
@@ -270,8 +270,7 @@ fn do_set_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, 
                                                  str_to_u8(params[3]), str_to_u8(params[4]),
                                                  str_to_u8(params[5]), str_to_u8(params[6]),
                                                  str_to_u8(params[7]), str_to_u8(params[8]))));
-                try!(p.save());
-                try!(bot.send_privmsg(chan, format!("{} ({}) now has temporary {}.", p.username, params[1], p.stats()).as_slice()));
+                try!(bot.send_privmsg(chan, format!("{} ({}) now has temporary {}.", p.identifier(), params[1], p.stats()).as_slice()));
             } else {
                 try!(bot.send_privmsg(chan, "Stats must be non-zero positive integers. Format is: "))
                 try!(bot.send_privmsg(chan, ".temp target health str dex con wis int cha"));
@@ -290,11 +289,11 @@ fn do_set_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, 
 fn do_clear_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if !try!(do_permissions_test(bot, user, chan, world)) { return Ok(()); }
     if params.len() == 2 {
-        let res = world.get_user(params[1]);
+        let res = world.get_entity(params[1]);
         if res.is_ok() {
             let p = try!(res);
             p.clear_temp_stats();
-            try!(bot.send_privmsg(chan, format!("{} ({}) has reverted to {}.", p.username, params[1], p.stats()).as_slice()));
+            try!(bot.send_privmsg(chan, format!("{} ({}) has reverted to {}.", p.identifier(), params[1], p.stats()).as_slice()));
         } else {
             try!(bot.send_privmsg(chan, format!("{} is not logged in or does not exist.", user).as_slice()));
         }
