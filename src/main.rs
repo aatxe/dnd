@@ -6,6 +6,7 @@ use std::ascii::AsciiExt;
 use std::io::IoResult;
 use data::{Basic, RollType};
 use data::game::Game;
+use data::monster::Monster;
 use data::player::Player;
 use data::stats::Stats;
 use data::utils::{join_from, str_to_u8};
@@ -305,6 +306,34 @@ fn do_clear_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World
 }
 
 #[cfg(not(test))]
+fn do_add_monster(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
+    if !try!(do_permissions_test(bot, user, chan, world)) { return Ok(()); }
+    if params.len() == 9 {
+        let mut valid = true;
+        for s in params.slice_from(3).iter() {
+            if str_to_u8(*s) == 0 {
+                valid = false;
+            }
+        }
+        if valid {
+            let m = try!(Monster::create(params[1], str_to_u8(params[2]),
+                str_to_u8(params[3]), str_to_u8(params[4]),
+                str_to_u8(params[5]), str_to_u8(params[6]),
+                str_to_u8(params[7]), str_to_u8(params[8])));
+            let index = try!(world.add_monster(m));
+            try!(bot.send_privmsg(chan, format!("Monster ({}) has been created as @{}.", params[1], index).as_slice()));
+        } else {
+            try!(bot.send_privmsg(chan, "Stats must be non-zero positive integers. Format is: "))
+            try!(bot.send_privmsg(chan, ".addmonster name health str dex con wis int cha"));
+        }
+    } else {
+        try!(bot.send_privmsg(chan, "Incorrect format for monster creation. Format is:"));
+        try!(bot.send_privmsg(chan, ".addmonster name health str dex con wis int cha"));
+    }
+    Ok(())
+}
+
+#[cfg(not(test))]
 fn do_permissions_test(bot: &irc::Bot, user: &str, chan: &str, world: &mut World) -> IoResult<bool> {
     let mut ret = true;
     let res = world.get_game(chan);
@@ -359,6 +388,8 @@ fn main() {
                         try!(do_set_temp_stats(bot, user, chan, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with(".cleartemp") {
                         try!(do_clear_temp_stats(bot, user, chan, &mut world, msg.clone().split_str(" ").collect()));
+                    } else if msg.starts_with(".addmonster") {
+                        try!(do_add_monster(bot, user, chan, &mut world, msg.clone().split_str(" ").collect()));
                     }
                 }
             },

@@ -71,6 +71,11 @@ impl World {
             })
         }
     }
+
+    pub fn add_monster(&mut self, monster: Monster) -> IoResult<uint> {
+        self.monsters.push(monster);
+        Ok(self.monsters.len() - 1)
+    }
 }
 
 #[cfg(test)]
