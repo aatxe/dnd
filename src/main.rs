@@ -212,7 +212,7 @@ fn do_look_up(bot: &irc::Bot, resp: &str, world: &mut World, params: Vec<&str>) 
             ""
         };
         try!(bot.send_privmsg(resp, "Invalid format for lookup. Format is:"));
-        try!(bot.send_privmsg(resp, format!("{}lookup user [stat]", dot).as_slice()))
+        try!(bot.send_privmsg(resp, format!("{}lookup target [stat]", dot).as_slice()))
     }
     Ok(())
 }

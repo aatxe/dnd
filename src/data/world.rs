@@ -85,7 +85,7 @@ impl World {
                 None => 0,
             };
             if i < self.monsters.len() {
-                Ok(self.monsters.get_mut(i))
+                Ok(self.monsters.get_mut(i) as &mut Entity)
             } else {
                 Err(IoError {
                     kind: InvalidInput,
@@ -96,7 +96,7 @@ impl World {
         } else {
             let nick = String::from_str(identifier);
             if self.users.contains_key(&nick) {
-                Ok(self.users.get_mut(&nick))
+                Ok(self.users.get_mut(&nick) as &mut Entity)
             } else {
                 Err(IoError {
                     kind: InvalidInput,
