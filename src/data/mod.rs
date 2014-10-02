@@ -26,6 +26,14 @@ pub mod utils {
     }
 }
 
+pub trait Entity {
+    fn roll(&self, roll_type: RollType) -> u8;
+    fn stats(&self) -> stats::Stats;
+    fn has_temp_stats(&self) -> bool;
+    fn set_temp_stats(&mut self, stats: stats::Stats);
+    fn clear_temp_stats(&mut self);
+}
+
 #[deriving(Show, PartialEq)]
 pub enum RollType {
     Basic,

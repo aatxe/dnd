@@ -4,7 +4,7 @@ extern crate serialize;
 
 use std::ascii::AsciiExt;
 use std::io::IoResult;
-use data::{Basic, RollType};
+use data::{Basic, Entity, RollType};
 use data::game::Game;
 use data::monster::Monster;
 use data::player::Player;

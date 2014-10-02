@@ -2,7 +2,7 @@ use std::io::fs::File;
 use std::io::{InvalidInput, IoError, IoResult};
 use std::rand::task_rng;
 use std::rand::distributions::{IndependentSample, Range};
-use data::{RollType, Basic, Strength, Dexterity, Constitution, Wisdom, Intellect, Charisma};
+use data::{Entity, RollType, Basic, Strength, Dexterity, Constitution, Wisdom, Intellect, Charisma};
 use data::game::Game;
 use data::stats::Stats;
 use serialize::json::{decode, encode};
@@ -65,8 +65,10 @@ impl Player {
     pub fn add_feat(&mut self, feat: &str) {
         self.feats.push(String::from_str(feat))
     }
+}
 
-    pub fn roll(&self, roll_type: RollType) -> u8 {
+impl Entity for Player {
+    fn roll(&self, roll_type: RollType) -> u8 {
         let d20 = Range::new(1i8, 21i8);
         let mut rng = task_rng();
         match match roll_type {
@@ -84,25 +86,25 @@ impl Player {
         }
     }
 
-    pub fn stats(&self) -> Stats {
+    fn stats(&self) -> Stats {
         match self.temp_stats {
             Some(stats) => stats,
             None => self.stats,
         }
     }
 
-    pub fn has_temp_stats(&self) -> bool {
+    fn has_temp_stats(&self) -> bool {
         match self.temp_stats {
             Some(_) => true,
             None => false,
         }
     }
 
-    pub fn set_temp_stats(&mut self, stats: Stats) {
+    fn set_temp_stats(&mut self, stats: Stats) {
         self.temp_stats = Some(stats);
     }
 
-    pub fn clear_temp_stats(&mut self) {
+    fn clear_temp_stats(&mut self) {
         self.temp_stats = None;
     }
 }
