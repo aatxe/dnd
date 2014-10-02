@@ -68,6 +68,10 @@ impl Player {
 }
 
 impl Entity for Player {
+    fn identifier(&self) -> &str {
+        self.username.as_slice()
+    }
+
     fn roll(&self, roll_type: RollType) -> u8 {
         let d20 = Range::new(1i8, 21i8);
         let mut rng = task_rng();

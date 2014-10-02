@@ -25,6 +25,10 @@ impl Monster {
 }
 
 impl Entity for Monster {
+    fn identifier(&self) -> &str {
+        self.name.as_slice()
+    }
+
     fn roll(&self, roll_type: RollType) -> u8 {
         let d20 = Range::new(1i8, 21i8);
         let mut rng = task_rng();
