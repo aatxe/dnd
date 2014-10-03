@@ -206,6 +206,38 @@ fn do_save(bot: &irc::Bot, user: &str, world: &mut World) -> IoResult<()> {
 }
 
 #[cfg(not(test))]
+fn do_damage(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
+    if !try!(do_permissions_test(bot, user, chan, world)) { return Ok(()); }
+    if params.len() == 3 {
+        let res = world.get_entity(params[1], Some(chan));
+        if res.is_ok() {
+            let e = try!(res);
+            if let Some(n) = from_str(params[2]) {
+                let m = if e.damage(n) {
+                    format!("{} ({}) took {} damage and has {} health remaining.", e.identifier(), params[1], params[2], e.stats().health)
+                } else {
+                    format!("{} ({}) has fallen unconscious.", e.identifier(), params[1])
+                };
+                try!(bot.send_privmsg(chan, m.as_slice()));
+            } else {
+                try!(bot.send_privmsg(chan, format!("{} is not a valid positive integer.", params[2]).as_slice()));
+            }
+        } else {
+            let m = if params[1].starts_with("@") {
+                format!("{} is not a valid monster.", params[1])
+            } else {
+                format!("{} is not logged in.", params[1])
+            };
+            try!(bot.send_privmsg(chan, m.as_slice()));
+        }
+    } else {
+        try!(bot.send_privmsg(chan, "Invalid format for damage. Format is:"));
+        try!(bot.send_privmsg(chan, ".damage target value"));
+    }
+    Ok(())
+}
+
+#[cfg(not(test))]
 fn do_look_up(bot: &irc::Bot, resp: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if params.len() == 2 || params.len() == 3 {
         let res = world.get_user(params[1]);
@@ -283,22 +315,21 @@ fn do_add_update(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, para
         let res = world.get_user(user);
         if res.is_ok() {
             let p = try!(res);
-            match from_str(params[2]) {
-                Some(n) => {
-                    if update {
-                        p.stats.update_stat(params[1], n);
-                        try!(bot.send_privmsg(chan, format!("{} ({}) now has {} {}.", p.username, user, n, params[1]).as_slice()));
-                    } else {
-                        p.stats.increase_stat(params[1], n);
-                        let k = match p.stats.get_stat(params[1]) {
-                            Some(i) => i,
-                            None => 0,
-                        };
-                        try!(bot.send_privmsg(chan, format!("{} ({}) now has {} {}.", p.username, user, k, params[1]).as_slice()));
-                    }
-                },
-                None => try!(bot.send_privmsg(chan, format!("{} is not a valid positive integer.", params[2]).as_slice())),
-            };
+            if let Some(n) = from_str(params[2]) {
+                if update {
+                    p.stats.update_stat(params[1], n);
+                    try!(bot.send_privmsg(chan, format!("{} ({}) now has {} {}.", p.username, user, n, params[1]).as_slice()));
+                } else {
+                    p.stats.increase_stat(params[1], n);
+                    let k = match p.stats.get_stat(params[1]) {
+                        Some(i) => i,
+                        None => 0,
+                    };
+                    try!(bot.send_privmsg(chan, format!("{} ({}) now has {} {}.", p.username, user, k, params[1]).as_slice()));
+                }
+            } else {
+                try!(bot.send_privmsg(chan, format!("{} is not a valid positive integer.", params[2]).as_slice()));
+            }
         } else {
             try!(bot.send_privmsg(chan, "You're not logged in."));
         }
@@ -459,6 +490,8 @@ fn main() {
                         try!(do_set_temp_stats(bot, user, chan, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with(".cleartemp") {
                         try!(do_clear_temp_stats(bot, user, chan, &mut world, msg.clone().split_str(" ").collect()));
+                    } else if msg.starts_with(".damage") {
+                        try!(do_damage(bot, user, chan, &mut world, msg.clone().split_str(" ").collect()));
                     }
                 }
             },

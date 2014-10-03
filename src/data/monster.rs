@@ -29,6 +29,16 @@ impl Entity for Monster {
         self.name.as_slice()
     }
 
+    fn damage(&mut self, amount: u8) -> bool {
+        if amount >= self.stats.health {
+            self.stats.health = 0;
+            false
+        } else {
+            self.stats.health -= amount;
+            true
+        }
+    }
+
     fn roll(&self, roll_type: RollType) -> u8 {
         let d20 = Range::new(1i8, 21i8);
         let mut rng = task_rng();
