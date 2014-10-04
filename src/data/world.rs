@@ -124,6 +124,7 @@ impl World {
 
 #[cfg(test)]
 mod test {
+    use data::Entity;
     use data::monster::Monster;
     use data::player::Player;
     use data::world::World;
@@ -159,6 +160,19 @@ mod test {
     #[test]
     fn add_monster_test() {
         let mut w = World::new().unwrap();
-        assert!(w.add_monster(Monster::create("test", 20, 12, 12, 12, 12, 12, 12).unwrap()).is_ok());
+        assert!(w.add_monster(Monster::create("test", 20, 12, 12, 12, 12, 12, 12).unwrap(), "#test").is_ok());
+        assert!(w.add_monster(Monster::create("test2", 20, 12, 12, 12, 12, 12, 12).unwrap(), "#test").is_ok());
+    }
+
+    #[test]
+    fn get_entity_test() {
+        let mut w = World::new().unwrap();
+        let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
+        let m = Monster::create("TestZombie", 20, 12, 12, 12, 12, 12, 12).unwrap();
+        w.add_user("test", p.clone()).unwrap();
+        w.add_monster(m.clone(), "#test").unwrap();
+        assert_eq!(w.get_entity("test", None).unwrap().identifier(), p.identifier());
+        assert_eq!(w.get_entity("@0", Some("#test")).unwrap().identifier(), m.identifier());
+        assert_eq!(w.get_entity("test", Some("#test")).unwrap().identifier(), p.identifier());
     }
 }

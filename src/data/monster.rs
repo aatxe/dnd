@@ -4,7 +4,7 @@ use std::rand::distributions::{IndependentSample, Range};
 use data::{Entity, RollType, Basic, Strength, Dexterity, Constitution, Wisdom, Intellect, Charisma};
 use data::stats::Stats;
 
-#[deriving(Show, PartialEq)]
+#[deriving(Show, PartialEq, Clone)]
 pub struct Monster {
     pub name: String,
     pub stats: Stats,
