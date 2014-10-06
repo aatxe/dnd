@@ -131,7 +131,7 @@ mod test {
     use data::stats::Stats;
 
     #[test]
-    fn create_player_test() {
+    fn create_player() {
         let p = Player::create("test", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
         let m = Player {
             username: String::from_str("test"),
@@ -144,7 +144,7 @@ mod test {
     }
 
     #[test]
-    fn save_load_player_test() {
+    fn save_load_player() {
         let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
         p.save().unwrap();
         let l = Player::load("test").unwrap();
@@ -152,7 +152,7 @@ mod test {
     }
 
     #[test]
-    fn add_feat_test() {
+    fn add_feat() {
         let mut p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
         assert_eq!(p.feats.len(), 0);
         p.add_feat("Test Feat");
@@ -161,7 +161,7 @@ mod test {
     }
 
     #[test]
-    fn stats_fn_test() {
+    fn stats_fn() {
         let mut p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
         let s = Stats::new(20, 10, 10, 10, 10, 10, 10).unwrap();
         assert_eq!(p.stats(), Stats::new(20, 12, 12, 12, 12, 12, 12).unwrap());
@@ -170,7 +170,7 @@ mod test {
     }
 
     #[test]
-    fn set_temp_stats_test() {
+    fn set_temp_stats() {
         let mut p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
         let s = Stats::new(20, 10, 10, 10, 10, 10, 10).unwrap();
         p.set_temp_stats(s);
@@ -178,7 +178,7 @@ mod test {
     }
 
     #[test]
-    fn has_temp_stats_test() {
+    fn has_temp_stats() {
         let mut p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
         let s = Stats::new(20, 10, 10, 10, 10, 10, 10).unwrap();
         assert!(!p.has_temp_stats());
@@ -187,7 +187,7 @@ mod test {
     }
 
     #[test]
-    fn clear_temp_stats_test() {
+    fn clear_temp_stats() {
         let mut p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
         let s = Stats::new(20, 10, 10, 10, 10, 10, 10).unwrap();
         p.set_temp_stats(s);
@@ -196,7 +196,7 @@ mod test {
     }
 
     #[test]
-    fn basic_roll_test() {
+    fn basic_roll() {
         let p = Player::create_test("test", "test", 20, 12, 12, 8, 12, 12, 12).unwrap();
         for _ in range(0i, 1000i) {
             let r = p.roll(Basic);
@@ -205,7 +205,7 @@ mod test {
     }
 
     #[test]
-    fn positive_stat_roll_test() {
+    fn positive_stat_roll() {
         let p = Player::create_test("test", "test", 20, 12, 12, 8, 12, 12, 12).unwrap();
         for _ in range(0i, 1000i) {
             let r = p.roll(Dexterity);
@@ -215,7 +215,7 @@ mod test {
     }
 
     #[test]
-    fn negative_stat_roll_test() {
+    fn negative_stat_roll() {
         let p = Player::create_test("test", "test", 20, 12, 12, 8, 12, 12, 12).unwrap();
         for _ in range(0i, 1000i) {
             let r = p.roll(Constitution);

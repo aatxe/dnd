@@ -59,7 +59,7 @@ mod test {
     use data::player::Player;
 
     #[test]
-    fn password_hash_test() {
+    fn password_hash() {
         let s = String::from_str("9ece086e9bac491fac5c1d1046ca11d737b92a2b2ebd93f005d7b710110c0a678288166e7fbe796883a4f2e9b3ca9f484f521d0ce464345cc1aec96779149c14");
         let h = Game::password_hash("test").unwrap();
         assert_eq!(s, h);
@@ -67,7 +67,7 @@ mod test {
 
 
     #[test]
-    fn worldless_roll_test() {
+    fn worldless_roll() {
         for _ in range(0i, 1000i) {
             let r = Game::roll();
             assert!(r >= 1 && r <= 20);
@@ -75,7 +75,7 @@ mod test {
     }
 
     #[test]
-    fn login_test() {
+    fn login() {
         let p = Player::create("test", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
         p.save().unwrap();
         let mut g = Game::new("test", "test").unwrap();
@@ -83,7 +83,7 @@ mod test {
     }
 
     #[test]
-    fn is_dm_test() {
+    fn is_dm() {
         let g = Game::new("Dungeons and Tests", "test").unwrap();
         assert!(g.is_dm("test"));
         assert!(!g.is_dm("test2"));

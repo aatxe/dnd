@@ -87,7 +87,7 @@ mod test {
     use data::stats::Stats;
 
     #[test]
-    fn create_monster_test() {
+    fn create_monster() {
         let m = Monster::create("test", 20, 12, 12, 12, 12, 12, 12).unwrap();
         let n = Monster {
             name: String::from_str("test"),
@@ -98,7 +98,7 @@ mod test {
     }
 
     #[test]
-    fn stats_fn_test() {
+    fn stats_fn() {
         let mut m = Monster::create("test", 20, 12, 12, 12, 12, 12, 12).unwrap();
         let s = Stats::new(20, 10, 10, 10, 10, 10, 10).unwrap();
         assert_eq!(m.stats(), Stats::new(20, 12, 12, 12, 12, 12, 12).unwrap());
@@ -107,7 +107,7 @@ mod test {
     }
 
     #[test]
-    fn set_temp_stats_test() {
+    fn set_temp_stats() {
         let mut m = Monster::create("test", 20, 12, 12, 12, 12, 12, 12).unwrap();
         let s = Stats::new(20, 10, 10, 10, 10, 10, 10).unwrap();
         m.set_temp_stats(s);
@@ -115,7 +115,7 @@ mod test {
     }
 
     #[test]
-    fn has_temp_stats_test() {
+    fn has_temp_stats() {
         let mut m = Monster::create("test", 20, 12, 12, 12, 12, 12, 12).unwrap();
         let s = Stats::new(20, 10, 10, 10, 10, 10, 10).unwrap();
         assert!(!m.has_temp_stats());
@@ -124,7 +124,7 @@ mod test {
     }
 
     #[test]
-    fn clear_temp_stats_test() {
+    fn clear_temp_stats() {
         let mut m = Monster::create("test", 20, 12, 12, 12, 12, 12, 12).unwrap();
         let s = Stats::new(20, 10, 10, 10, 10, 10, 10).unwrap();
         m.set_temp_stats(s);
@@ -133,7 +133,7 @@ mod test {
     }
 
     #[test]
-    fn basic_roll_test() {
+    fn basic_roll() {
         let m = Monster::create("test", 20, 12, 12, 8, 12, 12, 12).unwrap();
         for _ in range(0i, 1000i) {
             let r = m.roll(Basic);
@@ -142,7 +142,7 @@ mod test {
     }
 
     #[test]
-    fn positive_stat_roll_test() {
+    fn positive_stat_roll() {
         let m = Monster::create("test", 20, 12, 12, 8, 12, 12, 12).unwrap();
         for _ in range(0i, 1000i) {
             let r = m.roll(Dexterity);
@@ -152,7 +152,7 @@ mod test {
     }
 
     #[test]
-    fn negative_stat_roll_test() {
+    fn negative_stat_roll() {
         let m = Monster::create("test", 20, 12, 12, 8, 12, 12, 12).unwrap();
         for _ in range(0i, 1000i) {
             let r = m.roll(Constitution);

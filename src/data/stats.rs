@@ -86,7 +86,7 @@ mod test {
     use super::Stats;
 
     #[test]
-    fn get_stat_test() {
+    fn get_stat() {
         let s = Stats::new(20, 12, 12, 8, 12, 14, 12).unwrap();
         assert_eq!(s.get_stat("str"), Some(12));
         assert_eq!(s.get_stat("constitution"), Some(8));
@@ -94,7 +94,7 @@ mod test {
     }
 
     #[test]
-    fn update_stat_test() {
+    fn update_stat() {
         let mut s = Stats::new(20, 12, 12, 12, 12, 12, 12).unwrap();
         s.update_stat("str", 10);
         assert_eq!(s.get_stat("str"), Some(10));
@@ -105,7 +105,7 @@ mod test {
     }
 
     #[test]
-    fn increase_stat_test() {
+    fn increase_stat() {
         let mut s = Stats::new(20, 12, 12, 7, 12, 12, 12).unwrap();
         s.increase_stat("str", 2);
         assert_eq!(s.get_stat("str"), Some(14));
@@ -116,7 +116,7 @@ mod test {
     }
 
     #[test]
-    fn calc_bonus_test() {
+    fn calc_bonus() {
         assert_eq!(Stats::calc_bonus(14), 2i8);
         assert_eq!(Stats::calc_bonus(11), 0i8);
         assert_eq!(Stats::calc_bonus(8), -1i8);

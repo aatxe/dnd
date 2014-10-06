@@ -137,7 +137,7 @@ mod test {
     use data::world::World;
 
     #[test]
-    fn world_user_test() {
+    fn world_user() {
         let mut w = World::new().unwrap();
         let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
         assert_eq!(w.is_user_logged_in("test"), false);
@@ -151,13 +151,13 @@ mod test {
     }
 
     #[test]
-    fn add_game_test() {
+    fn add_game() {
         let mut w = World::new().unwrap();
         assert!(w.add_game("Dungeons and Tests", "test", "#test").is_ok());
     }
 
     #[test]
-    fn get_game_test() {
+    fn get_game() {
         let mut w = World::new().unwrap();
         w.add_game("Dungeons and Tests", "test", "#test").unwrap();
         assert!(w.get_game("#test").is_ok());
@@ -165,14 +165,14 @@ mod test {
     }
 
     #[test]
-    fn add_monster_test() {
+    fn add_monster() {
         let mut w = World::new().unwrap();
         assert!(w.add_monster(Monster::create("test", 20, 12, 12, 12, 12, 12, 12).unwrap(), "#test").is_ok());
         assert!(w.add_monster(Monster::create("test2", 20, 12, 12, 12, 12, 12, 12).unwrap(), "#test").is_ok());
     }
 
     #[test]
-    fn get_entity_test() {
+    fn get_entity() {
         let mut w = World::new().unwrap();
         let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
         let m = Monster::create("TestZombie", 20, 12, 12, 12, 12, 12, 12).unwrap();
@@ -184,7 +184,7 @@ mod test {
     }
 
     #[test]
-    fn save_all_test() {
+    fn save_all() {
         let mut w = World::new().unwrap();
         let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
         let q = Player::create_test("test2", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();

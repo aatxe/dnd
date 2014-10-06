@@ -72,10 +72,10 @@ impl RollType {
 mod test {
     use super::RollType;
     use super::{Strength, Wisdom, Intellect};
-    use super::utils::{join_from, str_to_u8};
+    use super::utils;
 
     #[test]
-    fn to_roll_type_test() {
+    fn to_roll_type() {
         assert_eq!(RollType::to_roll_type("str"), Some(Strength));
         assert_eq!(RollType::to_roll_type("WISDOM"), Some(Wisdom));
         assert_eq!(RollType::to_roll_type("Intellect"), Some(Intellect));
@@ -83,15 +83,15 @@ mod test {
     }
 
     #[test]
-    fn str_to_u8_test() {
-        assert_eq!(str_to_u8("4"), 4);
-        assert_eq!(str_to_u8("-4"), 0);
-        assert_eq!(str_to_u8("x"), 0);
+    fn str_to_u8() {
+        assert_eq!(utils::str_to_u8("4"), 4);
+        assert_eq!(utils::str_to_u8("-4"), 0);
+        assert_eq!(utils::str_to_u8("x"), 0);
     }
 
     #[test]
-    fn join_from_test() {
-        assert_eq!(join_from(vec!["hi","there","friend"], 0).as_slice(), "hi there friend");
-            assert_eq!(join_from(vec!["hi","their","friend"], 1).as_slice(), "their friend");
+    fn join_from() {
+        assert_eq!(utils::join_from(vec!["hi","there","friend"], 0).as_slice(), "hi there friend");
+        assert_eq!(utils::join_from(vec!["hi","their","friend"], 1).as_slice(), "their friend");
     }
 }
