@@ -1,12 +1,12 @@
+#![cfg(not(test))]
 use std::io::IoResult;
 use data::{Basic, Entity, RollType};
 use data::stats::Stats;
 use data::utils::str_to_u8;
 use data::world::World;
-#[cfg(not(test))] use func::{incorrect_format, permissions_test};
+use func::{incorrect_format, permissions_test};
 use irc::Bot;
 
-#[cfg(not(test))]
 pub fn roll(bot: &Bot, user: &str, chan: &str,
            world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if params.len() == 1 || (params.len() == 2 && params[1].starts_with("@")) {
@@ -67,7 +67,6 @@ pub fn roll(bot: &Bot, user: &str, chan: &str,
     Ok(())
 }
 
-#[cfg(not(test))]
 pub fn damage(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if !try!(permissions_test(bot, user, chan, world)) { return Ok(()); }
     if params.len() == 3 {
@@ -98,7 +97,6 @@ pub fn damage(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<
     Ok(())
 }
 
-#[cfg(not(test))]
 pub fn set_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if !try!(permissions_test(bot, user, chan, world)) { return Ok(()); }
     if params.len() == 9 {
@@ -130,7 +128,6 @@ pub fn set_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, para
     Ok(())
 }
 
-#[cfg(not(test))]
 pub fn clear_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if !try!(permissions_test(bot, user, chan, world)) { return Ok(()); }
     if params.len() == 2 {

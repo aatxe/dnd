@@ -1,3 +1,4 @@
+#![cfg(not(test))]
 extern crate irc;
 
 use std::io::IoResult;
@@ -5,11 +6,9 @@ use data::Entity;
 use data::monster::Monster;
 use data::utils::str_to_u8;
 use data::world::World;
-#[cfg(not(test))] use func::{incorrect_format, permissions_test};
+use func::{incorrect_format, permissions_test};
 use irc::Bot;
 
-
-#[cfg(not(test))]
 pub fn add(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if params.len() == 10 {
         if !try!(permissions_test(bot, user, params[1], world)) { return Ok(()); }
@@ -44,7 +43,6 @@ pub fn add(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoRes
     Ok(())
 }
 
-#[cfg(not(test))]
 pub fn look_up(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if (params.len() == 3 || params.len() == 4) && params[2].starts_with("@") {
         if !try!(permissions_test(bot, user, params[1], world)) { return Ok(()); }

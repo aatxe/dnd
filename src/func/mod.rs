@@ -1,3 +1,4 @@
+#![cfg(not(test))]
 extern crate irc;
 
 use std::io::IoResult;
@@ -10,7 +11,6 @@ pub mod entity;
 pub mod monster;
 pub mod player;
 
-#[cfg(not(test))]
 pub fn permissions_test(bot: &Bot, user: &str, chan: &str, world: &mut World) -> IoResult<bool> {
     let mut ret = true;
     let res = world.get_game(chan);
@@ -24,14 +24,12 @@ pub fn permissions_test(bot: &Bot, user: &str, chan: &str, world: &mut World) ->
     Ok(ret)
 }
 
-#[cfg(not(test))]
 pub fn incorrect_format(bot: &Bot, resp: &str, cmd: &str, format: &str) -> IoResult<()> {
     try!(bot.send_privmsg(resp, format!("Incorrect format for {}. Format is:", cmd).as_slice()));
     try!(bot.send_privmsg(resp, format!("{} {}", cmd, format).as_slice()));
     Ok(())
 }
 
-#[cfg(not(test))]
 pub fn create(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if params.len() >= 3 {
         try!(bot.send_join(params[1]));
@@ -47,7 +45,6 @@ pub fn create(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> Io
     Ok(())
 }
 
-#[cfg(not(test))]
 pub fn private_roll(bot: &irc::Bot, user: &str) -> IoResult<()> {
     try!(bot.send_privmsg(user, format!("You rolled {}.", Game::roll()).as_slice()));
     Ok(())

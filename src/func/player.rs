@@ -1,3 +1,4 @@
+#![cfg(not(test))]
 extern crate irc;
 
 use std::ascii::AsciiExt;
@@ -6,10 +7,9 @@ use data::Entity;
 use data::player::Player;
 use data::utils::{join_from, str_to_u8};
 use data::world::World;
-#[cfg(not(test))] use func::incorrect_format;
+use func::incorrect_format;
 use irc::Bot;
 
-#[cfg(not(test))]
 pub fn register(bot: &Bot, user: &str, params: Vec<&str>) -> IoResult<()> {
     if params.len() == 10 {
         let mut valid = true;
@@ -35,7 +35,6 @@ pub fn register(bot: &Bot, user: &str, params: Vec<&str>) -> IoResult<()> {
     Ok(())
 }
 
-#[cfg(not(test))]
 pub fn login(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if params.len() == 4 {
         let pr = Player::load(params[1]);
@@ -68,7 +67,6 @@ pub fn login(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoR
     Ok(())
 }
 
-#[cfg(not(test))]
 pub fn logout(bot: &Bot, user: &str, world: &mut World) -> IoResult<()> {
     if world.is_user_logged_in(user) {
         try!(world.remove_user(user));
@@ -79,8 +77,6 @@ pub fn logout(bot: &Bot, user: &str, world: &mut World) -> IoResult<()> {
     Ok(())
 }
 
-
-#[cfg(not(test))]
 pub fn add_feat(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if params.len() > 1 {
         let res = world.get_user(user);
@@ -98,8 +94,6 @@ pub fn add_feat(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> 
     Ok(())
 }
 
-
-#[cfg(not(test))]
 pub fn save(bot: &Bot, user: &str, world: &mut World) -> IoResult<()> {
     let res = world.get_user(user);
     if res.is_ok() {
@@ -114,7 +108,6 @@ pub fn save(bot: &Bot, user: &str, world: &mut World) -> IoResult<()> {
     Ok(())
 }
 
-#[cfg(not(test))]
 pub fn look_up(bot: &Bot, resp: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if params.len() == 2 || params.len() == 3 {
         let res = world.get_user(params[1]);
@@ -151,7 +144,6 @@ pub fn look_up(bot: &Bot, resp: &str, world: &mut World, params: Vec<&str>) -> I
     Ok(())
 }
 
-#[cfg(not(test))]
 pub fn add_update(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>, update: bool) -> IoResult<()> {
     if params.len() == 3 {
         let res = world.get_user(user);
