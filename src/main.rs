@@ -3,7 +3,6 @@ extern crate crypto;
 extern crate irc;
 extern crate serialize;
 
-use std::ascii::AsciiExt;
 use std::io::IoResult;
 use data::{Basic, Entity, RollType};
 use data::monster::Monster;
@@ -126,44 +125,6 @@ fn do_damage(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&
 }
 
 #[cfg(not(test))]
-fn do_look_up(bot: &Bot, resp: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
-    if params.len() == 2 || params.len() == 3 {
-        let res = world.get_user(params[1]);
-        if res.is_ok() {
-            let p = try!(res);
-            let tmp_msg = if p.has_temp_stats() {
-                "Temp. "
-            } else {
-                ""
-            };
-            if params.len() == 2 {
-                let s = format!("{} ({}): {}{} Feats {}", p.username, params[1], tmp_msg, p.stats(), p.feats);
-                try!(bot.send_privmsg(resp, s.as_slice()));
-            } else if params[2].eq_ignore_ascii_case("feats") || params[2].eq_ignore_ascii_case("feat") {
-                try!(bot.send_privmsg(resp, format!("{} ({}): {}", p.username, params[1], p.feats).as_slice()));
-            } else {
-                let s = match p.stats().get_stat(params[2]) {
-                        Some(x) => format!("{} ({}): {}{} {}", p.username, params[1], tmp_msg, x, params[2]),
-                        None => format!("{} is not a valid stat.", params[2]),
-                };
-                try!(bot.send_privmsg(resp, s.as_slice()));
-            }
-        } else {
-            try!(bot.send_privmsg(resp, format!("{} is not logged in.", params[1]).as_slice()));
-        }
-    } else {
-        let dot = if resp.starts_with("#") {
-            "."
-        } else {
-            ""
-        };
-        try!(bot.send_privmsg(resp, "Invalid format for lookup. Format is:"));
-        try!(bot.send_privmsg(resp, format!("{}lookup target [stat]", dot).as_slice()))
-    }
-    Ok(())
-}
-
-#[cfg(not(test))]
 fn do_monster_look_up(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if (params.len() == 3 || params.len() == 4) && params[2].starts_with("@") {
         if !try!(do_permissions_test(bot, user, params[1], world)) { return Ok(()); }
@@ -193,40 +154,6 @@ fn do_monster_look_up(bot: &Bot, user: &str, world: &mut World, params: Vec<&str
     } else {
         try!(bot.send_privmsg(user, "Invalid format for mlookup. Format is:"));
         try!(bot.send_privmsg(user, "mlookup channel target [stat]"));
-    }
-    Ok(())
-}
-
-#[cfg(not(test))]
-fn do_add_update(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>, update: bool) -> IoResult<()> {
-    if params.len() == 3 {
-        let res = world.get_user(user);
-        if res.is_ok() {
-            let p = try!(res);
-            if let Some(n) = from_str(params[2]) {
-                if update {
-                    p.stats.update_stat(params[1], n);
-                    try!(bot.send_privmsg(chan, format!("{} ({}) now has {} {}.", p.username, user, n, params[1]).as_slice()));
-                } else {
-                    p.stats.increase_stat(params[1], n);
-                    let k = match p.stats.get_stat(params[1]) {
-                        Some(i) => i,
-                        None => 0,
-                    };
-                    try!(bot.send_privmsg(chan, format!("{} ({}) now has {} {}.", p.username, user, k, params[1]).as_slice()));
-                }
-            } else {
-                try!(bot.send_privmsg(chan, format!("{} is not a valid positive integer.", params[2]).as_slice()));
-            }
-        } else {
-            try!(bot.send_privmsg(chan, "You're not logged in."));
-        }
-    } else if update {
-        try!(bot.send_privmsg(chan, "Invalid format for update. Format is:"));
-        try!(bot.send_privmsg(chan, ".update stat value"))
-    } else {
-        try!(bot.send_privmsg(chan, "Invalid format for increase. Format is:"));
-        try!(bot.send_privmsg(chan, ".increase stat value"))
     }
     Ok(())
 }
@@ -359,7 +286,7 @@ fn main() {
                     } else if msg.starts_with("save") {
                         try!(func::player::save(bot, user, &mut world));
                     } else if msg.starts_with("lookup") {
-                        try!(do_look_up(bot, user, &mut world, msg.clone().split_str(" ").collect()));
+                        try!(func::player::look_up(bot, user, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with("mlookup") {
                         try!(do_monster_look_up(bot, user, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with("addmonster") {
@@ -369,11 +296,11 @@ fn main() {
                     if msg.starts_with(".roll") {
                         try!(do_roll(bot, user, chan, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with(".lookup") {
-                        try!(do_look_up(bot, chan, &mut world, msg.clone().split_str(" ").collect()));
+                        try!(func::player::look_up(bot, chan, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with(".update") {
-                        try!(do_add_update(bot, user, chan, &mut world, msg.clone().split_str(" ").collect(), true));
+                        try!(func::player::add_update(bot, user, chan, &mut world, msg.clone().split_str(" ").collect(), true));
                     } else if msg.starts_with(".increase") {
-                        try!(do_add_update(bot, user, chan, &mut world, msg.clone().split_str(" ").collect(), false));
+                        try!(func::player::add_update(bot, user, chan, &mut world, msg.clone().split_str(" ").collect(), false));
                     } else if msg.starts_with(".temp") {
                         try!(do_set_temp_stats(bot, user, chan, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with(".cleartemp") {
