@@ -6,6 +6,7 @@ use data::utils::join_from;
 use data::world::World;
 use irc::Bot;
 
+pub mod entity;
 pub mod monster;
 pub mod player;
 
