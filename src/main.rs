@@ -6,17 +6,17 @@ extern crate serialize;
 use std::ascii::AsciiExt;
 use std::io::IoResult;
 use data::{Basic, Entity, RollType};
-use data::game::Game;
 use data::monster::Monster;
-use data::player::Player;
 use data::stats::Stats;
 use data::utils::{join_from, str_to_u8};
 use data::world::World;
+use irc::Bot;
 
 mod data;
+mod func;
 
 #[cfg(not(test))]
-fn do_create(bot: &irc::Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
+fn do_create(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if params.len() >= 3 {
         try!(bot.send_join(params[1]));
         let name = join_from(params.clone(), 2);
@@ -33,98 +33,7 @@ fn do_create(bot: &irc::Bot, user: &str, world: &mut World, params: Vec<&str>) -
 }
 
 #[cfg(not(test))]
-fn do_register(bot: &irc::Bot, user: &str, params: Vec<&str>) -> IoResult<()> {
-    if params.len() == 10 {
-        let mut valid = true;
-        for s in params.slice_from(3).iter() {
-            if str_to_u8(*s) == 0 {
-                valid = false;
-            }
-        }
-        if valid {
-            let p = try!(Player::create(params[1], params[2], str_to_u8(params[3]),
-                str_to_u8(params[4]), str_to_u8(params[5]),
-                str_to_u8(params[6]), str_to_u8(params[7]),
-                str_to_u8(params[8]), str_to_u8(params[9])));
-            try!(p.save());
-            try!(bot.send_privmsg(user, format!("Your account ({}) has been created.", params[1]).as_slice()));
-        } else {
-            try!(bot.send_privmsg(user, "Stats must be non-zero positive integers. Format is: "))
-            try!(bot.send_privmsg(user, "register username password health str dex con wis int cha"));
-        }
-    } else {
-        try!(bot.send_privmsg(user, "Incorrect format for registration. Format is:"));
-        try!(bot.send_privmsg(user, "register username password health str dex con wis int cha"));
-    }
-    Ok(())
-}
-
-#[cfg(not(test))]
-fn do_login(bot: &irc::Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
-    if params.len() == 4 {
-        let pr = Player::load(params[1]);
-        if pr.is_ok() && !world.is_user_logged_in(user) {
-            let p = try!(pr);
-            let mut success = false;
-            match world.games.find_mut(&String::from_str(params[3])) {
-                Some(game) => {
-                    let res = try!(game.login(p.clone(), user, params[2]));
-                    try!(bot.send_privmsg(user, res));
-                    if "Login successful.".eq(&res) {
-                        try!(bot.send_invite(user, params[3]));
-                        success = true;
-                    };
-                },
-                None => try!(bot.send_privmsg(user, format!("Game not found on channel {}.", params[3]).as_slice())),
-            };
-            if success {
-                try!(world.add_user(user, p));
-            }
-        } else if pr.is_err() {
-            try!(bot.send_privmsg(user, format!("Account {} does not exist, or could not be loaded.", params[1]).as_slice()));
-        } else {
-            try!(bot.send_privmsg(user, "You can only be logged into one account at once."));
-            try!(bot.send_privmsg(user, "Use logout to log out."));
-        }
-    } else {
-        try!(bot.send_privmsg(user, "Incorrect format for login: Format is:"));
-        try!(bot.send_privmsg(user, "login username password channel"));
-    }
-    Ok(())
-}
-
-#[cfg(not(test))]
-fn do_logout(bot: &irc::Bot, user: &str, world: &mut World) -> IoResult<()> {
-    if world.is_user_logged_in(user) {
-        try!(world.remove_user(user));
-        try!(bot.send_privmsg(user, "You've been logged out."));
-    } else {
-        try!(bot.send_privmsg(user, "You're not currently logged in."));
-    }
-    Ok(())
-}
-
-#[cfg(not(test))]
-fn do_add_feat(bot: &irc::Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
-    if params.len() > 1 {
-        let res = world.get_user(user);
-        if res.is_ok() {
-            let name = join_from(params.clone(), 1);
-            let player = try!(res);
-            player.add_feat(name.as_slice());
-            try!(bot.send_privmsg(user, format!("Added {} feat.", name).as_slice()));
-        } else {
-            try!(bot.send_privmsg(user, "You must be logged in to add a feat."));
-        }
-    } else {
-        try!(bot.send_privmsg(user, "Can't add feat without a name. Format is:"));
-        try!(bot.send_privmsg(user, "addfeat name of feat"));
-    }
-    Ok(())
-}
-
-#[cfg(not(test))]
-fn do_roll(bot: &irc::Bot, user: &str, chan: &str,
+fn do_roll(bot: &Bot, user: &str, chan: &str,
            world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if params.len() == 1 || (params.len() == 2 && params[1].starts_with("@")) {
         let res = if params.len() == 2 {
@@ -185,28 +94,7 @@ fn do_roll(bot: &irc::Bot, user: &str, chan: &str,
 }
 
 #[cfg(not(test))]
-fn do_private_roll(bot: &irc::Bot, user: &str) -> IoResult<()> {
-    try!(bot.send_privmsg(user, format!("You rolled {}.", Game::roll()).as_slice()));
-    Ok(())
-}
-
-#[cfg(not(test))]
-fn do_save(bot: &irc::Bot, user: &str, world: &mut World) -> IoResult<()> {
-    let res = world.get_user(user);
-    if res.is_ok() {
-        let player = try!(res);
-        match player.save() {
-            Ok(_) => try!(bot.send_privmsg(user, format!("Saved {}.", player.username).as_slice())),
-            Err(_) => try!(bot.send_privmsg(user, format!("Failed to save {}.", player.username).as_slice())),
-        }
-    } else {
-        try!(bot.send_privmsg(user, "You must be logged in to save."));
-    }
-    Ok(())
-}
-
-#[cfg(not(test))]
-fn do_damage(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
+fn do_damage(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if !try!(do_permissions_test(bot, user, chan, world)) { return Ok(()); }
     if params.len() == 3 {
         let res = world.get_entity(params[1], Some(chan));
@@ -238,7 +126,7 @@ fn do_damage(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, params: 
 }
 
 #[cfg(not(test))]
-fn do_look_up(bot: &irc::Bot, resp: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
+fn do_look_up(bot: &Bot, resp: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if params.len() == 2 || params.len() == 3 {
         let res = world.get_user(params[1]);
         if res.is_ok() {
@@ -276,7 +164,7 @@ fn do_look_up(bot: &irc::Bot, resp: &str, world: &mut World, params: Vec<&str>) 
 }
 
 #[cfg(not(test))]
-fn do_monster_look_up(bot: &irc::Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
+fn do_monster_look_up(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if (params.len() == 3 || params.len() == 4) && params[2].starts_with("@") {
         if !try!(do_permissions_test(bot, user, params[1], world)) { return Ok(()); }
         let res = world.get_entity(params[2], Some(params[1]));
@@ -310,7 +198,7 @@ fn do_monster_look_up(bot: &irc::Bot, user: &str, world: &mut World, params: Vec
 }
 
 #[cfg(not(test))]
-fn do_add_update(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>, update: bool) -> IoResult<()> {
+fn do_add_update(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>, update: bool) -> IoResult<()> {
     if params.len() == 3 {
         let res = world.get_user(user);
         if res.is_ok() {
@@ -344,7 +232,7 @@ fn do_add_update(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, para
 }
 
 #[cfg(not(test))]
-fn do_set_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
+fn do_set_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if !try!(do_permissions_test(bot, user, chan, world)) { return Ok(()); }
     if params.len() == 9 {
         let res = world.get_entity(params[1], Some(chan));
@@ -377,7 +265,7 @@ fn do_set_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, 
 }
 
 #[cfg(not(test))]
-fn do_clear_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
+fn do_clear_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if !try!(do_permissions_test(bot, user, chan, world)) { return Ok(()); }
     if params.len() == 2 {
         let res = world.get_entity(params[1], Some(chan));
@@ -396,7 +284,7 @@ fn do_clear_temp_stats(bot: &irc::Bot, user: &str, chan: &str, world: &mut World
 }
 
 #[cfg(not(test))]
-fn do_add_monster(bot: &irc::Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
+fn do_add_monster(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if params.len() == 10 {
         if !try!(do_permissions_test(bot, user, params[1], world)) { return Ok(()); }
         let mut valid = true;
@@ -432,7 +320,7 @@ fn do_add_monster(bot: &irc::Bot, user: &str, world: &mut World, params: Vec<&st
 }
 
 #[cfg(not(test))]
-fn do_permissions_test(bot: &irc::Bot, user: &str, chan: &str, world: &mut World) -> IoResult<bool> {
+fn do_permissions_test(bot: &Bot, user: &str, chan: &str, world: &mut World) -> IoResult<bool> {
     let mut ret = true;
     let res = world.get_game(chan);
     if res.is_err() {
@@ -448,7 +336,7 @@ fn do_permissions_test(bot: &irc::Bot, user: &str, chan: &str, world: &mut World
 #[cfg(not(test))]
 fn main() {
     let mut world = World::new().unwrap();
-    let process = |bot: &irc::Bot, source: &str, command: &str, args: &[&str]| {
+    let process = |bot: &Bot, source: &str, command: &str, args: &[&str]| {
         match (command, args) {
             ("PRIVMSG", [chan, msg]) => {
                 let user = match source.find('!') {
@@ -457,19 +345,19 @@ fn main() {
                 };
                 if !chan.starts_with("#") {
                     if msg.starts_with("register") {
-                        try!(do_register(bot, user, msg.clone().split_str(" ").collect()));
+                        try!(func::player::register(bot, user, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with("login") {
-                        try!(do_login(bot, user, &mut world, msg.clone().split_str(" ").collect()));
+                        try!(func::player::login(bot, user, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with("create") {
                         try!(do_create(bot, user, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with("logout") {
-                        try!(do_logout(bot, user, &mut world));
+                        try!(func::player::logout(bot, user, &mut world));
                     } else if msg.starts_with("addfeat") {
-                        try!(do_add_feat(bot, user, &mut world, msg.clone().split_str(" ").collect()));
+                        try!(func::player::add_feat(bot, user, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with("roll") {
-                        try!(do_private_roll(bot, user));
+                        try!(func::private_roll(bot, user));
                     } else if msg.starts_with("save") {
-                        try!(do_save(bot, user, &mut world));
+                        try!(func::player::save(bot, user, &mut world));
                     } else if msg.starts_with("lookup") {
                         try!(do_look_up(bot, user, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with("mlookup") {
@@ -499,7 +387,7 @@ fn main() {
         }
         Ok(())
     };
-    let mut pickle = irc::Bot::new(process).unwrap();
+    let mut pickle = Bot::new(process).unwrap();
     pickle.identify().unwrap();
     pickle.output();
 }
