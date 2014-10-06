@@ -5,10 +5,10 @@ extern crate serialize;
 
 use std::io::IoResult;
 use data::{Basic, Entity, RollType};
-use data::monster::Monster;
 use data::stats::Stats;
 use data::utils::{join_from, str_to_u8};
 use data::world::World;
+use func::permissions_test;
 use irc::Bot;
 
 mod data;
@@ -36,7 +36,7 @@ fn do_roll(bot: &Bot, user: &str, chan: &str,
            world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if params.len() == 1 || (params.len() == 2 && params[1].starts_with("@")) {
         let res = if params.len() == 2 {
-            if !try!(do_permissions_test(bot, user, chan, world)) { return Ok(()); }
+            if !try!(permissions_test(bot, user, chan, world)) { return Ok(()); }
             world.get_entity(params[1], Some(chan))
         } else {
             world.get_entity(user, None)
@@ -55,7 +55,7 @@ fn do_roll(bot: &Bot, user: &str, chan: &str,
         }
     } else if params.len() == 2 || (params.len() == 3 && params[1].starts_with("@")) {
         let res = if params.len() == 3 {
-            if !try!(do_permissions_test(bot, user, chan, world)) { return Ok(()); }
+            if !try!(permissions_test(bot, user, chan, world)) { return Ok(()); }
             world.get_entity(params[1], Some(chan))
         } else {
             world.get_entity(user, None)
@@ -94,7 +94,7 @@ fn do_roll(bot: &Bot, user: &str, chan: &str,
 
 #[cfg(not(test))]
 fn do_damage(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
-    if !try!(do_permissions_test(bot, user, chan, world)) { return Ok(()); }
+    if !try!(permissions_test(bot, user, chan, world)) { return Ok(()); }
     if params.len() == 3 {
         let res = world.get_entity(params[1], Some(chan));
         if res.is_ok() {
@@ -125,42 +125,8 @@ fn do_damage(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&
 }
 
 #[cfg(not(test))]
-fn do_monster_look_up(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
-    if (params.len() == 3 || params.len() == 4) && params[2].starts_with("@") {
-        if !try!(do_permissions_test(bot, user, params[1], world)) { return Ok(()); }
-        let res = world.get_entity(params[2], Some(params[1]));
-        if res.is_ok() {
-            let m = try!(res);
-            let tmp_msg = if m.has_temp_stats() {
-                "Temp. "
-            } else {
-                ""
-            };
-            if params.len() == 3 {
-                let s = format!("{} ({}): {}{}", m.identifier(), params[2], tmp_msg, m.stats());
-                try!(bot.send_privmsg(user, s.as_slice()));
-            } else {
-                let s = match m.stats().get_stat(params[3]) {
-                        Some(x) => format!("{} ({}): {}{} {}", m.identifier(), params[2], tmp_msg, x, params[3]),
-                        None => format!("{} is not a valid stat.", params[3]),
-                };
-                try!(bot.send_privmsg(user, s.as_slice()));
-            }
-        } else {
-            try!(bot.send_privmsg(user, format!("{} is not a valid monster.", params[2]).as_slice()));
-        }
-    } else if params.len() == 3 || params.len() == 4 {
-        try!(bot.send_privmsg(user, format!("{} is not a valid monster.", params[2]).as_slice()));
-    } else {
-        try!(bot.send_privmsg(user, "Invalid format for mlookup. Format is:"));
-        try!(bot.send_privmsg(user, "mlookup channel target [stat]"));
-    }
-    Ok(())
-}
-
-#[cfg(not(test))]
 fn do_set_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
-    if !try!(do_permissions_test(bot, user, chan, world)) { return Ok(()); }
+    if !try!(permissions_test(bot, user, chan, world)) { return Ok(()); }
     if params.len() == 9 {
         let res = world.get_entity(params[1], Some(chan));
         if res.is_ok() {
@@ -193,7 +159,7 @@ fn do_set_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, param
 
 #[cfg(not(test))]
 fn do_clear_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
-    if !try!(do_permissions_test(bot, user, chan, world)) { return Ok(()); }
+    if !try!(permissions_test(bot, user, chan, world)) { return Ok(()); }
     if params.len() == 2 {
         let res = world.get_entity(params[1], Some(chan));
         if res.is_ok() {
@@ -208,56 +174,6 @@ fn do_clear_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, par
         try!(bot.send_privmsg(chan, ".cleartemp target"));
     }
     Ok(())
-}
-
-#[cfg(not(test))]
-fn do_add_monster(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
-    if params.len() == 10 {
-        if !try!(do_permissions_test(bot, user, params[1], world)) { return Ok(()); }
-        let mut valid = true;
-        for s in params.slice_from(4).iter() {
-            if str_to_u8(*s) == 0 {
-                valid = false;
-            }
-        }
-        if valid {
-            let m = try!(Monster::create(params[2], str_to_u8(params[3]),
-                str_to_u8(params[4]), str_to_u8(params[5]),
-                str_to_u8(params[6]), str_to_u8(params[7]),
-                str_to_u8(params[8]), str_to_u8(params[9])));
-            let res = world.add_monster(m, params[1]);
-            if res.is_ok() {
-                try!(bot.send_privmsg(user, format!("Monster ({}) has been created as @{}.", params[2], try!(res)).as_slice()));
-            } else {
-                if let Some(err) = res.err() {
-                    try!(bot.send_privmsg(user, format!("Failed to create monster: {}", err.desc).as_slice()));
-                } else {
-                    try!(bot.send_privmsg(user, "Failed to create monster for an unknown reason."));
-                }
-            }
-        } else {
-            try!(bot.send_privmsg(user, "Stats must be non-zero positive integers. Format is: "))
-            try!(bot.send_privmsg(user, "addmonster chan name health str dex con wis int cha"));
-        }
-    } else {
-        try!(bot.send_privmsg(user, "Incorrect format for monster creation. Format is:"));
-        try!(bot.send_privmsg(user, "addmonster chan name health str dex con wis int cha"));
-    }
-    Ok(())
-}
-
-#[cfg(not(test))]
-fn do_permissions_test(bot: &Bot, user: &str, chan: &str, world: &mut World) -> IoResult<bool> {
-    let mut ret = true;
-    let res = world.get_game(chan);
-    if res.is_err() {
-        try!(bot.send_privmsg(user, format!("There is no game in {}.", chan).as_slice()));
-        ret = false;
-    } else if !try!(res).is_dm(user) {
-        try!(bot.send_privmsg(user, "You must be the DM to do that!"));
-        ret = false;
-    };
-    Ok(ret)
 }
 
 #[cfg(not(test))]
@@ -288,9 +204,9 @@ fn main() {
                     } else if msg.starts_with("lookup") {
                         try!(func::player::look_up(bot, user, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with("mlookup") {
-                        try!(do_monster_look_up(bot, user, &mut world, msg.clone().split_str(" ").collect()));
+                        try!(func::monster::look_up(bot, user, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with("addmonster") {
-                        try!(do_add_monster(bot, user, &mut world, msg.clone().split_str(" ").collect()));
+                        try!(func::monster::add(bot, user, &mut world, msg.clone().split_str(" ").collect()));
                     }
                 } else {
                     if msg.starts_with(".roll") {
