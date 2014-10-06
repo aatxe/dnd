@@ -19,47 +19,34 @@ fn main() {
                     Some(i) => source.slice_to(i),
                     None => chan,
                 };
-                if !chan.starts_with("#") {
-                    if msg.starts_with("register") {
-                        try!(func::player::register(bot, user, msg.clone().split_str(" ").collect()));
-                    } else if msg.starts_with("login") {
-                        try!(func::player::login(bot, user, &mut world, msg.clone().split_str(" ").collect()));
-                    } else if msg.starts_with("create") {
-                        try!(func::world::create(bot, user, &mut world, msg.clone().split_str(" ").collect()));
-                    } else if msg.starts_with("logout") {
-                        try!(func::player::logout(bot, user, &mut world));
-                    } else if msg.starts_with("addfeat") {
-                        try!(func::player::add_feat(bot, user, &mut world, msg.clone().split_str(" ").collect()));
-                    } else if msg.starts_with("roll") {
-                        try!(func::world::private_roll(bot, user));
-                    } else if msg.starts_with("saveall") {
-                        try!(func::world::save_all(bot, user, &world));
-                    } else if msg.starts_with("save") {
-                        try!(func::player::save(bot, user, &mut world));
-                    } else if msg.starts_with("lookup") {
-                        try!(func::player::look_up(bot, user, &mut world, msg.clone().split_str(" ").collect()));
-                    } else if msg.starts_with("mlookup") {
-                        try!(func::monster::look_up(bot, user, &mut world, msg.clone().split_str(" ").collect()));
-                    } else if msg.starts_with("addmonster") {
-                        try!(func::monster::add(bot, user, &mut world, msg.clone().split_str(" ").collect()));
+                let tokens: Vec<&str> = msg.split_str(" ").collect();
+                try!(if !chan.starts_with("#") {
+                    match tokens[0] {
+                        "register" => func::player::register(bot, user, tokens),
+                        "login" => func::player::login(bot, user, &mut world, tokens),
+                        "create" => func::world::create(bot, user, &mut world, tokens),
+                        "logout" => func::player::logout(bot, user, &mut world),
+                        "addfeat" => func::player::add_feat(bot, user, &mut world, tokens),
+                        "roll" => func::world::private_roll(bot, user),
+                        "saveall" => func::world::save_all(bot, user, &world),
+                        "save" => func::player::save(bot, user, &mut world),
+                        "lookup" => func::player::look_up(bot, user, &mut world, tokens),
+                        "mlookup" => func::monster::look_up(bot, user, &mut world, tokens),
+                        "addmonster" => func::monster::add(bot, user, &mut world, tokens),
+                        _ => Ok(())
                     }
                 } else {
-                    if msg.starts_with(".roll") {
-                        try!(func::entity::roll(bot, user, chan, &mut world, msg.clone().split_str(" ").collect()));
-                    } else if msg.starts_with(".lookup") {
-                        try!(func::player::look_up(bot, chan, &mut world, msg.clone().split_str(" ").collect()));
-                    } else if msg.starts_with(".update") {
-                        try!(func::player::add_update(bot, user, chan, &mut world, msg.clone().split_str(" ").collect(), true));
-                    } else if msg.starts_with(".increase") {
-                        try!(func::player::add_update(bot, user, chan, &mut world, msg.clone().split_str(" ").collect(), false));
-                    } else if msg.starts_with(".temp") {
-                        try!(func::entity::set_temp_stats(bot, user, chan, &mut world, msg.clone().split_str(" ").collect()));
-                    } else if msg.starts_with(".cleartemp") {
-                        try!(func::entity::clear_temp_stats(bot, user, chan, &mut world, msg.clone().split_str(" ").collect()));
-                    } else if msg.starts_with(".damage") {
-                        try!(func::entity::damage(bot, user, chan, &mut world, msg.clone().split_str(" ").collect()));
+                    match tokens[0] {
+                        ".roll" => func::entity::roll(bot, user, chan, &mut world, tokens),
+                        ".lookup" => func::player::look_up(bot, user, &mut world, tokens),
+                        ".update" => func::player::add_update(bot, user, chan, &mut world, tokens, true),
+                        ".increase" => func::player::add_update(bot, user, chan, &mut world, tokens, false),
+                        ".temp" => func::entity::set_temp_stats(bot, user, chan, &mut world, tokens),
+                        ".cleartemp" => func::entity::clear_temp_stats(bot, user, chan, &mut world, tokens),
+                        ".damage" => func::entity::damage(bot, user, chan, &mut world, tokens),
+                        _ => Ok(())
                     }
-                }
+                });
             },
             _ => (),
         }

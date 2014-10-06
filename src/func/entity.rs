@@ -7,8 +7,7 @@ use data::world::World;
 use func::{incorrect_format, permissions_test};
 use irc::Bot;
 
-pub fn roll(bot: &Bot, user: &str, chan: &str,
-           world: &mut World, params: Vec<&str>) -> IoResult<()> {
+pub fn roll(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if params.len() == 1 || (params.len() == 2 && params[1].starts_with("@")) {
         let res = if params.len() == 2 {
             if !try!(permissions_test(bot, user, chan, world)) { return Ok(()); }
