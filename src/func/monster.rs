@@ -5,7 +5,7 @@ use data::Entity;
 use data::monster::Monster;
 use data::utils::str_to_u8;
 use data::world::World;
-use func::permissions_test;
+#[cfg(not(test))] use func::permissions_test;
 use irc::Bot;
 
 

@@ -8,7 +8,7 @@ use data::{Basic, Entity, RollType};
 use data::stats::Stats;
 use data::utils::{join_from, str_to_u8};
 use data::world::World;
-use func::permissions_test;
+#[cfg(not(test))] use func::permissions_test;
 use irc::Bot;
 
 mod data;
