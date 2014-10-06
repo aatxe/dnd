@@ -8,7 +8,7 @@ use data::{Basic, Entity, RollType};
 use data::stats::Stats;
 use data::utils::str_to_u8;
 use data::world::World;
-#[cfg(not(test))] use func::permissions_test;
+#[cfg(not(test))] use func::{incorrect_format, permissions_test};
 use irc::Bot;
 
 mod data;
@@ -101,8 +101,7 @@ fn do_damage(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&
             try!(bot.send_privmsg(chan, m.as_slice()));
         }
     } else {
-        try!(bot.send_privmsg(chan, "Invalid format for damage. Format is:"));
-        try!(bot.send_privmsg(chan, ".damage target value"));
+        try!(incorrect_format(bot, chan, ".damage", "target value"));
     }
     Ok(())
 }
@@ -134,8 +133,7 @@ fn do_set_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, param
             try!(bot.send_privmsg(chan, format!("{} is not logged in or does not exist.", params[1]).as_slice()));
         }
     } else {
-        try!(bot.send_privmsg(chan, "Invalid format for setting temporary stats. Format is:"));
-        try!(bot.send_privmsg(chan, ".temp target health str dex con wis int cha"));
+        try!(incorrect_format(bot, chan, ".temp", "target health str dex con wis int cha"));
     }
     Ok(())
 }
@@ -153,8 +151,7 @@ fn do_clear_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, par
             try!(bot.send_privmsg(chan, format!("{} is not logged in or does not exist.", user).as_slice()));
         }
     } else {
-        try!(bot.send_privmsg(chan, "Invalid format for setting temporary stats. Format is:"));
-        try!(bot.send_privmsg(chan, ".cleartemp target"));
+        try!(incorrect_format(bot, chan, ".cleartemp", "target"));
     }
     Ok(())
 }

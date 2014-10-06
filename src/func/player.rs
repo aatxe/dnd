@@ -6,6 +6,7 @@ use data::Entity;
 use data::player::Player;
 use data::utils::{join_from, str_to_u8};
 use data::world::World;
+#[cfg(not(test))] use func::incorrect_format;
 use irc::Bot;
 
 #[cfg(not(test))]
@@ -29,8 +30,7 @@ pub fn register(bot: &Bot, user: &str, params: Vec<&str>) -> IoResult<()> {
             try!(bot.send_privmsg(user, "register username password health str dex con wis int cha"));
         }
     } else {
-        try!(bot.send_privmsg(user, "Incorrect format for registration. Format is:"));
-        try!(bot.send_privmsg(user, "register username password health str dex con wis int cha"));
+        try!(incorrect_format(bot, user, "register", "username password health str dex con wis int cha"));
     }
     Ok(())
 }
@@ -63,8 +63,7 @@ pub fn login(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoR
             try!(bot.send_privmsg(user, "Use logout to log out."));
         }
     } else {
-        try!(bot.send_privmsg(user, "Incorrect format for login: Format is:"));
-        try!(bot.send_privmsg(user, "login username password channel"));
+        try!(incorrect_format(bot, user, "login", "username password channel"));
     }
     Ok(())
 }
@@ -94,8 +93,7 @@ pub fn add_feat(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> 
             try!(bot.send_privmsg(user, "You must be logged in to add a feat."));
         }
     } else {
-        try!(bot.send_privmsg(user, "Can't add feat without a name. Format is:"));
-        try!(bot.send_privmsg(user, "addfeat name of feat"));
+        try!(incorrect_format(bot, user, "addfeat", "name of feat"));
     }
     Ok(())
 }
@@ -148,8 +146,7 @@ pub fn look_up(bot: &Bot, resp: &str, world: &mut World, params: Vec<&str>) -> I
         } else {
             ""
         };
-        try!(bot.send_privmsg(resp, "Invalid format for lookup. Format is:"));
-        try!(bot.send_privmsg(resp, format!("{}lookup target [stat]", dot).as_slice()))
+        try!(incorrect_format(bot, resp, format!("{}lookup", dot).as_slice(), "target [stat]"));
     }
     Ok(())
 }
@@ -179,11 +176,9 @@ pub fn add_update(bot: &Bot, user: &str, chan: &str, world: &mut World, params: 
             try!(bot.send_privmsg(chan, "You're not logged in."));
         }
     } else if update {
-        try!(bot.send_privmsg(chan, "Invalid format for update. Format is:"));
-        try!(bot.send_privmsg(chan, ".update stat value"))
+        try!(incorrect_format(bot, chan, ".update", "stat value"));
     } else {
-        try!(bot.send_privmsg(chan, "Invalid format for increase. Format is:"));
-        try!(bot.send_privmsg(chan, ".increase stat value"))
+        try!(incorrect_format(bot, chan, ".increase", "stat value"));
     }
     Ok(())
 }

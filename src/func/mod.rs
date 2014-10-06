@@ -24,6 +24,13 @@ pub fn permissions_test(bot: &Bot, user: &str, chan: &str, world: &mut World) ->
 }
 
 #[cfg(not(test))]
+pub fn incorrect_format(bot: &Bot, resp: &str, cmd: &str, format: &str) -> IoResult<()> {
+    try!(bot.send_privmsg(resp, format!("Incorrect format for {}. Format is:", cmd).as_slice()));
+    try!(bot.send_privmsg(resp, format!("{} {}", cmd, format).as_slice()));
+    Ok(())
+}
+
+#[cfg(not(test))]
 pub fn create(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if params.len() >= 3 {
         try!(bot.send_join(params[1]));
@@ -34,8 +41,7 @@ pub fn create(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> Io
         try!(bot.send_privmsg(user, format!("Campaign created named {}.", name).as_slice()));
         try!(bot.send_invite(user, params[1]));
     } else {
-        try!(bot.send_privmsg(user, "Incorrect format for game creation. Format is:"));
-        try!(bot.send_privmsg(user, "create channel campaign name"));
+        try!(incorrect_format(bot, user, "create", "channel campaign name"));
     }
     Ok(())
 }

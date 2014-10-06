@@ -5,7 +5,7 @@ use data::Entity;
 use data::monster::Monster;
 use data::utils::str_to_u8;
 use data::world::World;
-#[cfg(not(test))] use func::permissions_test;
+#[cfg(not(test))] use func::{incorrect_format, permissions_test};
 use irc::Bot;
 
 
@@ -39,8 +39,7 @@ pub fn add(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoRes
             try!(bot.send_privmsg(user, "addmonster chan name health str dex con wis int cha"));
         }
     } else {
-        try!(bot.send_privmsg(user, "Incorrect format for monster creation. Format is:"));
-        try!(bot.send_privmsg(user, "addmonster chan name health str dex con wis int cha"));
+        try!(incorrect_format(bot, user, "addmonster", "chan name health str dex con wis int cha"));
     }
     Ok(())
 }
@@ -73,8 +72,7 @@ pub fn look_up(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> I
     } else if params.len() == 3 || params.len() == 4 {
         try!(bot.send_privmsg(user, format!("{} is not a valid monster.", params[2]).as_slice()));
     } else {
-        try!(bot.send_privmsg(user, "Invalid format for mlookup. Format is:"));
-        try!(bot.send_privmsg(user, "mlookup channel target [stat]"));
+        try!(incorrect_format(bot, user, "mlookup", "channel target [stat]"));
     }
     Ok(())
 }
