@@ -36,15 +36,19 @@ fn main() {
                         _ => Ok(())
                     }
                 } else {
-                    match tokens[0] {
-                        ".roll" => func::entity::roll(bot, user, chan, &mut world, tokens),
-                        ".lookup" => func::player::look_up(bot, user, &mut world, tokens),
-                        ".update" => func::player::add_update(bot, user, chan, &mut world, tokens, true),
-                        ".increase" => func::player::add_update(bot, user, chan, &mut world, tokens, false),
-                        ".temp" => func::entity::set_temp_stats(bot, user, chan, &mut world, tokens),
-                        ".cleartemp" => func::entity::clear_temp_stats(bot, user, chan, &mut world, tokens),
-                        ".damage" => func::entity::damage(bot, user, chan, &mut world, tokens),
-                        _ => Ok(())
+                    if tokens[0].starts_with(".") {
+                        match tokens[0].slice_from(1) {
+                            "roll" => func::entity::roll(bot, user, chan, &mut world, tokens),
+                            "lookup" => func::player::look_up(bot, user, &mut world, tokens),
+                            "update" => func::player::add_update(bot, user, chan, &mut world, tokens, true),
+                            "increase" => func::player::add_update(bot, user, chan, &mut world, tokens, false),
+                            "temp" => func::entity::set_temp_stats(bot, user, chan, &mut world, tokens),
+                            "cleartemp" => func::entity::clear_temp_stats(bot, user, chan, &mut world, tokens),
+                            "damage" => func::entity::damage(bot, user, chan, &mut world, tokens),
+                            _ => Ok(())
+                        }
+                    } else {
+                        Ok(())
                     }
                 });
             },
