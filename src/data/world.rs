@@ -182,4 +182,19 @@ mod test {
         assert_eq!(w.get_entity("@0", Some("#test")).unwrap().identifier(), m.identifier());
         assert_eq!(w.get_entity("test", Some("#test")).unwrap().identifier(), p.identifier());
     }
+
+    #[test]
+    fn save_all_test() {
+        let mut w = World::new().unwrap();
+        let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
+        let q = Player::create_test("test2", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
+        w.add_user("test", p.clone()).unwrap();
+        w.add_user("test2", q.clone()).unwrap();
+        w.save_all().unwrap();
+        let l = Player::load("test").unwrap();
+        let m = Player::load("test2").unwrap();
+        assert_eq!(l, p);
+        assert_eq!(m, q);
+    }
+
 }
