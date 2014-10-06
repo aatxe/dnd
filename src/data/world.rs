@@ -120,6 +120,13 @@ impl World {
             }
         }
     }
+
+    pub fn save_all(&self) -> IoResult<()> {
+        for user in self.users.values() {
+            try!(user.save());
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]

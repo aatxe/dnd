@@ -1,6 +1,4 @@
 #![cfg(not(test))]
-extern crate irc;
-
 use std::ascii::AsciiExt;
 use std::io::IoResult;
 use data::Entity;

@@ -2,14 +2,13 @@
 extern crate irc;
 
 use std::io::IoResult;
-use data::game::Game;
-use data::utils::join_from;
 use data::world::World;
 use irc::Bot;
 
 pub mod entity;
 pub mod monster;
 pub mod player;
+pub mod world;
 
 pub fn permissions_test(bot: &Bot, user: &str, chan: &str, world: &mut World) -> IoResult<bool> {
     let mut ret = true;
@@ -27,25 +26,5 @@ pub fn permissions_test(bot: &Bot, user: &str, chan: &str, world: &mut World) ->
 pub fn incorrect_format(bot: &Bot, resp: &str, cmd: &str, format: &str) -> IoResult<()> {
     try!(bot.send_privmsg(resp, format!("Incorrect format for {}. Format is:", cmd).as_slice()));
     try!(bot.send_privmsg(resp, format!("{} {}", cmd, format).as_slice()));
-    Ok(())
-}
-
-pub fn create(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
-    if params.len() >= 3 {
-        try!(bot.send_join(params[1]));
-        let name = join_from(params.clone(), 2);
-        try!(bot.send_topic(params[1], name.as_slice()));
-        try!(bot.send_mode(params[1], "+i"));
-        try!(world.add_game(name.as_slice(), user, params[1]));
-        try!(bot.send_privmsg(user, format!("Campaign created named {}.", name).as_slice()));
-        try!(bot.send_invite(user, params[1]));
-    } else {
-        try!(incorrect_format(bot, user, "create", "channel campaign name"));
-    }
-    Ok(())
-}
-
-pub fn private_roll(bot: &irc::Bot, user: &str) -> IoResult<()> {
-    try!(bot.send_privmsg(user, format!("You rolled {}.", Game::roll()).as_slice()));
     Ok(())
 }

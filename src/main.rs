@@ -25,13 +25,15 @@ fn main() {
                     } else if msg.starts_with("login") {
                         try!(func::player::login(bot, user, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with("create") {
-                        try!(func::create(bot, user, &mut world, msg.clone().split_str(" ").collect()));
+                        try!(func::world::create(bot, user, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with("logout") {
                         try!(func::player::logout(bot, user, &mut world));
                     } else if msg.starts_with("addfeat") {
                         try!(func::player::add_feat(bot, user, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with("roll") {
-                        try!(func::private_roll(bot, user));
+                        try!(func::world::private_roll(bot, user));
+                    } else if msg.starts_with("saveall") {
+                        try!(func::world::save_all(bot, user, &world));
                     } else if msg.starts_with("save") {
                         try!(func::player::save(bot, user, &mut world));
                     } else if msg.starts_with("lookup") {
@@ -65,5 +67,5 @@ fn main() {
     };
     let mut pickle = Bot::new(process).unwrap();
     pickle.identify().unwrap();
-    pickle.output();
+    pickle.output().unwrap();
 }
