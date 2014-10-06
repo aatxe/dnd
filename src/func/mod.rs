@@ -2,6 +2,7 @@ extern crate irc;
 
 use std::io::IoResult;
 use data::game::Game;
+use data::utils::join_from;
 use data::world::World;
 use irc::Bot;
 
@@ -20,6 +21,23 @@ pub fn permissions_test(bot: &Bot, user: &str, chan: &str, world: &mut World) ->
         ret = false;
     };
     Ok(ret)
+}
+
+#[cfg(not(test))]
+pub fn create(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
+    if params.len() >= 3 {
+        try!(bot.send_join(params[1]));
+        let name = join_from(params.clone(), 2);
+        try!(bot.send_topic(params[1], name.as_slice()));
+        try!(bot.send_mode(params[1], "+i"));
+        try!(world.add_game(name.as_slice(), user, params[1]));
+        try!(bot.send_privmsg(user, format!("Campaign created named {}.", name).as_slice()));
+        try!(bot.send_invite(user, params[1]));
+    } else {
+        try!(bot.send_privmsg(user, "Incorrect format for game creation. Format is:"));
+        try!(bot.send_privmsg(user, "create channel campaign name"));
+    }
+    Ok(())
 }
 
 #[cfg(not(test))]

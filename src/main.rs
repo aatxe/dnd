@@ -6,30 +6,13 @@ extern crate serialize;
 use std::io::IoResult;
 use data::{Basic, Entity, RollType};
 use data::stats::Stats;
-use data::utils::{join_from, str_to_u8};
+use data::utils::str_to_u8;
 use data::world::World;
 #[cfg(not(test))] use func::permissions_test;
 use irc::Bot;
 
 mod data;
 mod func;
-
-#[cfg(not(test))]
-fn do_create(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
-    if params.len() >= 3 {
-        try!(bot.send_join(params[1]));
-        let name = join_from(params.clone(), 2);
-        try!(bot.send_topic(params[1], name.as_slice()));
-        try!(bot.send_mode(params[1], "+i"));
-        try!(world.add_game(name.as_slice(), user, params[1]));
-        try!(bot.send_privmsg(user, format!("Campaign created named {}.", name).as_slice()));
-        try!(bot.send_invite(user, params[1]));
-    } else {
-        try!(bot.send_privmsg(user, "Incorrect format for game creation. Format is:"));
-        try!(bot.send_privmsg(user, "create channel campaign name"));
-    }
-    Ok(())
-}
 
 #[cfg(not(test))]
 fn do_roll(bot: &Bot, user: &str, chan: &str,
@@ -192,7 +175,7 @@ fn main() {
                     } else if msg.starts_with("login") {
                         try!(func::player::login(bot, user, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with("create") {
-                        try!(do_create(bot, user, &mut world, msg.clone().split_str(" ").collect()));
+                        try!(func::create(bot, user, &mut world, msg.clone().split_str(" ").collect()));
                     } else if msg.starts_with("logout") {
                         try!(func::player::logout(bot, user, &mut world));
                     } else if msg.starts_with("addfeat") {
