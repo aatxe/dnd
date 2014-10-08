@@ -3,8 +3,9 @@ extern crate crypto;
 extern crate irc;
 extern crate serialize;
 
+use std::io::{BufferedWriter, TcpStream};
 use data::world::World;
-use irc::Bot;
+use irc::{Bot, IrcBot};
 
 mod data;
 mod func;
@@ -12,7 +13,7 @@ mod func;
 #[cfg(not(test))]
 fn main() {
     let mut world = World::new().unwrap();
-    let process = |bot: &Bot, source: &str, command: &str, args: &[&str]| {
+    let process = |bot: &IrcBot<BufferedWriter<TcpStream>, TcpStream>, source: &str, command: &str, args: &[&str]| {
         match (command, args) {
             ("PRIVMSG", [chan, msg]) => {
                 let user = match source.find('!') {
@@ -56,7 +57,7 @@ fn main() {
         }
         Ok(())
     };
-    let mut pickle = Bot::new(process).unwrap();
+    let mut pickle = IrcBot::new(process).unwrap();
     pickle.identify().unwrap();
     pickle.output().unwrap();
 }

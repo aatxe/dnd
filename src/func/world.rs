@@ -27,7 +27,7 @@ pub fn private_roll(bot: &Bot, user: &str) -> IoResult<()> {
 }
 
 pub fn save_all(bot: &Bot, user: &str, world: &World) -> IoResult<()> {
-    if bot.config.is_owner(user) {
+    if bot.config().is_owner(user) {
         try!(world.save_all());
         try!(bot.send_privmsg(user, "The world has been saved."));
     } else {

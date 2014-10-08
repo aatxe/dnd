@@ -2,34 +2,34 @@
 name = "dnd"
 version = "0.0.1"
 dependencies = [
- "crypto 0.0.1 (git+https://github.com/seb-m/crypto.rs.git#b225a17b39d8bd1e1f65e92e440d74c1786dbe1c)",
- "irc 0.0.1 (git+https://github.com/aaronweiss74/irc.git#394ca6bb8f899015f07dbebc359d99f21a6c616f)",
+ "crypto 0.0.1 (git+https://github.com/seb-m/crypto.rs.git#a97470c24fe40a3ca2fb3d77ab8509853ed62d12)",
+ "irc 0.0.1 (git+https://github.com/aaronweiss74/irc.git#95a3a8d6b688270102189d495345977779e672f1)",
 ]
 
 [[package]]
 name = "common"
 version = "0.0.1"
-source = "git+https://github.com/seb-m/common.rs#e96c8952bd919894d73a70c16c2e684b63f8e90b"
+source = "git+https://github.com/seb-m/common.rs#9fc56b07449400f086319379445b63ff6f95bc12"
 
 [[package]]
 name = "crypto"
 version = "0.0.1"
-source = "git+https://github.com/seb-m/crypto.rs.git#b225a17b39d8bd1e1f65e92e440d74c1786dbe1c"
+source = "git+https://github.com/seb-m/crypto.rs.git#a97470c24fe40a3ca2fb3d77ab8509853ed62d12"
 dependencies = [
- "common 0.0.1 (git+https://github.com/seb-m/common.rs#e96c8952bd919894d73a70c16c2e684b63f8e90b)",
- "curve41417 0.0.1 (git+https://github.com/seb-m/curve41417.rs#0836b3bf8eca909c42ecf2757f43f13ff441e60e)",
+ "common 0.0.1 (git+https://github.com/seb-m/common.rs#9fc56b07449400f086319379445b63ff6f95bc12)",
+ "curve41417 0.0.1 (git+https://github.com/seb-m/curve41417.rs#bfb65c2cb6d0161ad3ff8a385807e6fe1c24232c)",
 ]
 
 [[package]]
 name = "curve41417"
 version = "0.0.1"
-source = "git+https://github.com/seb-m/curve41417.rs#0836b3bf8eca909c42ecf2757f43f13ff441e60e"
+source = "git+https://github.com/seb-m/curve41417.rs#bfb65c2cb6d0161ad3ff8a385807e6fe1c24232c"
 dependencies = [
- "common 0.0.1 (git+https://github.com/seb-m/common.rs#e96c8952bd919894d73a70c16c2e684b63f8e90b)",
+ "common 0.0.1 (git+https://github.com/seb-m/common.rs#9fc56b07449400f086319379445b63ff6f95bc12)",
 ]
 
 [[package]]
 name = "irc"
 version = "0.0.1"
-source = "git+https://github.com/aaronweiss74/irc.git#394ca6bb8f899015f07dbebc359d99f21a6c616f"
+source = "git+https://github.com/aaronweiss74/irc.git#95a3a8d6b688270102189d495345977779e672f1"
 
