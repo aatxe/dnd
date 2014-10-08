@@ -3,7 +3,7 @@ name = "dnd"
 version = "0.0.1"
 dependencies = [
  "crypto 0.0.1 (git+https://github.com/seb-m/crypto.rs.git#b225a17b39d8bd1e1f65e92e440d74c1786dbe1c)",
- "irc 0.0.1 (git+https://github.com/aaronweiss74/irc.git#95a3a8d6b688270102189d495345977779e672f1)",
+ "irc 0.0.1 (git+https://github.com/aaronweiss74/irc.git#af1f8ecf142e0b1980427b990e6a4b54cb7623a5)",
 ]
 
 [[package]]
@@ -31,5 +31,5 @@ dependencies = [
 [[package]]
 name = "irc"
 version = "0.0.1"
-source = "git+https://github.com/aaronweiss74/irc.git#95a3a8d6b688270102189d495345977779e672f1"
+source = "git+https://github.com/aaronweiss74/irc.git#af1f8ecf142e0b1980427b990e6a4b54cb7623a5"
 
