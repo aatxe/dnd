@@ -5,7 +5,8 @@ extern crate serialize;
 
 use std::io::{BufferedWriter, TcpStream};
 use data::world::World;
-use irc::{Bot, IrcBot};
+use irc::{Bot};
+use irc::bot::IrcBot;
 
 mod data;
 mod func;
