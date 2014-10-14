@@ -89,8 +89,7 @@ mod test {
         let r = BufReader::new(":test!test@test PRIVMSG test :addmonster #test Test 20 12 12 12 12 12 12\r\n".as_bytes());
         let mut world = World::new().unwrap();
         world.add_game("Test", "test", "#test").unwrap();
-        let conn = Connection::new(MemWriter::new(), r).unwrap();
-        let mut bot = IrcBot::from_connection(conn, |bot, source, command, args| {
+        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
             process_world(bot, source, command, args, &mut world)
         }).unwrap();
         bot.output().unwrap();
@@ -102,8 +101,7 @@ mod test {
         let r = BufReader::new(":test!test@test PRIVMSG test :addmonster #test Test 20 -12 a 12 12 12 12\r\n".as_bytes());
         let mut world = World::new().unwrap();
         world.add_game("Test", "test", "#test").unwrap();
-        let conn = Connection::new(MemWriter::new(), r).unwrap();
-        let mut bot = IrcBot::from_connection(conn, |bot, source, command, args| {
+        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
             process_world(bot, source, command, args, &mut world)
         }).unwrap();
         bot.output().unwrap();
@@ -118,8 +116,7 @@ mod test {
         let mut world = World::new().unwrap();
         world.add_game("Test", "test", "#test").unwrap();
         world.add_monster(Monster::create("Test", 20, 12, 12, 12, 12, 12, 12).unwrap(), "#test").unwrap();
-        let conn = Connection::new(MemWriter::new(), r).unwrap();
-        let mut bot = IrcBot::from_connection(conn, |bot, source, command, args| {
+        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
             process_world(bot, source, command, args, &mut world)
         }).unwrap();
         bot.output().unwrap();
@@ -132,8 +129,7 @@ mod test {
         let mut world = World::new().unwrap();
         world.add_game("Test", "test", "#test").unwrap();
         world.add_monster(Monster::create("Test", 20, 12, 12, 12, 12, 12, 12).unwrap(), "#test").unwrap();
-        let conn = Connection::new(MemWriter::new(), r).unwrap();
-        let mut bot = IrcBot::from_connection(conn, |bot, source, command, args| {
+        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
             process_world(bot, source, command, args, &mut world)
         }).unwrap();
         bot.output().unwrap();
@@ -146,8 +142,7 @@ mod test {
         let mut world = World::new().unwrap();
         world.add_game("Test", "test", "#test").unwrap();
         world.add_monster(Monster::create("Test", 20, 12, 12, 12, 12, 12, 12).unwrap(), "#test").unwrap();
-        let conn = Connection::new(MemWriter::new(), r).unwrap();
-        let mut bot = IrcBot::from_connection(conn, |bot, source, command, args| {
+        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
             process_world(bot, source, command, args, &mut world)
         }).unwrap();
         bot.output().unwrap();
@@ -160,8 +155,7 @@ mod test {
         let mut world = World::new().unwrap();
         world.add_game("Test", "test", "#test").unwrap();
         world.add_monster(Monster::create("Test", 20, 12, 12, 12, 12, 12, 12).unwrap(), "#test").unwrap();
-        let conn = Connection::new(MemWriter::new(), r).unwrap();
-        let mut bot = IrcBot::from_connection(conn, |bot, source, command, args| {
+        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
             process_world(bot, source, command, args, &mut world)
         }).unwrap();
         bot.output().unwrap();
@@ -176,8 +170,7 @@ mod test {
         let mut m = Monster::create("Test", 14, 12, 10, 12, 12, 12, 12).unwrap();
         m.set_temp_stats(Stats::new(20, 12, 12, 12, 12, 12, 12).unwrap());
         world.add_monster(m, "#test").unwrap();
-        let conn = Connection::new(MemWriter::new(), r).unwrap();
-        let mut bot = IrcBot::from_connection(conn, |bot, source, command, args| {
+        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
             process_world(bot, source, command, args, &mut world)
         }).unwrap();
         bot.output().unwrap();
@@ -192,8 +185,7 @@ mod test {
         let mut m = Monster::create("Test", 14, 12, 10, 12, 12, 12, 12).unwrap();
         m.set_temp_stats(Stats::new(20, 12, 12, 12, 12, 12, 12).unwrap());
         world.add_monster(m, "#test").unwrap();
-        let conn = Connection::new(MemWriter::new(), r).unwrap();
-        let mut bot = IrcBot::from_connection(conn, |bot, source, command, args| {
+        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
             process_world(bot, source, command, args, &mut world)
         }).unwrap();
         bot.output().unwrap();

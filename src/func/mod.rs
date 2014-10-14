@@ -85,20 +85,17 @@ mod test {
 
     #[test]
     fn permissions_test_no_game() {
-        let mut world = World::new().unwrap();
-        let conn = Connection::new(MemWriter::new(), NullReader).unwrap();
-        let bot = IrcBot::from_connection(conn, |_, _, _, _| {
+        let bot = IrcBot::from_connection(Connection::new(MemWriter::new(), NullReader).unwrap(), |_, _, _, _| {
             Ok(())
         }).unwrap();
-        assert!(!super::permissions_test(&bot, "test", "#test", &mut world).unwrap());
+        assert!(!super::permissions_test(&bot, "test", "#test", &mut World::new().unwrap()).unwrap());
         assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG test :There is no game in #test.\r\n".as_bytes());
     }
 
     #[test]
     fn permissions_test_not_dm() {
         let mut world = World::new().unwrap();
-        let conn = Connection::new(MemWriter::new(), NullReader).unwrap();
-        let bot = IrcBot::from_connection(conn, |_, _, _, _| {
+        let bot = IrcBot::from_connection(Connection::new(MemWriter::new(), NullReader).unwrap(), |_, _, _, _| {
             Ok(())
         }).unwrap();
         world.add_game("Test", "test", "#test").unwrap();
@@ -109,8 +106,7 @@ mod test {
     #[test]
     fn permissions_test_success() {
         let mut world = World::new().unwrap();
-        let conn = Connection::new(MemWriter::new(), NullReader).unwrap();
-        let bot = IrcBot::from_connection(conn, |_, _, _, _| {
+        let bot = IrcBot::from_connection(Connection::new(MemWriter::new(), NullReader).unwrap(), |_, _, _, _| {
             Ok(())
         }).unwrap();
         world.add_game("Test", "test", "#test").unwrap();
@@ -119,8 +115,7 @@ mod test {
 
     #[test]
     fn incorrect_format() {
-        let conn = Connection::new(MemWriter::new(), NullReader).unwrap();
-        let bot = IrcBot::from_connection(conn, |_, _, _, _| {
+        let bot = IrcBot::from_connection(Connection::new(MemWriter::new(), NullReader).unwrap(), |_, _, _, _| {
             Ok(())
         }).unwrap();
         super::incorrect_format(&bot, "test", "a", "b c").unwrap();
