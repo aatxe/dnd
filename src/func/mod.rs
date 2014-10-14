@@ -77,7 +77,6 @@ pub fn incorrect_format(bot: &Bot, resp: &str, cmd: &str, format: &str) -> IoRes
 
 #[cfg(test)]
 mod test {
-    use super::process_world;
     use std::io::MemWriter;
     use std::io::util::NullReader;
     use data::world::World;
@@ -120,10 +119,9 @@ mod test {
 
     #[test]
     fn incorrect_format() {
-        let mut world = World::new().unwrap();
         let conn = Connection::new(MemWriter::new(), NullReader).unwrap();
-        let bot = IrcBot::from_connection(conn, |bot, source, command, args| {
-            process_world(bot, source, command, args, &mut world)
+        let bot = IrcBot::from_connection(conn, |_, _, _, _| {
+            Ok(())
         }).unwrap();
         super::incorrect_format(&bot, "test", "a", "b c").unwrap();
         let mut exp = String::from_str("PRIVMSG test :Incorrect format for a. Format is:\r\n");
