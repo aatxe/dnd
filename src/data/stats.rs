@@ -79,6 +79,16 @@ impl Stats {
         let st = stat as i8;
         (st - 10) / 2
     }
+
+    pub fn damage(&mut self, amount: u8) -> bool {
+        if amount >= self.health {
+            self.health = 0;
+            false
+        } else {
+            self.health -= amount;
+            true
+        }
+    }
 }
 
 #[cfg(test)]
