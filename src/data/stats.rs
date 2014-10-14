@@ -131,4 +131,13 @@ mod test {
         assert_eq!(Stats::calc_bonus(11), 0i8);
         assert_eq!(Stats::calc_bonus(8), -1i8);
     }
+
+    #[test]
+    fn damage() {
+        let mut s = Stats::new(20, 12, 12, 12, 12, 12, 12).unwrap();
+        assert!(s.damage(4));
+        assert_eq!(s.get_stat("health"), Some(16));
+        assert!(!s.damage(18));
+        assert_eq!(s.get_stat("health"), Some(0));
+    }
 }

@@ -73,12 +73,13 @@ impl Entity for Player {
     }
 
     fn damage(&mut self, amount: u8) -> bool {
-        if amount >= self.stats.health {
-            self.stats.health = 0;
-            false
+        if self.temp_stats.is_some() {
+            let mut temp = self.temp_stats.unwrap();
+            let ret = temp.damage(amount);
+            self.temp_stats = Some(temp);
+            ret
         } else {
-            self.stats.health -= amount;
-            true
+            self.stats.damage(amount)
         }
     }
 
