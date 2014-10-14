@@ -118,7 +118,12 @@ pub fn set_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, para
                 try!(bot.send_privmsg(chan, ".temp target health str dex con wis int cha"));
             }
         } else {
-            try!(bot.send_privmsg(chan, format!("{} is not logged in or does not exist.", params[1]).as_slice()));
+            let m = if params[1].starts_with("@") {
+                format!("{} is not a valid monster.", params[1])
+            } else {
+                format!("{} is not logged in.", params[1])
+            };
+            try!(bot.send_privmsg(chan, m.as_slice()));
         }
     } else {
         try!(incorrect_format(bot, chan, ".temp", "target health str dex con wis int cha"));
@@ -135,7 +140,12 @@ pub fn clear_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, pa
             p.clear_temp_stats();
             try!(bot.send_privmsg(chan, format!("{} ({}) has reverted to {}.", p.identifier(), params[1], p.stats()).as_slice()));
         } else {
-            try!(bot.send_privmsg(chan, format!("{} is not logged in or does not exist.", params[1]).as_slice()));
+            let m = if params[1].starts_with("@") {
+                format!("{} is not a valid monster.", params[1])
+            } else {
+                format!("{} is not logged in.", params[1])
+            };
+            try!(bot.send_privmsg(chan, m.as_slice()));
         }
     } else {
         try!(incorrect_format(bot, chan, ".cleartemp", "target"));
@@ -178,7 +188,7 @@ mod test {
             process_world(bot, source, command, args, &mut world)
         }).unwrap();
         bot.output().unwrap();
-        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG #test :@0 is not logged in or does not exist.\r\n".as_bytes());
+        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG #test :@0 is not a valid monster.\r\n".as_bytes());
     }
 
     #[test]
@@ -221,6 +231,6 @@ mod test {
             process_world(bot, source, command, args, &mut world)
         }).unwrap();
         bot.output().unwrap();
-        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG #test :@0 is not logged in or does not exist.\r\n".as_bytes());
+        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG #test :@0 is not a valid monster.\r\n".as_bytes());
     }
 }
