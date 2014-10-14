@@ -99,6 +99,27 @@ mod test {
     }
 
     #[test]
+    fn damage() {
+        let mut m = Monster::create("test", 20, 12, 12, 12, 12, 12, 12).unwrap();
+        assert_eq!(m.stats().health, 20);
+        assert!(m.damage(5));
+        assert_eq!(m.stats().health, 15);
+        assert!(!m.damage(16));
+        assert_eq!(m.stats().health, 0);
+    }
+
+    #[test]
+    fn damage_temp_health() {
+        let mut m = Monster::create("test", 20, 12, 12, 12, 12, 12, 12).unwrap();
+        m.set_temp_stats(Stats::new(40, 10, 10, 10, 10, 10, 10).unwrap());
+        assert_eq!(m.stats().health, 40);
+        assert!(m.damage(5));
+        assert_eq!(m.stats().health, 35);
+        assert!(!m.damage(35));
+        assert_eq!(m.stats().health, 0);
+    }
+
+    #[test]
     fn stats_fn() {
         let mut m = Monster::create("test", 20, 12, 12, 12, 12, 12, 12).unwrap();
         let s = Stats::new(20, 10, 10, 10, 10, 10, 10).unwrap();

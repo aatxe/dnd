@@ -162,6 +162,27 @@ mod test {
     }
 
     #[test]
+    fn damage() {
+        let mut p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
+        assert_eq!(p.stats().health, 20);
+        assert!(p.damage(5));
+        assert_eq!(p.stats().health, 15);
+        assert!(!p.damage(16));
+        assert_eq!(p.stats().health, 0);
+    }
+
+    #[test]
+    fn damage_temp_health() {
+        let mut p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
+        p.set_temp_stats(Stats::new(40, 10, 10, 10, 10, 10, 10).unwrap());
+        assert_eq!(p.stats().health, 40);
+        assert!(p.damage(5));
+        assert_eq!(p.stats().health, 35);
+        assert!(!p.damage(35));
+        assert_eq!(p.stats().health, 0);
+    }
+
+    #[test]
     fn stats_fn() {
         let mut p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
         let s = Stats::new(20, 10, 10, 10, 10, 10, 10).unwrap();
