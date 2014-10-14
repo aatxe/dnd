@@ -84,13 +84,17 @@ impl World {
 
     pub fn get_entity(&mut self, identifier: &str, chan: Option<&str>) -> IoResult<&mut Entity> {
         if identifier.starts_with("@") {
-            let i = match from_str(identifier.slice_from(1)) {
+            let i: uint = match from_str(identifier.slice_from(1)) {
                 Some(n) => n,
-                None => 0,
+                None => return Err(IoError {
+                    kind: InvalidInput,
+                    desc: "Non-integer identifier.",
+                    detail: None,
+                }),
             };
             if chan.is_some() {
                 let chan_str = String::from_str(chan.unwrap());
-                if i < self.monsters.get_mut(&chan_str).len() {
+                if self.monsters.contains_key(&chan_str) && i < self.monsters.get_mut(&chan_str).len() {
                     Ok(self.monsters.get_mut(&chan_str).get_mut(i) as &mut Entity)
                 } else {
                     Err(IoError {
