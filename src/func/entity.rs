@@ -166,6 +166,16 @@ mod test {
     use irc::conn::Connection;
 
     #[test]
+    fn roll_failed_invalid_format() {
+        let r = BufReader::new(":test!test@test PRIVMSG #test :.roll a b c\r\n".as_bytes());
+        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
+            process_world(bot, source, command, args, &mut World::new().unwrap())
+        }).unwrap();
+        bot.output().unwrap();
+        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG #test :Invalid format. Use '.roll [@monster]' or '.roll [@monster] (stat)'.\r\n".as_bytes());
+    }
+
+    #[test]
     fn set_temp_stats_success() {
         let r = BufReader::new(":test!test@test PRIVMSG #test :.temp @0 20 12 12 12 12 12 12\r\n".as_bytes());
         let mut world = World::new().unwrap();
@@ -180,7 +190,7 @@ mod test {
     }
 
     #[test]
-    fn set_temp_stats_failed_does_not_exist() {
+    fn set_temp_stats_failed_monster_does_not_exist() {
         let r = BufReader::new(":test!test@test PRIVMSG #test :.temp @0 20 12 12 12 12 12 12\r\n".as_bytes());
         let mut world = World::new().unwrap();
         world.add_game("Test", "test", "#test").unwrap();
@@ -223,7 +233,7 @@ mod test {
     }
 
     #[test]
-    fn clear_temp_stats_failed_does_not_exist() {
+    fn clear_temp_stats_failed_monster_does_not_exist() {
         let r = BufReader::new(":test!test@test PRIVMSG #test :.cleartemp @0\r\n".as_bytes());
         let mut world = World::new().unwrap();
         world.add_game("Test", "test", "#test").unwrap();
@@ -232,5 +242,17 @@ mod test {
         }).unwrap();
         bot.output().unwrap();
         assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG #test :@0 is not a valid monster.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn clear_temp_stats_failed_user_is_not_logged_in() {
+        let r = BufReader::new(":test!test@test PRIVMSG #test :.cleartemp test\r\n".as_bytes());
+        let mut world = World::new().unwrap();
+        world.add_game("Test", "test", "#test").unwrap();
+        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
+            process_world(bot, source, command, args, &mut world)
+        }).unwrap();
+        bot.output().unwrap();
+        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG #test :test is not logged in.\r\n".as_bytes());
     }
 }
