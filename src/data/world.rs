@@ -21,13 +21,8 @@ impl World {
         })
     }
 
-    pub fn is_user_logged_in(&mut self, nickname: &str) -> bool {
-        for user in self.users.keys() {
-            if user.as_slice().eq(&nickname) {
-                return true;
-            }
-        };
-        false
+    pub fn is_user_logged_in(&self, nickname: &str) -> bool {
+        self.users.contains_key(&String::from_str(nickname))
     }
 
     pub fn add_user(&mut self, nickname: &str, player: Player) -> IoResult<()> {
@@ -53,6 +48,10 @@ impl World {
                 detail: None,
             })
         }
+    }
+
+    pub fn game_exists(&self, chan: &str) -> bool {
+        self.games.contains_key(&String::from_str(chan))
     }
 
     pub fn add_game(&mut self, name: &str, dm_nick: &str, chan: &str) -> IoResult<()> {
@@ -140,14 +139,21 @@ mod test {
     fn world_user() {
         let mut w = World::new().unwrap();
         let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
-        assert_eq!(w.is_user_logged_in("test"), false);
+        assert!(!w.is_user_logged_in("test"));
         w.add_user("test", p.clone()).unwrap();
         assert_eq!(*w.get_user("test").unwrap(), p);
-        assert_eq!(w.is_user_logged_in("test"), true);
+        assert!(w.is_user_logged_in("test"));
         w.remove_user("test").unwrap();
-        assert_eq!(w.is_user_logged_in("test"), false);
+        assert!(!w.is_user_logged_in("test"));
         assert!(w.get_user("test").is_err());
+    }
 
+    #[test]
+    fn game_exists() {
+        let mut w = World::new().unwrap();
+        assert!(!w.game_exists("#test"));
+        w.add_game("Dungeons and Tests", "test", "#test").unwrap();
+        assert!(w.game_exists("#test"));
     }
 
     #[test]
