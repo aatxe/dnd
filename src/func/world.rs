@@ -7,13 +7,17 @@ use irc::Bot;
 
 pub fn create(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
     if params.len() >= 3 {
-        try!(bot.send_join(params[1]));
-        let name = join_from(params.clone(), 2);
-        try!(bot.send_topic(params[1], name.as_slice()));
-        try!(bot.send_mode(params[1], "+i"));
-        try!(world.add_game(name.as_slice(), user, params[1]));
-        try!(bot.send_privmsg(user, format!("Campaign created named {}.", name).as_slice()));
-        try!(bot.send_invite(user, params[1]));
+        if !world.game_exists(params[1]) {
+            try!(bot.send_join(params[1]));
+            let name = join_from(params.clone(), 2);
+            try!(bot.send_topic(params[1], name.as_slice()));
+            try!(bot.send_mode(params[1], "+i"));
+            try!(world.add_game(name.as_slice(), user, params[1]));
+            try!(bot.send_privmsg(user, format!("Campaign created named {}.", name).as_slice()));
+            try!(bot.send_invite(user, params[1]));
+        } else {
+            try!(bot.send_privmsg(user, format!("A campaign already exists on {}.", params[1]).as_slice()));
+        }
     } else {
         try!(incorrect_format(bot, user, "create", "channel campaign name"));
     }
@@ -57,6 +61,18 @@ mod test {
         exp.push_str("PRIVMSG test :Campaign created named Dungeons and Tests.\r\n");
         exp.push_str("INVITE test :#test\r\n");
         assert_eq!(bot.conn.writer().deref_mut().get_ref(), exp.as_bytes());
+    }
+
+    #[test]
+    fn create_failed_already_exists() {
+        let r = BufReader::new(":test!test@test PRIVMSG test :create #test Dungeons and Tests\r\n".as_bytes());
+        let mut world = World::new().unwrap();
+        world.add_game("Dungeons and Tests", "test", "#test").unwrap();
+        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
+            process_world(bot, source, command, args, &mut world)
+        }).unwrap();
+        bot.output().unwrap();
+        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG test :A campaign already exists on #test.\r\n".as_bytes());
     }
 
     #[test]
