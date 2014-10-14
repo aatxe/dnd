@@ -74,3 +74,60 @@ pub fn incorrect_format(bot: &Bot, resp: &str, cmd: &str, format: &str) -> IoRes
     try!(bot.send_privmsg(resp, format!("{} {}", cmd, format).as_slice()));
     Ok(())
 }
+
+#[cfg(test)]
+mod test {
+    use super::process_world;
+    use std::io::MemWriter;
+    use std::io::util::NullReader;
+    use data::world::World;
+    use irc::bot::IrcBot;
+    use irc::conn::Connection;
+
+    #[test]
+    fn permissions_test_no_game() {
+        let mut world = World::new().unwrap();
+        let conn = Connection::new(MemWriter::new(), NullReader).unwrap();
+        let bot = IrcBot::from_connection(conn, |_, _, _, _| {
+            Ok(())
+        }).unwrap();
+        assert!(!super::permissions_test(&bot, "test", "#test", &mut world).unwrap());
+        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG test :There is no game in #test.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn permissions_test_not_dm() {
+        let mut world = World::new().unwrap();
+        let conn = Connection::new(MemWriter::new(), NullReader).unwrap();
+        let bot = IrcBot::from_connection(conn, |_, _, _, _| {
+            Ok(())
+        }).unwrap();
+        world.add_game("Test", "test", "#test").unwrap();
+        assert!(!super::permissions_test(&bot, "test2", "#test", &mut world).unwrap());
+        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG test2 :You must be the DM to do that!\r\n".as_bytes());
+    }
+
+    #[test]
+    fn permissions_test_success() {
+        let mut world = World::new().unwrap();
+        let conn = Connection::new(MemWriter::new(), NullReader).unwrap();
+        let bot = IrcBot::from_connection(conn, |_, _, _, _| {
+            Ok(())
+        }).unwrap();
+        world.add_game("Test", "test", "#test").unwrap();
+        assert!(super::permissions_test(&bot, "test", "#test", &mut world).unwrap());
+    }
+
+    #[test]
+    fn incorrect_format() {
+        let mut world = World::new().unwrap();
+        let conn = Connection::new(MemWriter::new(), NullReader).unwrap();
+        let bot = IrcBot::from_connection(conn, |bot, source, command, args| {
+            process_world(bot, source, command, args, &mut world)
+        }).unwrap();
+        super::incorrect_format(&bot, "test", "a", "b c").unwrap();
+        let mut exp = String::from_str("PRIVMSG test :Incorrect format for a. Format is:\r\n");
+        exp.push_str("PRIVMSG test :a b c\r\n");
+        assert_eq!(bot.conn.writer().deref_mut().get_ref(), exp.as_bytes());
+    }
+}
