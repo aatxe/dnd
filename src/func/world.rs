@@ -1,4 +1,3 @@
-#![cfg(not(test))]
 use std::io::IoResult;
 use data::game::Game;
 use data::utils::join_from;
@@ -34,4 +33,67 @@ pub fn save_all(bot: &Bot, user: &str, world: &World) -> IoResult<()> {
         try!(bot.send_privmsg(user, "You must own the bot to do that!"));
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod test {
+    use std::io::{BufReader, MemWriter};
+    use data::world::World;
+    use func::process_world;
+    use irc::Bot;
+    use irc::bot::IrcBot;
+    use irc::conn::Connection;
+
+    #[test]
+    fn create_success() {
+        let r = BufReader::new(":test!test@test PRIVMSG test :create #test Dungeons and Tests\r\n".as_bytes());
+        let mut world = World::new().unwrap();
+        let conn = Connection::new(MemWriter::new(), r).unwrap();
+        let mut bot = IrcBot::from_connection(conn, |bot, source, command, args| {
+            process_world(bot, source, command, args, &mut world)
+        }).unwrap();
+        bot.output().unwrap();
+        let mut exp = String::from_str("JOIN :#test\r\n");
+        exp.push_str("TOPIC #test :Dungeons and Tests\r\n");
+        exp.push_str("MODE #test :+i\r\n");
+        exp.push_str("PRIVMSG test :Campaign created named Dungeons and Tests.\r\n");
+        exp.push_str("INVITE test :#test\r\n");
+        assert_eq!(bot.conn.writer().deref_mut().get_ref(), exp.as_bytes());
+    }
+
+    #[test]
+    fn private_roll() {
+        let r = BufReader::new(":test!test@test PRIVMSG test :roll\r\n".as_bytes());
+        let mut world = World::new().unwrap();
+        let conn = Connection::new(MemWriter::new(), r).unwrap();
+        let mut bot = IrcBot::from_connection(conn, |bot, source, command, args| {
+            process_world(bot, source, command, args, &mut world)
+        }).unwrap();
+        bot.output().unwrap();
+        assert_eq!(bot.conn.writer().deref_mut().get_ref().slice_to(25), "PRIVMSG test :You rolled ".as_bytes());
+    }
+
+    #[test]
+    fn save_all_from_owner() {
+        let r = BufReader::new(":test!test@test PRIVMSG test :saveall\r\n".as_bytes());
+        let mut world = World::new().unwrap();
+        let conn = Connection::new(MemWriter::new(), r).unwrap();
+        let mut bot = IrcBot::from_connection(conn, |bot, source, command, args| {
+            process_world(bot, source, command, args, &mut world)
+        }).unwrap();
+        bot.output().unwrap();
+        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG test :The world has been saved.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn save_all_from_non_owner() {
+        let r = BufReader::new(":test2!test@test PRIVMSG test :saveall\r\n".as_bytes());
+        let mut world = World::new().unwrap();
+        let conn = Connection::new(MemWriter::new(), r).unwrap();
+        let mut bot = IrcBot::from_connection(conn, |bot, source, command, args| {
+            process_world(bot, source, command, args, &mut world)
+        }).unwrap();
+        bot.output().unwrap();
+        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG test2 :You must own the bot to do that!\r\n".as_bytes());
+    }
 }

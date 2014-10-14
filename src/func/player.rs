@@ -1,4 +1,3 @@
-#![cfg(not(test))]
 use std::ascii::AsciiExt;
 use std::io::IoResult;
 use data::Entity;

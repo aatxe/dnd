@@ -186,13 +186,13 @@ mod test {
     #[test]
     fn save_all() {
         let mut w = World::new().unwrap();
-        let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
-        let q = Player::create_test("test2", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
-        w.add_user("test", p.clone()).unwrap();
-        w.add_user("test2", q.clone()).unwrap();
+        let p = Player::create_test("test2", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
+        let q = Player::create_test("test3", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
+        w.add_user("test2", p.clone()).unwrap();
+        w.add_user("test3", q.clone()).unwrap();
         w.save_all().unwrap();
-        let l = Player::load("test").unwrap();
-        let m = Player::load("test2").unwrap();
+        let l = Player::load("test2").unwrap();
+        let m = Player::load("test3").unwrap();
         assert_eq!(l, p);
         assert_eq!(m, q);
     }

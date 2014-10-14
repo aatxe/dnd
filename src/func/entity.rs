@@ -1,4 +1,3 @@
-#![cfg(not(test))]
 use std::io::IoResult;
 use data::{Basic, Entity, RollType};
 use data::stats::Stats;

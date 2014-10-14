@@ -1,4 +1,3 @@
-#![cfg(not(test))]
 extern crate irc;
 
 use std::io::IoResult;
