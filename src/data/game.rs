@@ -65,7 +65,6 @@ mod test {
         assert_eq!(s, h);
     }
 
-
     #[test]
     fn worldless_roll() {
         for _ in range(0i, 1000i) {
