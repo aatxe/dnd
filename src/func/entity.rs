@@ -135,7 +135,7 @@ pub fn clear_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, pa
             p.clear_temp_stats();
             try!(bot.send_privmsg(chan, format!("{} ({}) has reverted to {}.", p.identifier(), params[1], p.stats()).as_slice()));
         } else {
-            try!(bot.send_privmsg(chan, format!("{} is not logged in or does not exist.", user).as_slice()));
+            try!(bot.send_privmsg(chan, format!("{} is not logged in or does not exist.", params[1]).as_slice()));
         }
     } else {
         try!(incorrect_format(bot, chan, ".cleartemp", "target"));
@@ -146,7 +146,9 @@ pub fn clear_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, pa
 #[cfg(test)]
 mod test {
     use std::io::{BufReader, MemWriter};
+    use data::Entity;
     use data::monster::Monster;
+    use data::stats::Stats;
     use data::world::World;
     use func::process_world;
     use irc::Bot;
@@ -170,6 +172,49 @@ mod test {
     #[test]
     fn set_temp_stats_failed_does_not_exist() {
         let r = BufReader::new(":test!test@test PRIVMSG #test :.temp @0 20 12 12 12 12 12 12\r\n".as_bytes());
+        let mut world = World::new().unwrap();
+        world.add_game("Test", "test", "#test").unwrap();
+        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
+            process_world(bot, source, command, args, &mut world)
+        }).unwrap();
+        bot.output().unwrap();
+        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG #test :@0 is not logged in or does not exist.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn set_temp_stats_failed_non_integers() {
+        let r = BufReader::new(":test!test@test PRIVMSG #test :.temp @0 20 -12 a 12 12 12 12\r\n".as_bytes());
+        let mut world = World::new().unwrap();
+        world.add_game("Test", "test", "#test").unwrap();
+        let m = Monster::create("Test", 14, 12, 10, 12, 12, 12, 12).unwrap();
+        world.add_monster(m, "#test").unwrap();
+        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
+            process_world(bot, source, command, args, &mut world)
+        }).unwrap();
+        bot.output().unwrap();
+        let mut exp = String::from_str("PRIVMSG #test :Stats must be non-zero positive integers. Format is: \r\n");
+        exp.push_str("PRIVMSG #test :.temp target health str dex con wis int cha\r\n");
+        assert_eq!(bot.conn.writer().deref_mut().get_ref(), exp.as_bytes());
+    }
+
+    #[test]
+    fn clear_temp_stats_success() {
+        let r = BufReader::new(":test!test@test PRIVMSG #test :.cleartemp @0\r\n".as_bytes());
+        let mut world = World::new().unwrap();
+        world.add_game("Test", "test", "#test").unwrap();
+        let mut m = Monster::create("Test", 14, 12, 10, 12, 12, 12, 12).unwrap();
+        m.set_temp_stats(Stats::new(20, 12, 12, 12, 12, 12, 12).unwrap());
+        world.add_monster(m, "#test").unwrap();
+        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
+            process_world(bot, source, command, args, &mut world)
+        }).unwrap();
+        bot.output().unwrap();
+        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG #test :Test (@0) has reverted to Stats { health: 14, strength: 12, dexterity: 10, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn clear_temp_stats_failed_does_not_exist() {
+        let r = BufReader::new(":test!test@test PRIVMSG #test :.cleartemp @0\r\n".as_bytes());
         let mut world = World::new().unwrap();
         world.add_game("Test", "test", "#test").unwrap();
         let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
