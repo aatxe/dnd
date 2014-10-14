@@ -146,9 +146,9 @@ mod test {
 
     #[test]
     fn save_load_player() {
-        let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
+        let p = Player::create_test("test4", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
         p.save().unwrap();
-        let l = Player::load("test").unwrap();
+        let l = Player::load("test4").unwrap();
         assert_eq!(l, p);
     }
 
