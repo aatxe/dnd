@@ -308,4 +308,154 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG test :save\r\n", |_| { Ok(()) }).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG test :You must be logged in to save.\r\n".as_bytes());
     }
+
+    #[test]
+    fn lookup_query_success() {
+        let data = test_helper(":test!test@test PRIVMSG test :lookup test\r\n",
+            |world| {
+                try!(world.add_game("Dungeons and Tests", "test", "#test"));
+                let p = try!(Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12));
+                world.add_user("test", p)
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :test (test): Stats { health: 20, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 } Feats []\r\n".as_bytes());
+    }
+
+    #[test]
+    fn lookup_query_success_feats() {
+        let data = test_helper(":test!test@test PRIVMSG test :lookup test feats\r\n",
+            |world| {
+                try!(world.add_game("Dungeons and Tests", "test", "#test"));
+                let p = try!(Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12));
+                world.add_user("test", p)
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :test (test): []\r\n".as_bytes());
+    }
+
+    #[test]
+    fn lookup_query_success_stat() {
+        let data = test_helper(":test!test@test PRIVMSG test :lookup test health\r\n",
+            |world| {
+                try!(world.add_game("Dungeons and Tests", "test", "#test"));
+                let p = try!(Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12));
+                world.add_user("test", p)
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :test (test): 20 health\r\n".as_bytes());
+    }
+
+    #[test]
+    fn lookup_query_failed_invalid_stat() {
+        let data = test_helper(":test!test@test PRIVMSG test :lookup test test\r\n",
+            |world| {
+                try!(world.add_game("Dungeons and Tests", "test", "#test"));
+                let p = try!(Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12));
+                world.add_user("test", p)
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :test is not a valid stat.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn lookup_query_failed_user_not_logged_in() {
+        let data = test_helper(":test!test@test PRIVMSG test :lookup test\r\n", |_| { Ok(()) }).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :test is not logged in.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn lookup_channel_success() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.lookup test\r\n",
+            |world| {
+                try!(world.add_game("Dungeons and Tests", "test", "#test"));
+                let p = try!(Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12));
+                world.add_user("test", p)
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG #test :test (test): Stats { health: 20, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 } Feats []\r\n".as_bytes());
+    }
+
+    #[test]
+    fn lookup_channel_success_feats() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.lookup test feats\r\n",
+            |world| {
+                try!(world.add_game("Dungeons and Tests", "test", "#test"));
+                let p = try!(Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12));
+                world.add_user("test", p)
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG #test :test (test): []\r\n".as_bytes());
+    }
+
+    #[test]
+    fn lookup_channel_success_stat() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.lookup test health\r\n",
+            |world| {
+                try!(world.add_game("Dungeons and Tests", "test", "#test"));
+                let p = try!(Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12));
+                world.add_user("test", p)
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG #test :test (test): 20 health\r\n".as_bytes());
+    }
+
+    #[test]
+    fn lookup_channel_failed_invalid_stat() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.lookup test test\r\n",
+            |world| {
+                try!(world.add_game("Dungeons and Tests", "test", "#test"));
+                let p = try!(Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12));
+                world.add_user("test", p)
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG #test :test is not a valid stat.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn lookup_channel_failed_user_not_logged_in() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.lookup test\r\n", |_| { Ok(()) }).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG #test :test is not logged in.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn add_stat_success() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.increase str 1\r\n",
+            |world| {
+                try!(world.add_game("Dungeons and Tests", "test", "#test"));
+                let p = try!(Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12));
+                world.add_user("test", p)
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG #test :test (test) now has 13 str.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn update_stat_success() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.update str 16\r\n",
+            |world| {
+                try!(world.add_game("Dungeons and Tests", "test", "#test"));
+                let p = try!(Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12));
+                world.add_user("test", p)
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG #test :test (test) now has 16 str.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn add_update_failed_invalid_stat_value() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.update str a\r\n",
+            |world| {
+                try!(world.add_game("Dungeons and Tests", "test", "#test"));
+                let p = try!(Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12));
+                world.add_user("test", p)
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG #test :a is not a valid positive integer.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn add_update_failed_user_not_logged_in() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.update str 16\r\n", |_| { Ok(()) }).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG #test :You're not logged in.\r\n".as_bytes());
+    }
 }

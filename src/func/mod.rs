@@ -38,7 +38,7 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
                 if tokens[0].starts_with(".") {
                     match tokens[0].slice_from(1) {
                         "roll" => entity::roll(bot, user, chan, world, tokens),
-                        "lookup" => player::look_up(bot, user, world, tokens),
+                        "lookup" => player::look_up(bot, chan, world, tokens),
                         "update" => player::add_update(bot, user, chan, world, tokens, true),
                         "increase" => player::add_update(bot, user, chan, world, tokens, false),
                         "temp" => entity::set_temp_stats(bot, user, chan, world, tokens),
