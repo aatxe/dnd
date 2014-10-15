@@ -161,6 +161,67 @@ mod test {
     use func::test::test_helper;
 
     #[test]
+    fn roll_success() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.roll @0\r\n",
+            |world| {
+                try!(world.add_game("Test", "test", "#test"));
+                let m = try!(Monster::create("Test", 14, 12, 10, 12, 12, 12, 12));
+                try!(world.add_monster(m, "#test"));
+                Ok(())
+            }
+        ).unwrap();
+        assert_eq!(data.slice_to(27), "PRIVMSG #test :Test rolled ".as_bytes());
+    }
+
+    #[test]
+    fn roll_success_stat() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.roll @0 con\r\n",
+            |world| {
+                try!(world.add_game("Test", "test", "#test"));
+                let m = try!(Monster::create("Test", 14, 12, 10, 12, 12, 12, 12));
+                try!(world.add_monster(m, "#test"));
+                Ok(())
+            }
+        ).unwrap();
+        assert_eq!(data.slice_to(27), "PRIVMSG #test :Test rolled ".as_bytes());
+    }
+
+    #[test]
+    fn roll_failed_invalid_stat() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.roll @0 test\r\n",
+            |world| {
+                try!(world.add_game("Test", "test", "#test"));
+                let m = try!(Monster::create("Test", 14, 12, 10, 12, 12, 12, 12));
+                try!(world.add_monster(m, "#test"));
+                Ok(())
+            }
+        ).unwrap();
+        let mut exp = String::from_str("PRIVMSG #test :test is not a valid stat.\r\n");
+        exp.push_str("PRIVMSG #test :Options: str dex con wis int cha (or their full names).\r\n");
+        assert_eq!(data.as_slice(), exp.as_bytes());
+    }
+
+    #[test]
+    fn roll_failed_monster_does_not_exist() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.roll @0\r\n",
+            |world| {
+                world.add_game("Test", "test", "#test")
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG #test :@0 is not a valid monster.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn roll_failed_user_is_not_logged_in() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.roll\r\n",
+            |world| {
+                world.add_game("Test", "test", "#test")
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG #test :test is not logged in.\r\n".as_bytes());
+    }
+
+    #[test]
     fn roll_failed_invalid_format() {
         let data = test_helper(":test!test@test PRIVMSG #test :.roll a b c\r\n", |_| { Ok(()) }).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG #test :Invalid format. Use '.roll [@monster]' or '.roll [@monster] (stat)'.\r\n".as_bytes());
