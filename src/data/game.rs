@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::io::IoResult;
+use std::io::{InvalidInput, IoResult, IoError};
 use std::rand::task_rng;
 use std::rand::distributions::{IndependentSample, Range};
 use crypto::sbuf::StdHeapAllocator;
@@ -27,7 +27,11 @@ impl Game {
             self.users.insert(String::from_str(nickname), account);
             Ok("Login successful.")
         } else {
-            Ok("Password incorrect.")
+            Err(IoError {
+                kind: InvalidInput,
+                desc: "Password incorrect.",
+                detail: None,
+            })
         }
     }
 

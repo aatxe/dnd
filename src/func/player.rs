@@ -40,12 +40,14 @@ pub fn login(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoR
             let mut success = false;
             match world.games.find_mut(&String::from_str(params[3])) {
                 Some(game) => {
-                    let res = try!(game.login(p.clone(), user, params[2]));
-                    try!(bot.send_privmsg(user, res));
-                    if "Login successful.".eq(&res) {
+                    let res = game.login(p.clone(), user, params[2]);
+                    if !res.is_err() {
+                        try!(bot.send_privmsg(user, try!(res)));
                         try!(bot.send_invite(user, params[3]));
                         success = true;
-                    };
+                    } else {
+                        try!(bot.send_privmsg(user, res.unwrap_err().desc));
+                    }
                 },
                 None => try!(bot.send_privmsg(user, format!("Game not found on channel {}.", params[3]).as_slice())),
             };
@@ -170,4 +172,35 @@ pub fn add_update(bot: &Bot, user: &str, chan: &str, world: &mut World, params: 
         try!(incorrect_format(bot, chan, ".increase", "stat value"));
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod test {
+    use func::test::test_helper;
+
+    #[test]
+    fn register_success() {
+        let data = test_helper(":test!test@test PRIVMSG test :register test5 test 20 12 12 12 12 12 12\r\n",
+                    |_| { Ok(()) }).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :Your account (test5) has been created.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn register_failed_invalid_stats() {
+        let data = test_helper(":test!test@test PRIVMSG test :register test5 test 20 12 -12 a 12 12 12\r\n",
+                    |_| { Ok(()) }).unwrap();
+        let mut exp = String::from_str("PRIVMSG test :Stats must be non-zero positive integers. Format is: \r\n");
+        exp.push_str("PRIVMSG test :register username password health str dex con wis int cha\r\n");
+        assert_eq!(data.as_slice(), exp.as_bytes());
+    }
+
+    #[test]
+    fn login_success() {
+        let data = test_helper(":test!test@test PRIVMSG test :create #test Dungeons and Tests\r\n",
+            |world| {
+                world.add_game("Dungeons and Tests", "test", "#test")
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :A campaign already exists on #test.\r\n".as_bytes());
+    }
 }
