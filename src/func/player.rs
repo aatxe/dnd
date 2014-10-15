@@ -154,10 +154,7 @@ pub fn add_update(bot: &Bot, user: &str, chan: &str, world: &mut World, params: 
                     try!(bot.send_privmsg(chan, format!("{} ({}) now has {} {}.", p.username, user, n, params[1]).as_slice()));
                 } else {
                     p.stats.increase_stat(params[1], n);
-                    let k = match p.stats.get_stat(params[1]) {
-                        Some(i) => i,
-                        None => 0,
-                    };
+                    let k = if let Some(i) = p.stats.get_stat(params[1]) { i } else { 0 };
                     try!(bot.send_privmsg(chan, format!("{} ({}) now has {} {}.", p.username, user, k, params[1]).as_slice()));
                 }
             } else {
@@ -235,9 +232,10 @@ mod test {
             |world| {
                 try!(world.add_game("Dungeons and Tests", "test", "#test"));
                 let p = try!(Player::load("login"));
-                try!(match world.games.find_mut(&String::from_str("#test")) {
-                    Some(game) => game.login(p.clone(), "test", "test"),
-                    None => Ok(""),
+                try!(if let Some(game) = world.games.find_mut(&String::from_str("#test")) {
+                    game.login(p.clone(), "test", "test")
+                } else {
+                    Ok("")
                 });
                 world.add_user("test", p)
             }
@@ -245,5 +243,69 @@ mod test {
         let mut exp = String::from_str("PRIVMSG test :You can only be logged into one account at once.\r\n");
         exp.push_str("PRIVMSG test :Use logout to log out.\r\n");
         assert_eq!(data.as_slice(), exp.as_bytes());
+    }
+
+    #[test]
+    fn logout_success() {
+        let data = test_helper(":test!test@test PRIVMSG test :logout\r\n",
+            |world| {
+                try!(world.add_game("Dungeons and Tests", "test", "#test"));
+                let p = try!(Player::load("login"));
+                try!(if let Some(game) = world.games.find_mut(&String::from_str("#test")) {
+                    game.login(p.clone(), "test", "test")
+                } else {
+                    Ok("")
+                });
+                world.add_user("test", p)
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :You've been logged out.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn logout_failed_not_logged_in() {
+        let data = test_helper(":test!test@test PRIVMSG test :logout\r\n", |_| { Ok(()) }).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :You're not currently logged in.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn add_feat_success() {
+        let data = test_helper(":test!test@test PRIVMSG test :addfeat Test Feat\r\n",
+            |world| {
+                try!(world.add_game("Dungeons and Tests", "test", "#test"));
+                let p = try!(Player::load("login"));
+                try!(if let Some(game) = world.games.find_mut(&String::from_str("#test")) {
+                    game.login(p.clone(), "test", "test")
+                } else {
+                    Ok("")
+                });
+                world.add_user("test", p)
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :Added Test Feat feat.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn add_feat_failed_not_logged_in() {
+        let data = test_helper(":test!test@test PRIVMSG test :addfeat Test Feat\r\n", |_| { Ok(()) }).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :You must be logged in to add a feat.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn save_success() {
+        let data = test_helper(":test!test@test PRIVMSG test :save\r\n",
+            |world| {
+                try!(world.add_game("Dungeons and Tests", "test", "#test"));
+                let p = try!(Player::create_test("test6", "test", 20, 12, 12, 12, 12, 12, 12));
+                world.add_user("test", p)
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :Saved test6.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn save_failed_not_logged_in() {
+        let data = test_helper(":test!test@test PRIVMSG test :save\r\n", |_| { Ok(()) }).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :You must be logged in to save.\r\n".as_bytes());
     }
 }
