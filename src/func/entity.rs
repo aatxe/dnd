@@ -228,6 +228,65 @@ mod test {
     }
 
     #[test]
+    fn damage_success() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.damage @0 5\r\n",
+            |world| {
+                try!(world.add_game("Test", "test", "#test"));
+                let m = try!(Monster::create("Test", 20, 12, 12, 12, 12, 12, 12));
+                try!(world.add_monster(m, "#test"));
+                Ok(())
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG #test :Test (@0) took 5 damage and has 15 health remaining.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn damage_success_unconscious() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.damage @0 20\r\n",
+            |world| {
+                try!(world.add_game("Test", "test", "#test"));
+                let m = try!(Monster::create("Test", 20, 12, 12, 12, 12, 12, 12));
+                try!(world.add_monster(m, "#test"));
+                Ok(())
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG #test :Test (@0) has fallen unconscious.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn damage_failed_invalid_amount() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.damage @0 a\r\n",
+            |world| {
+                try!(world.add_game("Test", "test", "#test"));
+                let m = try!(Monster::create("Test", 20, 12, 12, 12, 12, 12, 12));
+                try!(world.add_monster(m, "#test"));
+                Ok(())
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG #test :a is not a valid positive integer.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn damage_failed_monster_does_not_exist() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.damage @0 3\r\n",
+            |world| {
+                world.add_game("Test", "test", "#test")
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG #test :@0 is not a valid monster.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn damage_failed_user_is_not_logged_in() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.damage test 15\r\n",
+            |world| {
+                world.add_game("Test", "test", "#test")
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG #test :test is not logged in.\r\n".as_bytes());
+    }
+
+    #[test]
     fn set_temp_stats_success() {
         let data = test_helper(":test!test@test PRIVMSG #test :.temp @0 20 12 12 12 12 12 12\r\n",
             |world| {
