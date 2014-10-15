@@ -74,121 +74,106 @@ pub fn look_up(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> I
 
 #[cfg(test)]
 mod test {
-    use std::io::{BufReader, MemWriter};
     use data::Entity;
     use data::monster::Monster;
     use data::stats::Stats;
-    use data::world::World;
-    use func::process_world;
-    use irc::Bot;
-    use irc::bot::IrcBot;
-    use irc::conn::Connection;
+    use func::test::test_helper;
 
     #[test]
     fn add_success() {
-        let r = BufReader::new(":test!test@test PRIVMSG test :addmonster #test Test 20 12 12 12 12 12 12\r\n".as_bytes());
-        let mut world = World::new().unwrap();
-        world.add_game("Test", "test", "#test").unwrap();
-        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
-            process_world(bot, source, command, args, &mut world)
-        }).unwrap();
-        bot.output().unwrap();
-        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG test :Monster (Test) has been created as @0.\r\n".as_bytes());
+        let data = test_helper(":test!test@test PRIVMSG test :addmonster #test Test 20 12 12 12 12 12 12\r\n",
+            |world| {
+                world.add_game("Test", "test", "#test")
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :Monster (Test) has been created as @0.\r\n".as_bytes());
     }
 
     #[test]
     fn add_failed_non_integers() {
-        let r = BufReader::new(":test!test@test PRIVMSG test :addmonster #test Test 20 -12 a 12 12 12 12\r\n".as_bytes());
-        let mut world = World::new().unwrap();
-        world.add_game("Test", "test", "#test").unwrap();
-        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
-            process_world(bot, source, command, args, &mut world)
-        }).unwrap();
-        bot.output().unwrap();
+        let data = test_helper(":test!test@test PRIVMSG test :addmonster #test Test 20 -12 a 12 12 12 12\r\n",
+            |world| {
+                world.add_game("Test", "test", "#test")
+            }
+        ).unwrap();
         let mut exp = String::from_str("PRIVMSG test :Stats must be non-zero positive integers. Format is: \r\n");
         exp.push_str("PRIVMSG test :addmonster chan name health str dex con wis int cha\r\n");
-        assert_eq!(bot.conn.writer().deref_mut().get_ref(), exp.as_bytes());
+        assert_eq!(data.as_slice(), exp.as_bytes());
     }
 
     #[test]
     fn look_up_success() {
-        let r = BufReader::new(":test!test@test PRIVMSG test :mlookup #test @0\r\n".as_bytes());
-        let mut world = World::new().unwrap();
-        world.add_game("Test", "test", "#test").unwrap();
-        world.add_monster(Monster::create("Test", 20, 12, 12, 12, 12, 12, 12).unwrap(), "#test").unwrap();
-        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
-            process_world(bot, source, command, args, &mut world)
-        }).unwrap();
-        bot.output().unwrap();
-        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG test :Test (@0): Stats { health: 20, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }\r\n".as_bytes());
+        let data = test_helper(":test!test@test PRIVMSG test :mlookup #test @0\r\n",
+            |world| {
+                try!(world.add_game("Test", "test", "#test"));
+                try!(world.add_monster(Monster::create("Test", 20, 12, 12, 12, 12, 12, 12).unwrap(), "#test"));
+                Ok(())
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :Test (@0): Stats { health: 20, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }\r\n".as_bytes());
     }
 
     #[test]
     fn look_up_failed_no_monster() {
-        let r = BufReader::new(":test!test@test PRIVMSG test :mlookup #test @1\r\n".as_bytes());
-        let mut world = World::new().unwrap();
-        world.add_game("Test", "test", "#test").unwrap();
-        world.add_monster(Monster::create("Test", 20, 12, 12, 12, 12, 12, 12).unwrap(), "#test").unwrap();
-        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
-            process_world(bot, source, command, args, &mut world)
-        }).unwrap();
-        bot.output().unwrap();
-        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG test :@1 is not a valid monster.\r\n".as_bytes());
+        let data = test_helper(":test!test@test PRIVMSG test :mlookup #test @1\r\n",
+            |world| {
+                try!(world.add_game("Test", "test", "#test"));
+                try!(world.add_monster(Monster::create("Test", 20, 12, 12, 12, 12, 12, 12).unwrap(), "#test"));
+                Ok(())
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :@1 is not a valid monster.\r\n".as_bytes());
     }
 
     #[test]
     fn look_up_success_by_stat() {
-        let r = BufReader::new(":test!test@test PRIVMSG test :mlookup #test @0 health\r\n".as_bytes());
-        let mut world = World::new().unwrap();
-        world.add_game("Test", "test", "#test").unwrap();
-        world.add_monster(Monster::create("Test", 20, 12, 12, 12, 12, 12, 12).unwrap(), "#test").unwrap();
-        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
-            process_world(bot, source, command, args, &mut world)
-        }).unwrap();
-        bot.output().unwrap();
-        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG test :Test (@0): 20 health\r\n".as_bytes());
+        let data = test_helper(":test!test@test PRIVMSG test :mlookup #test @0 health\r\n",
+            |world| {
+                try!(world.add_game("Test", "test", "#test"));
+                try!(world.add_monster(Monster::create("Test", 20, 12, 12, 12, 12, 12, 12).unwrap(), "#test"));
+                Ok(())
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :Test (@0): 20 health\r\n".as_bytes());
     }
 
     #[test]
     fn look_up_failed_invalid_stat() {
-        let r = BufReader::new(":test!test@test PRIVMSG test :mlookup #test @0 test\r\n".as_bytes());
-        let mut world = World::new().unwrap();
-        world.add_game("Test", "test", "#test").unwrap();
-        world.add_monster(Monster::create("Test", 20, 12, 12, 12, 12, 12, 12).unwrap(), "#test").unwrap();
-        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
-            process_world(bot, source, command, args, &mut world)
-        }).unwrap();
-        bot.output().unwrap();
-        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG test :test is not a valid stat.\r\n".as_bytes());
+        let data = test_helper(":test!test@test PRIVMSG test :mlookup #test @0 test\r\n",
+            |world| {
+                try!(world.add_game("Test", "test", "#test"));
+                try!(world.add_monster(Monster::create("Test", 20, 12, 12, 12, 12, 12, 12).unwrap(), "#test"));
+                Ok(())
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :test is not a valid stat.\r\n".as_bytes());
     }
 
     #[test]
     fn look_up_success_temporary() {
-        let r = BufReader::new(":test!test@test PRIVMSG test :mlookup #test @0\r\n".as_bytes());
-        let mut world = World::new().unwrap();
-        world.add_game("Test", "test", "#test").unwrap();
-        let mut m = Monster::create("Test", 14, 12, 10, 12, 12, 12, 12).unwrap();
-        m.set_temp_stats(Stats::new(20, 12, 12, 12, 12, 12, 12).unwrap());
-        world.add_monster(m, "#test").unwrap();
-        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
-            process_world(bot, source, command, args, &mut world)
-        }).unwrap();
-        bot.output().unwrap();
-        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG test :Test (@0): Temp. Stats { health: 20, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }\r\n".as_bytes());
+        let data = test_helper(":test!test@test PRIVMSG test :mlookup #test @0\r\n",
+            |world| {
+                try!(world.add_game("Test", "test", "#test"));
+                let mut m = try!(Monster::create("Test", 14, 12, 10, 12, 12, 12, 12));
+                m.set_temp_stats(try!(Stats::new(20, 12, 12, 12, 12, 12, 12)));
+                try!(world.add_monster(m, "#test"));
+                Ok(())
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :Test (@0): Temp. Stats { health: 20, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }\r\n".as_bytes());
     }
 
     #[test]
     fn look_up_success_temporary_stat() {
-        let r = BufReader::new(":test!test@test PRIVMSG test :mlookup #test @0 health\r\n".as_bytes());
-        let mut world = World::new().unwrap();
-        world.add_game("Test", "test", "#test").unwrap();
-        let mut m = Monster::create("Test", 14, 12, 10, 12, 12, 12, 12).unwrap();
-        m.set_temp_stats(Stats::new(20, 12, 12, 12, 12, 12, 12).unwrap());
-        world.add_monster(m, "#test").unwrap();
-        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
-            process_world(bot, source, command, args, &mut world)
-        }).unwrap();
-        bot.output().unwrap();
-        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG test :Test (@0): Temp. 20 health\r\n".as_bytes());
+        let data = test_helper(":test!test@test PRIVMSG test :mlookup #test @0 health\r\n",
+            |world| {
+                try!(world.add_game("Test", "test", "#test"));
+                let mut m = try!(Monster::create("Test", 14, 12, 10, 12, 12, 12, 12));
+                m.set_temp_stats(try!(Stats::new(20, 12, 12, 12, 12, 12, 12)));
+                try!(world.add_monster(m, "#test"));
+                Ok(())
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :Test (@0): Temp. 20 health\r\n".as_bytes());
     }
 }

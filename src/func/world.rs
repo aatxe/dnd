@@ -41,67 +41,45 @@ pub fn save_all(bot: &Bot, user: &str, world: &World) -> IoResult<()> {
 
 #[cfg(test)]
 mod test {
-    use std::io::{BufReader, MemWriter};
-    use data::world::World;
-    use func::process_world;
-    use irc::Bot;
-    use irc::bot::IrcBot;
-    use irc::conn::Connection;
+    use func::test::test_helper;
 
     #[test]
     fn create_success() {
-        let r = BufReader::new(":test!test@test PRIVMSG test :create #test Dungeons and Tests\r\n".as_bytes());
-        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
-            process_world(bot, source, command, args, &mut World::new().unwrap())
-        }).unwrap();
-        bot.output().unwrap();
+        let data = test_helper(":test!test@test PRIVMSG test :create #test Dungeons and Tests\r\n",
+                               |_| { Ok(()) }).unwrap();
         let mut exp = String::from_str("JOIN :#test\r\n");
         exp.push_str("TOPIC #test :Dungeons and Tests\r\n");
         exp.push_str("MODE #test :+i\r\n");
         exp.push_str("PRIVMSG test :Campaign created named Dungeons and Tests.\r\n");
         exp.push_str("INVITE test :#test\r\n");
-        assert_eq!(bot.conn.writer().deref_mut().get_ref(), exp.as_bytes());
+        assert_eq!(data.as_slice(), exp.as_bytes());
     }
 
     #[test]
     fn create_failed_already_exists() {
-        let r = BufReader::new(":test!test@test PRIVMSG test :create #test Dungeons and Tests\r\n".as_bytes());
-        let mut world = World::new().unwrap();
-        world.add_game("Dungeons and Tests", "test", "#test").unwrap();
-        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
-            process_world(bot, source, command, args, &mut world)
-        }).unwrap();
-        bot.output().unwrap();
-        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG test :A campaign already exists on #test.\r\n".as_bytes());
+        let data = test_helper(":test!test@test PRIVMSG test :create #test Dungeons and Tests\r\n",
+            |world| {
+                world.add_game("Dungeons and Tests", "test", "#test")
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :A campaign already exists on #test.\r\n".as_bytes());
     }
 
     #[test]
     fn private_roll() {
-        let r = BufReader::new(":test!test@test PRIVMSG test :roll\r\n".as_bytes());
-        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
-            process_world(bot, source, command, args, &mut World::new().unwrap())
-        }).unwrap();
-        bot.output().unwrap();
-        assert_eq!(bot.conn.writer().deref_mut().get_ref().slice_to(25), "PRIVMSG test :You rolled ".as_bytes());
+        let data = test_helper(":test!test@test PRIVMSG test :roll\r\n", |_| { Ok(()) }).unwrap();
+        assert_eq!(data.slice_to(25), "PRIVMSG test :You rolled ".as_bytes());
     }
 
     #[test]
     fn save_all_from_owner() {
-        let r = BufReader::new(":test!test@test PRIVMSG test :saveall\r\n".as_bytes());
-        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
-            process_world(bot, source, command, args, &mut World::new().unwrap())
-        }).unwrap();
-        bot.output().unwrap();
-        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG test :The world has been saved.\r\n".as_bytes());
+        let data = test_helper(":test!test@test PRIVMSG test :saveall\r\n", |_| { Ok(()) }).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :The world has been saved.\r\n".as_bytes());
     }
 
     #[test]
     fn save_all_from_non_owner() {
-        let r = BufReader::new(":test2!test@test PRIVMSG test :saveall\r\n".as_bytes());
-        let mut bot = IrcBot::from_connection(Connection::new(MemWriter::new(), r).unwrap(), |bot, source, command, args| {
-            process_world(bot, source, command, args, &mut World::new().unwrap())
-        }).unwrap();
-        bot.output().unwrap();
-        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG test2 :You must own the bot to do that!\r\n".as_bytes());
+        let data = test_helper(":test2!test@test PRIVMSG test :saveall\r\n", |_| { Ok(()) }).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test2 :You must own the bot to do that!\r\n".as_bytes());
     }
 }

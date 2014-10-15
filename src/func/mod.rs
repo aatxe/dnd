@@ -77,11 +77,27 @@ pub fn incorrect_format(bot: &Bot, resp: &str, cmd: &str, format: &str) -> IoRes
 
 #[cfg(test)]
 mod test {
-    use std::io::MemWriter;
+    use super::process_world;
+    use std::io::{MemReader, MemWriter, IoResult};
     use std::io::util::NullReader;
     use data::world::World;
+    use irc::Bot;
     use irc::bot::IrcBot;
     use irc::conn::Connection;
+
+    pub fn test_helper(input: &str, world_hook: |&mut World| -> IoResult<()>) -> IoResult<Vec<u8>> {
+        let mut world = try!(World::new());
+        try!(world_hook(&mut world));
+        let mut bot = try!(
+            IrcBot::from_connection(try!(
+                Connection::new(MemWriter::new(), MemReader::new(input.as_bytes().to_vec()))
+            ), |bot, source, command, args| {
+                process_world(bot, source, command, args, &mut world)
+            })
+        );
+        try!(bot.output());
+        Ok(bot.conn.writer().deref().get_ref().to_vec())
+    }
 
     #[test]
     fn permissions_test_no_game() {
