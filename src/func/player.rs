@@ -49,7 +49,7 @@ pub fn login(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoR
                         try!(bot.send_privmsg(user, res.unwrap_err().desc));
                     }
                 },
-                None => try!(bot.send_privmsg(user, format!("Game not found on channel {}.", params[3]).as_slice())),
+                None => try!(bot.send_privmsg(user, format!("Game not found on {}.", params[3]).as_slice())),
             };
             if success {
                 try!(world.add_user(user, p));
@@ -176,6 +176,7 @@ pub fn add_update(bot: &Bot, user: &str, chan: &str, world: &mut World, params: 
 
 #[cfg(test)]
 mod test {
+    use data::player::Player;
     use func::test::test_helper;
 
     #[test]
@@ -196,11 +197,53 @@ mod test {
 
     #[test]
     fn login_success() {
-        let data = test_helper(":test!test@test PRIVMSG test :create #test Dungeons and Tests\r\n",
+        let data = test_helper(":test!test@test PRIVMSG test :login login test #test\r\n",
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test")
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG test :A campaign already exists on #test.\r\n".as_bytes());
+        let mut exp = String::from_str("PRIVMSG test :Login successful.\r\n");
+        exp.push_str("INVITE test :#test\r\n");
+        assert_eq!(data.as_slice(), exp.as_bytes());
+    }
+
+    #[test]
+    fn login_failed_password_incorrect() {
+        let data = test_helper(":test!test@test PRIVMSG test :login login ztest #test\r\n",
+            |world| {
+                world.add_game("Dungeons and Tests", "test", "#test")
+            }
+        ).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :Password incorrect.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn login_failed_game_not_found() {
+        let data = test_helper(":test!test@test PRIVMSG test :login login test #test\r\n", |_| { Ok(()) }).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :Game not found on #test.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn login_failed_player_not_found() {
+        let data = test_helper(":test!test@test PRIVMSG test :login missing test #test\r\n", |_| { Ok(()) }).unwrap();
+        assert_eq!(data.as_slice(), "PRIVMSG test :Account missing does not exist, or could not be loaded.\r\n".as_bytes());
+    }
+
+    #[test]
+    fn login_failed_already_logged_in() {
+        let data = test_helper(":test!test@test PRIVMSG test :login login test #test\r\n",
+            |world| {
+                try!(world.add_game("Dungeons and Tests", "test", "#test"));
+                let p = try!(Player::load("login"));
+                try!(match world.games.find_mut(&String::from_str("#test")) {
+                    Some(game) => game.login(p.clone(), "test", "test"),
+                    None => Ok(""),
+                });
+                world.add_user("test", p)
+            }
+        ).unwrap();
+        let mut exp = String::from_str("PRIVMSG test :You can only be logged into one account at once.\r\n");
+        exp.push_str("PRIVMSG test :Use logout to log out.\r\n");
+        assert_eq!(data.as_slice(), exp.as_bytes());
     }
 }
