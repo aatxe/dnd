@@ -16,7 +16,7 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
         ("PRIVMSG", [chan, msg]) => {
             let user = match source.find('!') {
                 Some(i) => source.slice_to(i),
-                None => chan,
+                None => "",
             };
             let tokens: Vec<&str> = msg.split_str(" ").collect();
             try!(if !chan.starts_with("#") {
