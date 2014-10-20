@@ -2,8 +2,18 @@ use data::{Basic, BotResult, Entity, Propagated, RollType, as_io};
 use data::stats::Stats;
 use data::utils::str_to_u8;
 use data::world::World;
-use func::{Functionality, incorrect_format, permissions_test, permissions_test_rf};
+use func::{Functionality, incorrect_format_rf, permissions_test_rf};
 use irc::Bot;
+
+fn get_target<'a>(maybe: &str, fallback: &str, chan: &str, world: &'a mut World) -> BotResult<&'a mut Entity + 'a> {
+    let (res, err) = if maybe.starts_with("@") {
+        if let Err(perm) = permissions_test_rf(fallback, chan, world) { return Err(perm); }
+        (world.get_entity(maybe, Some(chan)), format!("{} is not a valid monster.", maybe))
+    } else {
+        (world.get_entity(fallback, None), format!("{} is not logged in.", fallback))
+    };
+    if res.is_ok() { res } else { Err(Propagated(format!("{}", chan), err)) }
+}
 
 pub struct Roll<'a> {
     bot: &'a Bot + 'a,
@@ -22,22 +32,7 @@ impl <'a> Roll<'a> {
         Ok(Roll {
             bot: bot,
             chan: chan,
-            target: {
-                let (res, err) = if args.len() == 3 || args.len() == 2 && args[1].starts_with("@") {
-                    if let Err(perm) = permissions_test_rf(user, chan, world) {
-                        return Err(perm);
-                    }
-                    (world.get_entity(args[1], Some(chan)),
-                     format!("{} is not a valid monster.", args[1]))
-                } else {
-                    (world.get_entity(user, None), format!("{} is not logged in.", user))
-                };
-                if res.is_ok() {
-                    try!(res)
-                } else {
-                    return Err(Propagated(format!("{}", chan), err));
-                }
-            },
+            target: try!(get_target(if args.len() > 1 { args[1] } else { "" }, user, chan, world)),
             stat_str: if args.len() == 3 && args[1].starts_with("@") {
                 Some(args[2])
             } else if args.len() == 2 && !args[1].starts_with("@") {
@@ -57,7 +52,7 @@ impl <'a> Roll<'a> {
 }
 
 impl <'a> Functionality for Roll<'a> {
-    fn do_func(&self) -> BotResult<()> {
+    fn do_func(&mut self) -> BotResult<()> {
         if self.stat.is_none() {
             return Err(Propagated(
                 format!("{}", self.chan),
@@ -65,107 +60,135 @@ impl <'a> Functionality for Roll<'a> {
             )); // We do not check if self.stat_str is none because it cannot be based on new(...).
         }
         let r = self.target.roll(self.stat.unwrap());
-        try!(as_io(
+        as_io(
             self.bot.send_privmsg(self.chan, format!("{} rolled {}.", self.target.identifier(), r).as_slice())
-        ));
-        Ok(())
+        )
     }
 }
 
-pub fn damage(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> BotResult<()> {
-    if !try!(permissions_test(bot, user, chan, world)) { return Ok(()); }
-    if params.len() == 3 {
-        let res = world.get_entity(params[1], Some(chan));
-        if res.is_ok() {
-            let e = try!(res);
-            if let Some(n) = from_str(params[2]) {
-                let m = if e.damage(n) {
-                    format!("{} ({}) took {} damage and has {} health remaining.", e.identifier(), params[1], params[2], e.stats().health)
-                } else {
-                    format!("{} ({}) has fallen unconscious.", e.identifier(), params[1])
-                };
-                try!(as_io(bot.send_privmsg(chan, m.as_slice())));
-            } else {
-                try!(as_io(
-                    bot.send_privmsg(chan, format!("{} is not a valid positive integer.", params[2]).as_slice())
-                ));
-            }
-        } else {
-            let m = if params[1].starts_with("@") {
-                format!("{} is not a valid monster.", params[1])
-            } else {
-                format!("{} is not logged in.", params[1])
-            };
-            try!(as_io(bot.send_privmsg(chan, m.as_slice())));
-        }
-    } else {
-        try!(incorrect_format(bot, chan, ".damage", "target value"));
-    }
-    Ok(())
+pub struct Damage<'a> {
+    bot: &'a Bot + 'a,
+    chan: &'a str,
+    target_str: &'a str,
+    target: &'a mut Entity + 'a,
+    value: u8,
 }
 
-pub fn set_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> BotResult<()> {
-    if !try!(permissions_test(bot, user, chan, world)) { return Ok(()); }
-    if params.len() == 9 {
-        let res = world.get_entity(params[1], Some(chan));
-        if res.is_ok() {
-            let p = try!(res);
-            let mut valid = true;
-            for s in params.slice_from(3).iter() {
-                if str_to_u8(*s) == 0 {
-                    valid = false;
-                }
-            }
-            if valid {
-                p.set_temp_stats(Stats::new(str_to_u8(params[2]),
-                                            str_to_u8(params[3]), str_to_u8(params[4]),
-                                            str_to_u8(params[5]), str_to_u8(params[6]),
-                                            str_to_u8(params[7]), str_to_u8(params[8])));
-                try!(as_io(
-                    bot.send_privmsg(chan, format!("{} ({}) now has temporary {}.", p.identifier(), params[1], p.stats()).as_slice())
-                ));
-            } else {
-                try!(as_io(
-                    bot.send_privmsg(chan, "Stats must be non-zero positive integers. Format is: ")
-                ));
-                try!(as_io(bot.send_privmsg(chan, ".temp target health str dex con wis int cha")));
-            }
-        } else {
-            let m = if params[1].starts_with("@") {
-                format!("{} is not a valid monster.", params[1])
-            } else {
-                format!("{} is not logged in.", params[1])
-            };
-            try!(as_io(bot.send_privmsg(chan, m.as_slice())));
+impl <'a> Damage<'a> {
+    pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Damage<'a>> {
+        if args.len() != 3 {
+            return Err(incorrect_format_rf(chan, ".damage", "target value"));
         }
-    } else {
-        try!(incorrect_format(bot, chan, ".temp", "target health str dex con wis int cha"));
+        Ok(Damage {
+            bot: bot,
+            chan: chan,
+            target_str: args[1],
+            target: try!(get_target(args[1], user, chan, world)),
+            value: if let Some(n) = from_str(args[2]) {
+                n
+            } else {
+                return Err(Propagated(
+                        format!("{}", chan),
+                        format!("{} is not a valid positive integer.", args[2])
+                ));
+            },
+        })
     }
-    Ok(())
 }
 
-pub fn clear_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> BotResult<()> {
-    if !try!(permissions_test(bot, user, chan, world)) { return Ok(()); }
-    if params.len() == 2 {
-        let res = world.get_entity(params[1], Some(chan));
-        if res.is_ok() {
-            let p = try!(res);
-            p.clear_temp_stats();
-            try!(as_io(
-                bot.send_privmsg(chan, format!("{} ({}) has reverted to {}.", p.identifier(), params[1], p.stats()).as_slice())
-            ));
+impl <'a> Functionality for Damage<'a> {
+    fn do_func(&mut self) -> BotResult<()> {
+        let m = if self.target.damage(self.value) {
+            format!("{} ({}) took {} damage and has {} health remaining.", self.target.identifier(),
+                    self.target_str, self.value, self.target.stats().health)
         } else {
-            let m = if params[1].starts_with("@") {
-                format!("{} is not a valid monster.", params[1])
-            } else {
-                format!("{} is not logged in.", params[1])
-            };
-            try!(as_io(bot.send_privmsg(chan, m.as_slice())));
-        }
-    } else {
-        try!(incorrect_format(bot, chan, ".cleartemp", "target"));
+            format!("{} ({}) has fallen unconscious.", self.target.identifier(), self.target_str)
+        };
+        as_io(self.bot.send_privmsg(self.chan, m.as_slice()))
     }
-    Ok(())
+}
+
+pub struct SetTempStats<'a> {
+    bot: &'a Bot + 'a,
+    chan: &'a str,
+    target_str: &'a str,
+    target: &'a mut Entity + 'a,
+    health: u8,
+    st: u8, dx: u8, cn: u8,
+    ws: u8, it: u8, ch: u8,
+}
+
+impl <'a> SetTempStats<'a> {
+    pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<SetTempStats<'a>> {
+        if let Err(perm) = permissions_test_rf(user, chan, world) {
+            return Err(perm);
+        } else if args.len() != 9 {
+            return Err(incorrect_format_rf(chan, ".temp", "target health str dex con wis int cha"));
+        }
+        for s in args.slice_from(3).iter() {
+            if str_to_u8(*s) == 0 {
+                return Err(Propagated(
+                    format!("{}", chan),
+                    format!("Stats must be non-zero positive integers. Format is:\r\n.temp target health str dex con wis int cha")
+                ));
+            }
+        }
+        Ok(SetTempStats {
+            bot: bot,
+            chan: chan,
+            target_str: args[1],
+            target: try!(get_target(args[1], user, chan, world)),
+            health: str_to_u8(args[2]),
+            st: str_to_u8(args[3]), dx: str_to_u8(args[4]), cn: str_to_u8(args[5]),
+            ws: str_to_u8(args[6]), it: str_to_u8(args[7]), ch: str_to_u8(args[8]),
+        })
+    }
+}
+
+impl <'a> Functionality for SetTempStats<'a> {
+    fn do_func(&mut self) -> BotResult<()> {
+        self.target.set_temp_stats(Stats::new(self.health,
+                                             self.st, self.dx, self.cn, self.ws, self.it, self.ch));
+        let s = format!("{} ({}) now has temporary {}.",
+                        self.target.identifier(), self.target_str, self.target.stats());
+        as_io(
+            self.bot.send_privmsg(self.chan, s.as_slice())
+        )
+    }
+}
+
+pub struct ClearTempStats<'a> {
+    bot: &'a Bot + 'a,
+    chan: &'a str,
+    target_str: &'a str,
+    target: &'a mut Entity + 'a,
+}
+
+impl <'a> ClearTempStats<'a> {
+    pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<ClearTempStats<'a>> {
+        if let Err(perm) = permissions_test_rf(user, chan, world) {
+            return Err(perm);
+        } else if args.len() != 2 {
+            return Err(incorrect_format_rf(chan, ".cleartemp", "target"));
+        }
+        Ok(ClearTempStats {
+            bot: bot,
+            chan: chan,
+            target_str: args[1],
+            target: try!(get_target(args[1], user, chan, world)),
+        })
+    }
+}
+
+impl <'a> Functionality for ClearTempStats<'a> {
+    fn do_func(&mut self) -> BotResult<()> {
+        self.target.clear_temp_stats();
+        let s = format!("{} ({}) has reverted to {}.",
+                        self.target.identifier(), self.target_str, self.target.stats());
+        as_io(
+            self.bot.send_privmsg(self.chan, s.as_slice())
+        )
+    }
 }
 
 #[cfg(test)]
@@ -339,7 +362,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let mut exp = String::from_str("PRIVMSG #test :Stats must be non-zero positive integers. Format is: \r\n");
+        let mut exp = String::from_str("PRIVMSG #test :Stats must be non-zero positive integers. Format is:\r\n");
         exp.push_str("PRIVMSG #test :.temp target health str dex con wis int cha\r\n");
         assert_eq!(data.as_slice(), exp.as_bytes());
     }

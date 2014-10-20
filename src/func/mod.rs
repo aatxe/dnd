@@ -1,9 +1,9 @@
 extern crate irc;
 
 use std::io::IoResult;
-use data::{BotResult, Propagated, as_io, to_io};
+use data::{BotError, BotResult, Propagated, as_io, to_io};
 use data::world::World;
-use self::entity::Roll;
+use self::entity::{ClearTempStats, Damage, Roll, SetTempStats};
 use irc::Bot;
 use irc::bot::IrcBot;
 use irc::data::{IrcReader, IrcWriter};
@@ -15,7 +15,7 @@ pub mod world;
 
 
 pub trait Functionality {
-    fn do_func(&self) -> BotResult<()>;
+    fn do_func(&mut self) -> BotResult<()>;
 }
 
 pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&str], world: &mut World) -> IoResult<()> where T: IrcWriter, U: IrcReader {
@@ -56,9 +56,33 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
                         "lookup" => player::look_up(bot, chan, world, tokens),
                         "update" => player::add_update(bot, user, chan, world, tokens, true),
                         "increase" => player::add_update(bot, user, chan, world, tokens, false),
-                        "temp" => entity::set_temp_stats(bot, user, chan, world, tokens),
-                        "cleartemp" => entity::clear_temp_stats(bot, user, chan, world, tokens),
-                        "damage" => entity::damage(bot, user, chan, world, tokens),
+                        "temp" => {
+                            let temp = SetTempStats::new(bot, user, chan, tokens, world);
+                            if let Err(Propagated(resp, msg)) = temp {
+                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                            } else if let Err(Propagated(resp, msg)) = temp.unwrap().do_func() {
+                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                            };
+                            Ok(())
+                        },
+                        "cleartemp" => {
+                            let clear = ClearTempStats::new(bot, user, chan, tokens, world);
+                            if let Err(Propagated(resp, msg)) = clear {
+                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                            } else if let Err(Propagated(resp, msg)) = clear.unwrap().do_func() {
+                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                            };
+                            Ok(())
+                        },
+                        "damage" => {
+                            let damage = Damage::new(bot, user, chan, tokens, world);
+                            if let Err(Propagated(resp, msg)) = damage {
+                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                            } else if let Err(Propagated(resp, msg)) = damage.unwrap().do_func() {
+                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                            };
+                            Ok(())
+                        },
                         _ => Ok(())
                     }
                 } else {
@@ -93,6 +117,13 @@ pub fn permissions_test(bot: &Bot, user: &str, chan: &str, world: &mut World) ->
         ret = false;
     };
     Ok(ret)
+}
+
+pub fn incorrect_format_rf(resp: &str, cmd: &str, format: &str) -> BotError {
+    Propagated(
+        format!("{}", resp),
+        format!("Incorrect format for {}. Format is:\r\n{} {}", cmd, cmd, format),
+    )
 }
 
 pub fn incorrect_format(bot: &Bot, resp: &str, cmd: &str, format: &str) -> BotResult<()> {
