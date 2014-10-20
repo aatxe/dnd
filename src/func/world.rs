@@ -1,44 +1,79 @@
-use std::io::IoResult;
-use data::{BotResult, as_io};
+use data::{BotResult, Propagated, as_io};
 use data::game::Game;
 use data::utils::join_from;
 use data::world::World;
-use func::incorrect_format;
+use func::{Functionality, incorrect_format_rf};
 use irc::Bot;
 
-pub fn create(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> BotResult<()> {
-    if params.len() >= 3 {
-        if !world.game_exists(params[1]) {
-            try!(as_io(bot.send_join(params[1])));
-            let name = join_from(params.clone(), 2);
-            try!(as_io(bot.send_topic(params[1], name.as_slice())));
-            try!(as_io(bot.send_mode(params[1], "+i")));
-            world.add_game(name.as_slice(), user, params[1]);
-            try!(as_io(
-                bot.send_privmsg(user, format!("Campaign created named {}.", name).as_slice())
-            ));
-            try!(as_io(bot.send_invite(user, params[1])));
-        } else {
-            try!(as_io(
-                bot.send_privmsg(user, format!("A campaign already exists on {}.", params[1]).as_slice())
+pub struct Create<'a> {
+    bot: &'a Bot + 'a,
+    user: &'a str,
+    world: &'a mut World,
+    chan: &'a str,
+    title: String,
+}
+
+impl <'a> Create<'a> {
+    pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Create<'a>> {
+        if args.len() < 3 { return Err(incorrect_format_rf(user, "create", "channel campaign name")); }
+        Ok(Create { bot: bot, user: user, world: world, chan: args[1], title: join_from(args, 2) })
+    }
+}
+
+impl <'a> Functionality for Create<'a> {
+    fn do_func(&mut self) -> BotResult<()> {
+        if self.world.game_exists(self.chan) {
+            return Err(Propagated(
+                format!("{}", self.user), format!("A campaign already exists on {}.", self.chan)
             ));
         }
-    } else {
-        try!(incorrect_format(bot, user, "create", "channel campaign name"));
+        try!(as_io(self.bot.send_join(self.chan)));
+        try!(as_io(self.bot.send_topic(self.chan, self.title.as_slice())));
+        try!(as_io(self.bot.send_mode(self.chan, "+i")));
+        self.world.add_game(self.title.as_slice(), self.user, self.chan);
+        let s = format!("Campaign created named {}.", self.title);
+        try!(as_io(self.bot.send_privmsg(self.user, s.as_slice())));
+        as_io(self.bot.send_invite(self.user, self.chan))
     }
-    Ok(())
 }
 
-pub fn private_roll(bot: &Bot, user: &str) -> IoResult<()> {
-    bot.send_privmsg(user, format!("You rolled {}.", Game::roll()).as_slice())
+pub struct PrivateRoll<'a> {
+    bot: &'a Bot + 'a,
+    user: &'a str,
 }
 
-pub fn save_all(bot: &Bot, user: &str, world: &World) -> IoResult<()> {
-    if bot.config().is_owner(user) {
-        try!(world.save_all());
-        bot.send_privmsg(user, "The world has been saved.")
-    } else {
-        bot.send_privmsg(user, "You must own the bot to do that!")
+impl <'a> PrivateRoll<'a> {
+    pub fn new(bot: &'a Bot, user: &'a str) -> BotResult<PrivateRoll<'a>> {
+        Ok(PrivateRoll { bot: bot, user: user })
+    }
+}
+
+impl <'a> Functionality for PrivateRoll<'a> {
+    fn do_func(&mut self) -> BotResult<()> {
+        as_io(self.bot.send_privmsg(self.user, format!("You rolled {}.", Game::roll()).as_slice()))
+    }
+}
+
+pub struct SaveAll<'a> {
+    bot: &'a Bot + 'a,
+    user: &'a str,
+    world: &'a World,
+}
+
+impl <'a> SaveAll<'a> {
+    pub fn new(bot: &'a Bot, user: &'a str, world: &'a World) -> BotResult<SaveAll<'a>> {
+        if !bot.config().is_owner(user) {
+            Err(Propagated(format!("{}", user), format!("You must own the bot to do that!")))
+        } else {
+            Ok(SaveAll { bot: bot, user: user, world: world })
+        }
+    }
+}
+
+impl <'a> Functionality for SaveAll<'a> {
+    fn do_func(&mut self) -> BotResult<()> {
+        try!(as_io(self.world.save_all()));
+        as_io(self.bot.send_privmsg(self.user, "The world has been saved."))
     }
 }
 

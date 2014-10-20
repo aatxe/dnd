@@ -1,9 +1,10 @@
 extern crate irc;
 
+use self::entity::{ClearTempStats, Damage, Roll, SetTempStats};
+use self::world::{Create, PrivateRoll, SaveAll};
 use std::io::IoResult;
 use data::{BotError, BotResult, Propagated, as_io, to_io};
 use data::world::World;
-use self::entity::{ClearTempStats, Damage, Roll, SetTempStats};
 use irc::Bot;
 use irc::bot::IrcBot;
 use irc::data::{IrcReader, IrcWriter};
@@ -30,11 +31,35 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
                 match tokens[0] {
                     "register" => player::register(bot, user, tokens),
                     "login" => player::login(bot, user, world, tokens),
-                    "create" => world::create(bot, user, world, tokens),
+                    "create" => {
+                        let create = Create::new(bot, user, tokens, world);
+                        if let Err(Propagated(resp, msg)) = create {
+                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                        } else if let Err(Propagated(resp, msg)) = create.unwrap().do_func() {
+                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                        };
+                        Ok(())
+                    },
                     "logout" => player::logout(bot, user, world),
                     "addfeat" => player::add_feat(bot, user, world, tokens),
-                    "roll" => as_io(world::private_roll(bot, user)),
-                    "saveall" => as_io(world::save_all(bot, user, world)),
+                    "roll" => {
+                        let roll = PrivateRoll::new(bot, user);
+                        if let Err(Propagated(resp, msg)) = roll {
+                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                        } else if let Err(Propagated(resp, msg)) = roll.unwrap().do_func() {
+                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                        };
+                        Ok(())
+                    },
+                    "saveall" => {
+                        let saveall = SaveAll::new(bot, user, world);
+                        if let Err(Propagated(resp, msg)) = saveall {
+                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                        } else if let Err(Propagated(resp, msg)) = saveall.unwrap().do_func() {
+                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                        };
+                        Ok(())
+                    },
                     "save" => player::save(bot, user, world),
                     "lookup" => player::look_up(bot, user, world, tokens),
                     "mlookup" => monster::look_up(bot, user, world, tokens),
