@@ -29,24 +29,19 @@ impl <'a> Roll<'a> {
             return Err(Propagated(format!("{}", chan),
                    format!("Invalid format. Use '.roll [@monster]' or '.roll [@monster] (stat)'.")))
         }
+        let (stat_str, stat) = if args.len() == 3 && args[1].starts_with("@") {
+            (Some(args[2]), RollType::to_roll_type(args[2]))
+        } else if args.len() == 2 && !args[1].starts_with("@") {
+            (Some(args[1]), RollType::to_roll_type(args[1]))
+        } else {
+            (None, Some(Basic))
+        };
         Ok(Roll {
             bot: bot,
             chan: chan,
             target: try!(get_target(if args.len() > 1 { args[1] } else { "" }, user, chan, world)),
-            stat_str: if args.len() == 3 && args[1].starts_with("@") {
-                Some(args[2])
-            } else if args.len() == 2 && !args[1].starts_with("@") {
-                Some(args[1])
-            } else {
-                None
-            },
-            stat: if args.len() == 3 && args[1].starts_with("@") {
-                RollType::to_roll_type(args[2])
-            } else if args.len() == 2 && !args[1].starts_with("@") {
-                RollType::to_roll_type(args[1])
-            } else {
-                Some(Basic)
-            }
+            stat_str: stat_str,
+            stat: stat,
         })
     }
 }
