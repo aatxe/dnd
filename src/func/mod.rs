@@ -1,8 +1,9 @@
 extern crate irc;
 
 use std::io::IoResult;
-use data::{BotResult, as_io, to_io};
+use data::{BotResult, Propagated, as_io, to_io};
 use data::world::World;
+use self::entity::Roll;
 use irc::Bot;
 use irc::bot::IrcBot;
 use irc::data::{IrcReader, IrcWriter};
@@ -11,6 +12,12 @@ pub mod entity;
 pub mod monster;
 pub mod player;
 pub mod world;
+
+
+pub trait Functionality<'a> {
+    fn new(&'a Bot, &'a str, &'a str, Vec<&'a str>, &'a mut World) -> BotResult<Self>;
+    fn do_func(&self) -> BotResult<()>;
+}
 
 pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&str], world: &mut World) -> IoResult<()> where T: IrcWriter, U: IrcReader {
     match (command, args) {
@@ -38,7 +45,15 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
             } else {
                 if tokens[0].starts_with(".") {
                     match tokens[0].slice_from(1) {
-                        "roll" => entity::roll(bot, user, chan, world, tokens),
+                        "roll" => {
+                            let roll: BotResult<Roll> = Functionality::new(bot, user, chan, tokens, world);
+                            if let Err(Propagated(resp, msg)) = roll {
+                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                            } else if let Err(Propagated(resp, msg)) = roll.unwrap().do_func() {
+                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                            };
+                            Ok(())
+                        },
                         "lookup" => player::look_up(bot, chan, world, tokens),
                         "update" => player::add_update(bot, user, chan, world, tokens, true),
                         "increase" => player::add_update(bot, user, chan, world, tokens, false),
@@ -55,6 +70,17 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
         _ => (),
     }
     Ok(())
+}
+
+pub fn permissions_test_rf(user: &str, chan: &str, world: &mut World) -> BotResult<()> {
+    let res = world.get_game(chan);
+    if res.is_err() {
+        Err(Propagated(String::from_str(user), format!("There is no game in {}.", chan)))
+    } else if !try!(res).is_dm(user) {
+        Err(Propagated(String::from_str(user), String::from_str("You must be the DM to do that!")))
+    } else {
+        Ok(())
+    }
 }
 
 pub fn permissions_test(bot: &Bot, user: &str, chan: &str, world: &mut World) -> BotResult<bool> {

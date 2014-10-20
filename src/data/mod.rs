@@ -34,6 +34,7 @@ pub enum BotError {
     Io(IoError),
     NotFound(String),
     PasswordIncorrect,
+    Propagated(String, String),
 }
 
 impl Show for BotError {
@@ -42,6 +43,10 @@ impl Show for BotError {
             &Io(ref io_err) => io_err.fmt(fmt),
             &NotFound(ref s) => s.fmt(fmt),
             &PasswordIncorrect => "Password incorrect.".fmt(fmt),
+            &Propagated(ref s, ref v) => {
+                try!(s.fmt(fmt));
+                v.fmt(fmt)
+            }
         }
     }
 }

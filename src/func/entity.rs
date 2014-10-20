@@ -1,77 +1,73 @@
-use data::{Basic, BotResult, Entity, RollType, as_io};
+use data::{Basic, BotResult, Entity, Propagated, RollType, as_io};
 use data::stats::Stats;
 use data::utils::str_to_u8;
 use data::world::World;
-use func::{incorrect_format, permissions_test};
+use func::{Functionality, incorrect_format, permissions_test, permissions_test_rf};
 use irc::Bot;
 
-pub fn roll(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> BotResult<()> {
-    if params.len() == 1 || (params.len() == 2 && params[1].starts_with("@")) {
-        let res = if params.len() == 2 {
-            if !try!(permissions_test(bot, user, chan, world)) { return Ok(()); }
-            world.get_entity(params[1], Some(chan))
-        } else {
-            world.get_entity(user, None)
-        };
-        if res.is_ok() {
-            let e = try!(res);
-            let r = e.roll(Basic);
-            try!(as_io(
-                bot.send_privmsg(chan, format!("{} rolled {}.", e.identifier(), r).as_slice())
-            ));
-        } else {
-            let m = if params.len() == 2 {
-                format!("{} is not a valid monster.", params[1])
-            } else {
-                format!("{} is not logged in.", user)
-            };
-            try!(as_io(bot.send_privmsg(chan, m.as_slice())));
+pub struct Roll<'a> {
+    bot: &'a Bot + 'a,
+    chan: &'a str,
+    target: &'a Entity + 'a,
+    stat_str: Option<&'a str>,
+    stat: Option<RollType>,
+}
+
+impl <'a> Functionality<'a> for Roll<'a> {
+    fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Roll<'a>> {
+        if args.len() > 3 {
+            return Err(Propagated(format!("{}", chan),
+                   format!("Invalid format. Use '.roll [@monster]' or '.roll [@monster] (stat)'.")))
         }
-    } else if params.len() == 2 || (params.len() == 3 && params[1].starts_with("@")) {
-        let res = if params.len() == 3 {
-            if !try!(permissions_test(bot, user, chan, world)) { return Ok(()); }
-            world.get_entity(params[1], Some(chan))
-        } else {
-            world.get_entity(user, None)
-        };
-        if res.is_ok() {
-            let e = try!(res);
-            let stat = if params.len() == 3 {
-                params[2]
-            } else {
-                params[1]
-            };
-            let rt = RollType::to_roll_type(stat);
-            match rt {
-                Some(roll_type) => {
-                    let r = e.roll(roll_type);
-                    try!(as_io(
-                        bot.send_privmsg(chan, format!("{} rolled {}.", e.identifier(), r).as_slice())
-                    ));
-                },
-                None => {
-                    try!(as_io(
-                        bot.send_privmsg(chan, format!("{} is not a valid stat.", stat).as_slice())
-                    ));
-                    try!(as_io(
-                        bot.send_privmsg(chan, "Options: str dex con wis int cha (or their full names).")
-                    ));
+        Ok(Roll {
+            bot: bot,
+            chan: chan,
+            target: {
+                let (res, err) = if args.len() == 3 || args.len() == 2 && args[1].starts_with("@") {
+                    if let Err(perm) = permissions_test_rf(user, chan, world) {
+                        return Err(perm);
+                    }
+                    (world.get_entity(args[1], Some(chan)),
+                     format!("{} is not a valid monster.", args[1]))
+                } else {
+                    (world.get_entity(user, None), format!("{} is not logged in.", user))
+                };
+                if res.is_ok() {
+                    try!(res)
+                } else {
+                    return Err(Propagated(format!("{}", chan), err));
                 }
-            }
-        } else {
-            let m = if params.len() == 3 {
-                format!("{} is not a valid monster.", params[1])
+            },
+            stat_str: if args.len() == 3 && args[1].starts_with("@") {
+                Some(args[2])
+            } else if args.len() == 2 && !args[1].starts_with("@") {
+                Some(args[1])
             } else {
-                format!("{} is not logged in.", user)
-            };
-            try!(as_io(bot.send_privmsg(chan, m.as_slice())));
-        }
-    } else {
-        try!(as_io(
-            bot.send_privmsg(chan, "Invalid format. Use '.roll [@monster]' or '.roll [@monster] (stat)'.")
-        ));
+                None
+            },
+            stat: if args.len() == 3 && args[1].starts_with("@") {
+                RollType::to_roll_type(args[2])
+            } else if args.len() == 2 && !args[1].starts_with("@") {
+                RollType::to_roll_type(args[1])
+            } else {
+                Some(Basic)
+            }
+        })
     }
-    Ok(())
+
+    fn do_func(&self) -> BotResult<()> {
+        if self.stat.is_none() {
+            return Err(Propagated(
+                format!("{}", self.chan),
+                format!("{} is not a valid stat.\r\nOptions: str dex con wis int cha (or their full names).", self.stat_str.unwrap())
+            )); // We do not check if self.stat_str is none because it cannot be based on new(...).
+        }
+        let r = self.target.roll(self.stat.unwrap());
+        try!(as_io(
+            self.bot.send_privmsg(self.chan, format!("{} rolled {}.", self.target.identifier(), r).as_slice())
+        ));
+        Ok(())
+    }
 }
 
 pub fn damage(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> BotResult<()> {
