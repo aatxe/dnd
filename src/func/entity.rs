@@ -13,8 +13,8 @@ pub struct Roll<'a> {
     stat: Option<RollType>,
 }
 
-impl <'a> Functionality<'a> for Roll<'a> {
-    fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Roll<'a>> {
+impl <'a> Roll<'a> {
+    pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Roll<'a>> {
         if args.len() > 3 {
             return Err(Propagated(format!("{}", chan),
                    format!("Invalid format. Use '.roll [@monster]' or '.roll [@monster] (stat)'.")))
@@ -54,7 +54,9 @@ impl <'a> Functionality<'a> for Roll<'a> {
             }
         })
     }
+}
 
+impl <'a> Functionality for Roll<'a> {
     fn do_func(&self) -> BotResult<()> {
         if self.stat.is_none() {
             return Err(Propagated(

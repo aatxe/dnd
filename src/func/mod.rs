@@ -14,8 +14,7 @@ pub mod player;
 pub mod world;
 
 
-pub trait Functionality<'a> {
-    fn new(&'a Bot, &'a str, &'a str, Vec<&'a str>, &'a mut World) -> BotResult<Self>;
+pub trait Functionality {
     fn do_func(&self) -> BotResult<()>;
 }
 
@@ -46,7 +45,7 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
                 if tokens[0].starts_with(".") {
                     match tokens[0].slice_from(1) {
                         "roll" => {
-                            let roll: BotResult<Roll> = Functionality::new(bot, user, chan, tokens, world);
+                            let roll = Roll::new(bot, user, chan, tokens, world);
                             if let Err(Propagated(resp, msg)) = roll {
                                 try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
                             } else if let Err(Propagated(resp, msg)) = roll.unwrap().do_func() {
