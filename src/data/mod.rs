@@ -1,5 +1,6 @@
 use std::ascii::AsciiExt;
-use std::io::{IoError, IoResult};
+use std::fmt::{FormatError, Formatter, Show};
+use std::io::{IoError, IoResult, OtherIoError};
 
 pub mod game;
 pub mod monster;
@@ -31,6 +32,18 @@ pub type BotResult<T> = Result<T, BotError>;
 
 pub enum BotError {
     Io(IoError),
+    NotFound(String),
+    PasswordIncorrect,
+}
+
+impl Show for BotError {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), FormatError> {
+        match self {
+            &Io(ref io_err) => io_err.fmt(fmt),
+            &NotFound(ref s) => s.fmt(fmt),
+            &PasswordIncorrect => "Password incorrect.".fmt(fmt),
+        }
+    }
 }
 
 pub fn as_io<T>(res: IoResult<T>) -> BotResult<T> {
@@ -41,6 +54,21 @@ pub fn as_io<T>(res: IoResult<T>) -> BotResult<T> {
     }
 }
 
+pub fn to_io<T>(res: BotResult<T>) -> IoResult<T> {
+    if res.is_ok() {
+        Ok(res.unwrap())
+    } else {
+        Err(if let Io(io) = res.err().unwrap() {
+            io
+        } else {
+            IoError {
+                kind: OtherIoError,
+                desc: "Something went wrong.",
+                detail: None,
+            }
+        })
+    }
+}
 
 pub trait Entity {
     fn identifier(&self) -> &str;

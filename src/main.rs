@@ -12,7 +12,7 @@ mod func;
 
 #[cfg(not(test))]
 fn main() {
-    let mut world = World::new().unwrap();
+    let mut world = World::new();
     let mut bot = IrcBot::new(|bot, source, command, args| {
         func::process_world(bot, source, command, args, &mut world)
     }).unwrap();

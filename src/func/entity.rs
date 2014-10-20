@@ -1,12 +1,11 @@
-use std::io::IoResult;
-use data::{Basic, Entity, RollType};
+use data::{Basic, BotResult, Entity, RollType, as_io};
 use data::stats::Stats;
 use data::utils::str_to_u8;
 use data::world::World;
 use func::{incorrect_format, permissions_test};
 use irc::Bot;
 
-pub fn roll(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
+pub fn roll(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> BotResult<()> {
     if params.len() == 1 || (params.len() == 2 && params[1].starts_with("@")) {
         let res = if params.len() == 2 {
             if !try!(permissions_test(bot, user, chan, world)) { return Ok(()); }
@@ -17,14 +16,16 @@ pub fn roll(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&s
         if res.is_ok() {
             let e = try!(res);
             let r = e.roll(Basic);
-            try!(bot.send_privmsg(chan, format!("{} rolled {}.", e.identifier(), r).as_slice()));
+            try!(as_io(
+                bot.send_privmsg(chan, format!("{} rolled {}.", e.identifier(), r).as_slice())
+            ));
         } else {
             let m = if params.len() == 2 {
                 format!("{} is not a valid monster.", params[1])
             } else {
                 format!("{} is not logged in.", user)
             };
-            try!(bot.send_privmsg(chan, m.as_slice()));
+            try!(as_io(bot.send_privmsg(chan, m.as_slice())));
         }
     } else if params.len() == 2 || (params.len() == 3 && params[1].starts_with("@")) {
         let res = if params.len() == 3 {
@@ -44,11 +45,17 @@ pub fn roll(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&s
             match rt {
                 Some(roll_type) => {
                     let r = e.roll(roll_type);
-                    try!(bot.send_privmsg(chan, format!("{} rolled {}.", e.identifier(), r).as_slice()));
+                    try!(as_io(
+                        bot.send_privmsg(chan, format!("{} rolled {}.", e.identifier(), r).as_slice())
+                    ));
                 },
                 None => {
-                    try!(bot.send_privmsg(chan, format!("{} is not a valid stat.", stat).as_slice()));
-                    try!(bot.send_privmsg(chan, "Options: str dex con wis int cha (or their full names)."));
+                    try!(as_io(
+                        bot.send_privmsg(chan, format!("{} is not a valid stat.", stat).as_slice())
+                    ));
+                    try!(as_io(
+                        bot.send_privmsg(chan, "Options: str dex con wis int cha (or their full names).")
+                    ));
                 }
             }
         } else {
@@ -57,15 +64,17 @@ pub fn roll(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&s
             } else {
                 format!("{} is not logged in.", user)
             };
-            try!(bot.send_privmsg(chan, m.as_slice()));
+            try!(as_io(bot.send_privmsg(chan, m.as_slice())));
         }
     } else {
-        try!(bot.send_privmsg(chan, "Invalid format. Use '.roll [@monster]' or '.roll [@monster] (stat)'."));
+        try!(as_io(
+            bot.send_privmsg(chan, "Invalid format. Use '.roll [@monster]' or '.roll [@monster] (stat)'.")
+        ));
     }
     Ok(())
 }
 
-pub fn damage(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
+pub fn damage(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> BotResult<()> {
     if !try!(permissions_test(bot, user, chan, world)) { return Ok(()); }
     if params.len() == 3 {
         let res = world.get_entity(params[1], Some(chan));
@@ -77,9 +86,11 @@ pub fn damage(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<
                 } else {
                     format!("{} ({}) has fallen unconscious.", e.identifier(), params[1])
                 };
-                try!(bot.send_privmsg(chan, m.as_slice()));
+                try!(as_io(bot.send_privmsg(chan, m.as_slice())));
             } else {
-                try!(bot.send_privmsg(chan, format!("{} is not a valid positive integer.", params[2]).as_slice()));
+                try!(as_io(
+                    bot.send_privmsg(chan, format!("{} is not a valid positive integer.", params[2]).as_slice())
+                ));
             }
         } else {
             let m = if params[1].starts_with("@") {
@@ -87,7 +98,7 @@ pub fn damage(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<
             } else {
                 format!("{} is not logged in.", params[1])
             };
-            try!(bot.send_privmsg(chan, m.as_slice()));
+            try!(as_io(bot.send_privmsg(chan, m.as_slice())));
         }
     } else {
         try!(incorrect_format(bot, chan, ".damage", "target value"));
@@ -95,7 +106,7 @@ pub fn damage(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<
     Ok(())
 }
 
-pub fn set_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
+pub fn set_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> BotResult<()> {
     if !try!(permissions_test(bot, user, chan, world)) { return Ok(()); }
     if params.len() == 9 {
         let res = world.get_entity(params[1], Some(chan));
@@ -108,14 +119,18 @@ pub fn set_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, para
                 }
             }
             if valid {
-                p.set_temp_stats(try!(Stats::new(str_to_u8(params[2]),
-                                                 str_to_u8(params[3]), str_to_u8(params[4]),
-                                                 str_to_u8(params[5]), str_to_u8(params[6]),
-                                                 str_to_u8(params[7]), str_to_u8(params[8]))));
-                try!(bot.send_privmsg(chan, format!("{} ({}) now has temporary {}.", p.identifier(), params[1], p.stats()).as_slice()));
+                p.set_temp_stats(Stats::new(str_to_u8(params[2]),
+                                            str_to_u8(params[3]), str_to_u8(params[4]),
+                                            str_to_u8(params[5]), str_to_u8(params[6]),
+                                            str_to_u8(params[7]), str_to_u8(params[8])));
+                try!(as_io(
+                    bot.send_privmsg(chan, format!("{} ({}) now has temporary {}.", p.identifier(), params[1], p.stats()).as_slice())
+                ));
             } else {
-                try!(bot.send_privmsg(chan, "Stats must be non-zero positive integers. Format is: "))
-                try!(bot.send_privmsg(chan, ".temp target health str dex con wis int cha"));
+                try!(as_io(
+                    bot.send_privmsg(chan, "Stats must be non-zero positive integers. Format is: ")
+                ));
+                try!(as_io(bot.send_privmsg(chan, ".temp target health str dex con wis int cha")));
             }
         } else {
             let m = if params[1].starts_with("@") {
@@ -123,7 +138,7 @@ pub fn set_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, para
             } else {
                 format!("{} is not logged in.", params[1])
             };
-            try!(bot.send_privmsg(chan, m.as_slice()));
+            try!(as_io(bot.send_privmsg(chan, m.as_slice())));
         }
     } else {
         try!(incorrect_format(bot, chan, ".temp", "target health str dex con wis int cha"));
@@ -131,21 +146,23 @@ pub fn set_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, para
     Ok(())
 }
 
-pub fn clear_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
+pub fn clear_temp_stats(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>) -> BotResult<()> {
     if !try!(permissions_test(bot, user, chan, world)) { return Ok(()); }
     if params.len() == 2 {
         let res = world.get_entity(params[1], Some(chan));
         if res.is_ok() {
             let p = try!(res);
             p.clear_temp_stats();
-            try!(bot.send_privmsg(chan, format!("{} ({}) has reverted to {}.", p.identifier(), params[1], p.stats()).as_slice()));
+            try!(as_io(
+                bot.send_privmsg(chan, format!("{} ({}) has reverted to {}.", p.identifier(), params[1], p.stats()).as_slice())
+            ));
         } else {
             let m = if params[1].starts_with("@") {
                 format!("{} is not a valid monster.", params[1])
             } else {
                 format!("{} is not logged in.", params[1])
             };
-            try!(bot.send_privmsg(chan, m.as_slice()));
+            try!(as_io(bot.send_privmsg(chan, m.as_slice())));
         }
     } else {
         try!(incorrect_format(bot, chan, ".cleartemp", "target"));
@@ -164,9 +181,9 @@ mod test {
     fn roll_success() {
         let data = test_helper(":test!test@test PRIVMSG #test :.roll @0\r\n",
             |world| {
-                try!(world.add_game("Test", "test", "#test"));
-                let m = try!(Monster::create("Test", 14, 12, 10, 12, 12, 12, 12));
-                try!(world.add_monster(m, "#test"));
+                world.add_game("Test", "test", "#test");
+                let m = Monster::create("Test", 14, 12, 10, 12, 12, 12, 12);
+                world.add_monster(m, "#test");
                 Ok(())
             }
         ).unwrap();
@@ -177,9 +194,9 @@ mod test {
     fn roll_success_stat() {
         let data = test_helper(":test!test@test PRIVMSG #test :.roll @0 con\r\n",
             |world| {
-                try!(world.add_game("Test", "test", "#test"));
-                let m = try!(Monster::create("Test", 14, 12, 10, 12, 12, 12, 12));
-                try!(world.add_monster(m, "#test"));
+                world.add_game("Test", "test", "#test");
+                let m = Monster::create("Test", 14, 12, 10, 12, 12, 12, 12);
+                world.add_monster(m, "#test");
                 Ok(())
             }
         ).unwrap();
@@ -190,9 +207,9 @@ mod test {
     fn roll_failed_invalid_stat() {
         let data = test_helper(":test!test@test PRIVMSG #test :.roll @0 test\r\n",
             |world| {
-                try!(world.add_game("Test", "test", "#test"));
-                let m = try!(Monster::create("Test", 14, 12, 10, 12, 12, 12, 12));
-                try!(world.add_monster(m, "#test"));
+                world.add_game("Test", "test", "#test");
+                let m = Monster::create("Test", 14, 12, 10, 12, 12, 12, 12);
+                world.add_monster(m, "#test");
                 Ok(())
             }
         ).unwrap();
@@ -205,7 +222,8 @@ mod test {
     fn roll_failed_monster_does_not_exist() {
         let data = test_helper(":test!test@test PRIVMSG #test :.roll @0\r\n",
             |world| {
-                world.add_game("Test", "test", "#test")
+                world.add_game("Test", "test", "#test");
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG #test :@0 is not a valid monster.\r\n".as_bytes());
@@ -215,7 +233,8 @@ mod test {
     fn roll_failed_user_is_not_logged_in() {
         let data = test_helper(":test!test@test PRIVMSG #test :.roll\r\n",
             |world| {
-                world.add_game("Test", "test", "#test")
+                world.add_game("Test", "test", "#test");
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG #test :test is not logged in.\r\n".as_bytes());
@@ -231,9 +250,9 @@ mod test {
     fn damage_success() {
         let data = test_helper(":test!test@test PRIVMSG #test :.damage @0 5\r\n",
             |world| {
-                try!(world.add_game("Test", "test", "#test"));
-                let m = try!(Monster::create("Test", 20, 12, 12, 12, 12, 12, 12));
-                try!(world.add_monster(m, "#test"));
+                world.add_game("Test", "test", "#test");
+                let m = Monster::create("Test", 20, 12, 12, 12, 12, 12, 12);
+                world.add_monster(m, "#test");
                 Ok(())
             }
         ).unwrap();
@@ -244,9 +263,9 @@ mod test {
     fn damage_success_unconscious() {
         let data = test_helper(":test!test@test PRIVMSG #test :.damage @0 20\r\n",
             |world| {
-                try!(world.add_game("Test", "test", "#test"));
-                let m = try!(Monster::create("Test", 20, 12, 12, 12, 12, 12, 12));
-                try!(world.add_monster(m, "#test"));
+                world.add_game("Test", "test", "#test");
+                let m = Monster::create("Test", 20, 12, 12, 12, 12, 12, 12);
+                world.add_monster(m, "#test");
                 Ok(())
             }
         ).unwrap();
@@ -257,9 +276,9 @@ mod test {
     fn damage_failed_invalid_amount() {
         let data = test_helper(":test!test@test PRIVMSG #test :.damage @0 a\r\n",
             |world| {
-                try!(world.add_game("Test", "test", "#test"));
-                let m = try!(Monster::create("Test", 20, 12, 12, 12, 12, 12, 12));
-                try!(world.add_monster(m, "#test"));
+                world.add_game("Test", "test", "#test");
+                let m = Monster::create("Test", 20, 12, 12, 12, 12, 12, 12);
+                world.add_monster(m, "#test");
                 Ok(())
             }
         ).unwrap();
@@ -270,7 +289,8 @@ mod test {
     fn damage_failed_monster_does_not_exist() {
         let data = test_helper(":test!test@test PRIVMSG #test :.damage @0 3\r\n",
             |world| {
-                world.add_game("Test", "test", "#test")
+                world.add_game("Test", "test", "#test");
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG #test :@0 is not a valid monster.\r\n".as_bytes());
@@ -280,7 +300,8 @@ mod test {
     fn damage_failed_user_is_not_logged_in() {
         let data = test_helper(":test!test@test PRIVMSG #test :.damage test 15\r\n",
             |world| {
-                world.add_game("Test", "test", "#test")
+                world.add_game("Test", "test", "#test");
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG #test :test is not logged in.\r\n".as_bytes());
@@ -290,9 +311,9 @@ mod test {
     fn set_temp_stats_success() {
         let data = test_helper(":test!test@test PRIVMSG #test :.temp @0 20 12 12 12 12 12 12\r\n",
             |world| {
-                try!(world.add_game("Test", "test", "#test"));
-                let m = try!(Monster::create("Test", 14, 12, 10, 12, 12, 12, 12));
-                try!(world.add_monster(m, "#test"));
+                world.add_game("Test", "test", "#test");
+                let m = Monster::create("Test", 14, 12, 10, 12, 12, 12, 12);
+                world.add_monster(m, "#test");
                 Ok(())
             }
         ).unwrap();
@@ -303,7 +324,8 @@ mod test {
     fn set_temp_stats_failed_monster_does_not_exist() {
         let data = test_helper(":test!test@test PRIVMSG #test :.temp @0 20 12 12 12 12 12 12\r\n",
             |world| {
-                world.add_game("Test", "test", "#test")
+                world.add_game("Test", "test", "#test");
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG #test :@0 is not a valid monster.\r\n".as_bytes());
@@ -313,9 +335,9 @@ mod test {
     fn set_temp_stats_failed_non_integers() {
         let data = test_helper(":test!test@test PRIVMSG #test :.temp @0 20 -12 a 12 12 12 12\r\n",
             |world| {
-                try!(world.add_game("Test", "test", "#test"));
-                let m = try!(Monster::create("Test", 14, 12, 10, 12, 12, 12, 12));
-                try!(world.add_monster(m, "#test"));
+                world.add_game("Test", "test", "#test");
+                let m = Monster::create("Test", 14, 12, 10, 12, 12, 12, 12);
+                world.add_monster(m, "#test");
                 Ok(())
             }
         ).unwrap();
@@ -328,10 +350,10 @@ mod test {
     fn clear_temp_stats_success() {
         let data = test_helper(":test!test@test PRIVMSG #test :.cleartemp @0\r\n",
             |world| {
-                try!(world.add_game("Test", "test", "#test"));
-                let mut m = try!(Monster::create("Test", 14, 12, 10, 12, 12, 12, 12));
-                m.set_temp_stats(try!(Stats::new(20, 12, 12, 12, 12, 12, 12)));
-                try!(world.add_monster(m, "#test"));
+                world.add_game("Test", "test", "#test");
+                let mut m = Monster::create("Test", 14, 12, 10, 12, 12, 12, 12);
+                m.set_temp_stats(Stats::new(20, 12, 12, 12, 12, 12, 12));
+                world.add_monster(m, "#test");
                 Ok(())
             }
         ).unwrap();
@@ -342,7 +364,8 @@ mod test {
     fn clear_temp_stats_failed_monster_does_not_exist() {
         let data = test_helper(":test!test@test PRIVMSG #test :.cleartemp @0\r\n",
             |world| {
-                world.add_game("Test", "test", "#test")
+                world.add_game("Test", "test", "#test");
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG #test :@0 is not a valid monster.\r\n".as_bytes());
@@ -352,7 +375,8 @@ mod test {
     fn clear_temp_stats_failed_user_is_not_logged_in() {
         let data = test_helper(":test!test@test PRIVMSG #test :.cleartemp test\r\n",
             |world| {
-                world.add_game("Test", "test", "#test")
+                world.add_game("Test", "test", "#test");
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG #test :test is not logged in.\r\n".as_bytes());

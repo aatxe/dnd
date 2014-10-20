@@ -11,4 +11,3 @@ Here are some of the features to be implemented soon:
 Here are some specific tasks to do:
 * Refactor functionality into structs sharing a trait, rewrite process_world accordingly.
 * Implement a useful help system following previous refactor.
-* Remove unnecessary usage of IoResult and translate all result usage into a custom Result.

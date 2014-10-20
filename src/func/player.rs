@@ -1,13 +1,12 @@
 use std::ascii::AsciiExt;
-use std::io::IoResult;
-use data::Entity;
+use data::{BotResult, Entity, as_io};
 use data::player::Player;
 use data::utils::{join_from, str_to_u8};
 use data::world::World;
 use func::incorrect_format;
 use irc::Bot;
 
-pub fn register(bot: &Bot, user: &str, params: Vec<&str>) -> IoResult<()> {
+pub fn register(bot: &Bot, user: &str, params: Vec<&str>) -> BotResult<()> {
     if params.len() == 10 {
         let mut valid = true;
         for s in params.slice_from(3).iter() {
@@ -20,11 +19,17 @@ pub fn register(bot: &Bot, user: &str, params: Vec<&str>) -> IoResult<()> {
                 str_to_u8(params[4]), str_to_u8(params[5]),
                 str_to_u8(params[6]), str_to_u8(params[7]),
                 str_to_u8(params[8]), str_to_u8(params[9])));
-            try!(p.save());
-            try!(bot.send_privmsg(user, format!("Your account ({}) has been created.", params[1]).as_slice()));
+            try!(as_io(p.save()));
+            try!(as_io(
+                bot.send_privmsg(user, format!("Your account ({}) has been created.", params[1]).as_slice())
+            ));
         } else {
-            try!(bot.send_privmsg(user, "Stats must be non-zero positive integers. Format is: "))
-            try!(bot.send_privmsg(user, "register username password health str dex con wis int cha"));
+            try!(as_io(
+                bot.send_privmsg(user, "Stats must be non-zero positive integers. Format is: ")
+            ));
+            try!(as_io(
+                bot.send_privmsg(user, "register username password health str dex con wis int cha")
+            ));
         }
     } else {
         try!(incorrect_format(bot, user, "register", "username password health str dex con wis int cha"));
@@ -32,33 +37,43 @@ pub fn register(bot: &Bot, user: &str, params: Vec<&str>) -> IoResult<()> {
     Ok(())
 }
 
-pub fn login(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
+pub fn login(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> BotResult<()> {
     if params.len() == 4 {
         let pr = Player::load(params[1]);
         if pr.is_ok() && !world.is_user_logged_in(user) {
-            let p = try!(pr);
+            let p = pr.unwrap();
             let mut success = false;
             match world.games.find_mut(&String::from_str(params[3])) {
                 Some(game) => {
                     let res = game.login(p.clone(), user, params[2]);
                     if !res.is_err() {
-                        try!(bot.send_privmsg(user, try!(res)));
-                        try!(bot.send_invite(user, params[3]));
+                        try!(as_io(bot.send_privmsg(user, try!(res))));
+                        try!(as_io(bot.send_invite(user, params[3])));
                         success = true;
                     } else {
-                        try!(bot.send_privmsg(user, res.unwrap_err().desc));
+                        try!(as_io(
+                            bot.send_privmsg(user, format!("{}", res.unwrap_err()).as_slice())
+                        ));
                     }
                 },
-                None => try!(bot.send_privmsg(user, format!("Game not found on {}.", params[3]).as_slice())),
+                None => try!(as_io(
+                    bot.send_privmsg(user, format!("Game not found on {}.", params[3]).as_slice())
+                )),
             };
             if success {
-                try!(world.add_user(user, p));
+                world.add_user(user, p);
             }
         } else if pr.is_err() {
-            try!(bot.send_privmsg(user, format!("Account {} does not exist, or could not be loaded.", params[1]).as_slice()));
+            try!(as_io(
+                bot.send_privmsg(user, format!("Account {} does not exist, or could not be loaded.", params[1]).as_slice())
+            ));
         } else {
-            try!(bot.send_privmsg(user, "You can only be logged into one account at once."));
-            try!(bot.send_privmsg(user, "Use logout to log out."));
+            try!(as_io(
+                bot.send_privmsg(user, "You can only be logged into one account at once.")
+            ));
+            try!(as_io(
+                bot.send_privmsg(user, "Use logout to log out.")
+            ));
         }
     } else {
         try!(incorrect_format(bot, user, "login", "username password channel"));
@@ -66,26 +81,26 @@ pub fn login(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoR
     Ok(())
 }
 
-pub fn logout(bot: &Bot, user: &str, world: &mut World) -> IoResult<()> {
+pub fn logout(bot: &Bot, user: &str, world: &mut World) -> BotResult<()> {
     if world.is_user_logged_in(user) {
         try!(world.remove_user(user));
-        try!(bot.send_privmsg(user, "You've been logged out."));
+        try!(as_io(bot.send_privmsg(user, "You've been logged out.")));
     } else {
-        try!(bot.send_privmsg(user, "You're not currently logged in."));
+        try!(as_io(bot.send_privmsg(user, "You're not currently logged in.")));
     }
     Ok(())
 }
 
-pub fn add_feat(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
+pub fn add_feat(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> BotResult<()> {
     if params.len() > 1 {
         let res = world.get_user(user);
         if res.is_ok() {
             let name = join_from(params.clone(), 1);
             let player = try!(res);
             player.add_feat(name.as_slice());
-            try!(bot.send_privmsg(user, format!("Added {} feat.", name).as_slice()));
+            try!(as_io(bot.send_privmsg(user, format!("Added {} feat.", name).as_slice())));
         } else {
-            try!(bot.send_privmsg(user, "You must be logged in to add a feat."));
+            try!(as_io(bot.send_privmsg(user, "You must be logged in to add a feat.")));
         }
     } else {
         try!(incorrect_format(bot, user, "addfeat", "name of feat"));
@@ -93,21 +108,25 @@ pub fn add_feat(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> 
     Ok(())
 }
 
-pub fn save(bot: &Bot, user: &str, world: &mut World) -> IoResult<()> {
+pub fn save(bot: &Bot, user: &str, world: &mut World) -> BotResult<()> {
     let res = world.get_user(user);
     if res.is_ok() {
         let player = try!(res);
         match player.save() {
-            Ok(_) => try!(bot.send_privmsg(user, format!("Saved {}.", player.username).as_slice())),
-            Err(_) => try!(bot.send_privmsg(user, format!("Failed to save {}.", player.username).as_slice())),
+            Ok(_) => try!(as_io(
+                bot.send_privmsg(user, format!("Saved {}.", player.username).as_slice())
+            )),
+            Err(_) => try!(as_io(
+                bot.send_privmsg(user, format!("Failed to save {}.", player.username).as_slice())
+            )),
         }
     } else {
-        try!(bot.send_privmsg(user, "You must be logged in to save."));
+        try!(as_io(bot.send_privmsg(user, "You must be logged in to save.")));
     }
     Ok(())
 }
 
-pub fn look_up(bot: &Bot, resp: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
+pub fn look_up(bot: &Bot, resp: &str, world: &mut World, params: Vec<&str>) -> BotResult<()> {
     if params.len() == 2 || params.len() == 3 {
         let res = world.get_user(params[1]);
         if res.is_ok() {
@@ -119,18 +138,21 @@ pub fn look_up(bot: &Bot, resp: &str, world: &mut World, params: Vec<&str>) -> I
             };
             if params.len() == 2 {
                 let s = format!("{} ({}): {}{} Feats {}", p.username, params[1], tmp_msg, p.stats(), p.feats);
-                try!(bot.send_privmsg(resp, s.as_slice()));
+                try!(as_io(bot.send_privmsg(resp, s.as_slice())));
             } else if params[2].eq_ignore_ascii_case("feats") || params[2].eq_ignore_ascii_case("feat") {
-                try!(bot.send_privmsg(resp, format!("{} ({}): {}", p.username, params[1], p.feats).as_slice()));
+                let s = format!("{} ({}): {}", p.username, params[1], p.feats);
+                try!(as_io(bot.send_privmsg(resp, s.as_slice())));
             } else {
                 let s = match p.stats().get_stat(params[2]) {
                         Some(x) => format!("{} ({}): {}{} {}", p.username, params[1], tmp_msg, x, params[2]),
                         None => format!("{} is not a valid stat.", params[2]),
                 };
-                try!(bot.send_privmsg(resp, s.as_slice()));
+                try!(as_io(bot.send_privmsg(resp, s.as_slice())));
             }
         } else {
-            try!(bot.send_privmsg(resp, format!("{} is not logged in.", params[1]).as_slice()));
+            try!(as_io(
+                bot.send_privmsg(resp, format!("{} is not logged in.", params[1]).as_slice())
+            ));
         }
     } else {
         let dot = if resp.starts_with("#") {
@@ -143,7 +165,7 @@ pub fn look_up(bot: &Bot, resp: &str, world: &mut World, params: Vec<&str>) -> I
     Ok(())
 }
 
-pub fn add_update(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>, update: bool) -> IoResult<()> {
+pub fn add_update(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>, update: bool) -> BotResult<()> {
     if params.len() == 3 {
         let res = world.get_user(user);
         if res.is_ok() {
@@ -151,17 +173,23 @@ pub fn add_update(bot: &Bot, user: &str, chan: &str, world: &mut World, params: 
             if let Some(n) = from_str(params[2]) {
                 if update {
                     p.stats.update_stat(params[1], n);
-                    try!(bot.send_privmsg(chan, format!("{} ({}) now has {} {}.", p.username, user, n, params[1]).as_slice()));
+                    try!(as_io(
+                        bot.send_privmsg(chan, format!("{} ({}) now has {} {}.", p.username, user, n, params[1]).as_slice())
+                    ));
                 } else {
                     p.stats.increase_stat(params[1], n);
                     let k = if let Some(i) = p.stats.get_stat(params[1]) { i } else { 0 };
-                    try!(bot.send_privmsg(chan, format!("{} ({}) now has {} {}.", p.username, user, k, params[1]).as_slice()));
+                    try!(as_io(
+                        bot.send_privmsg(chan, format!("{} ({}) now has {} {}.", p.username, user, k, params[1]).as_slice())
+                    ));
                 }
             } else {
-                try!(bot.send_privmsg(chan, format!("{} is not a valid positive integer.", params[2]).as_slice()));
+                try!(as_io(
+                    bot.send_privmsg(chan, format!("{} is not a valid positive integer.", params[2]).as_slice())
+                ));
             }
         } else {
-            try!(bot.send_privmsg(chan, "You're not logged in."));
+            try!(as_io(bot.send_privmsg(chan, "You're not logged in.")));
         }
     } else if update {
         try!(incorrect_format(bot, chan, ".update", "stat value"));
@@ -173,6 +201,7 @@ pub fn add_update(bot: &Bot, user: &str, chan: &str, world: &mut World, params: 
 
 #[cfg(test)]
 mod test {
+    use data::as_io;
     use data::player::Player;
     use func::test::test_helper;
 
@@ -196,7 +225,8 @@ mod test {
     fn login_success() {
         let data = test_helper(":test!test@test PRIVMSG test :login login test #test\r\n",
             |world| {
-                world.add_game("Dungeons and Tests", "test", "#test")
+                world.add_game("Dungeons and Tests", "test", "#test");
+                Ok(())
             }
         ).unwrap();
         let mut exp = String::from_str("PRIVMSG test :Login successful.\r\n");
@@ -208,7 +238,8 @@ mod test {
     fn login_failed_password_incorrect() {
         let data = test_helper(":test!test@test PRIVMSG test :login login ztest #test\r\n",
             |world| {
-                world.add_game("Dungeons and Tests", "test", "#test")
+                world.add_game("Dungeons and Tests", "test", "#test");
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG test :Password incorrect.\r\n".as_bytes());
@@ -230,14 +261,15 @@ mod test {
     fn login_failed_already_logged_in() {
         let data = test_helper(":test!test@test PRIVMSG test :login login test #test\r\n",
             |world| {
-                try!(world.add_game("Dungeons and Tests", "test", "#test"));
-                let p = try!(Player::load("login"));
+                world.add_game("Dungeons and Tests", "test", "#test");
+                let p = try!(as_io(Player::load("login")));
                 try!(if let Some(game) = world.games.find_mut(&String::from_str("#test")) {
                     game.login(p.clone(), "test", "test")
                 } else {
                     Ok("")
                 });
-                world.add_user("test", p)
+                world.add_user("test", p);
+                Ok(())
             }
         ).unwrap();
         let mut exp = String::from_str("PRIVMSG test :You can only be logged into one account at once.\r\n");
@@ -249,14 +281,15 @@ mod test {
     fn logout_success() {
         let data = test_helper(":test!test@test PRIVMSG test :logout\r\n",
             |world| {
-                try!(world.add_game("Dungeons and Tests", "test", "#test"));
-                let p = try!(Player::load("login"));
+                world.add_game("Dungeons and Tests", "test", "#test");
+                let p = try!(as_io(Player::load("login")));
                 try!(if let Some(game) = world.games.find_mut(&String::from_str("#test")) {
                     game.login(p.clone(), "test", "test")
                 } else {
                     Ok("")
                 });
-                world.add_user("test", p)
+                world.add_user("test", p);
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG test :You've been logged out.\r\n".as_bytes());
@@ -272,14 +305,15 @@ mod test {
     fn add_feat_success() {
         let data = test_helper(":test!test@test PRIVMSG test :addfeat Test Feat\r\n",
             |world| {
-                try!(world.add_game("Dungeons and Tests", "test", "#test"));
-                let p = try!(Player::load("login"));
+                world.add_game("Dungeons and Tests", "test", "#test");
+                let p = try!(as_io(Player::load("login")));
                 try!(if let Some(game) = world.games.find_mut(&String::from_str("#test")) {
                     game.login(p.clone(), "test", "test")
                 } else {
                     Ok("")
                 });
-                world.add_user("test", p)
+                world.add_user("test", p);
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG test :Added Test Feat feat.\r\n".as_bytes());
@@ -295,9 +329,10 @@ mod test {
     fn save_success() {
         let data = test_helper(":test!test@test PRIVMSG test :save\r\n",
             |world| {
-                try!(world.add_game("Dungeons and Tests", "test", "#test"));
-                let p = try!(Player::create_test("test6", "test", 20, 12, 12, 12, 12, 12, 12));
-                world.add_user("test", p)
+                world.add_game("Dungeons and Tests", "test", "#test");
+                let p = Player::create_test("test6", "test", 20, 12, 12, 12, 12, 12, 12);
+                world.add_user("test", p);
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG test :Saved test6.\r\n".as_bytes());
@@ -313,9 +348,10 @@ mod test {
     fn lookup_query_success() {
         let data = test_helper(":test!test@test PRIVMSG test :lookup test\r\n",
             |world| {
-                try!(world.add_game("Dungeons and Tests", "test", "#test"));
-                let p = try!(Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12));
-                world.add_user("test", p)
+                world.add_game("Dungeons and Tests", "test", "#test");
+                let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+                world.add_user("test", p);
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG test :test (test): Stats { health: 20, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 } Feats []\r\n".as_bytes());
@@ -325,9 +361,10 @@ mod test {
     fn lookup_query_success_feats() {
         let data = test_helper(":test!test@test PRIVMSG test :lookup test feats\r\n",
             |world| {
-                try!(world.add_game("Dungeons and Tests", "test", "#test"));
-                let p = try!(Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12));
-                world.add_user("test", p)
+                world.add_game("Dungeons and Tests", "test", "#test");
+                let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+                world.add_user("test", p);
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG test :test (test): []\r\n".as_bytes());
@@ -337,9 +374,10 @@ mod test {
     fn lookup_query_success_stat() {
         let data = test_helper(":test!test@test PRIVMSG test :lookup test health\r\n",
             |world| {
-                try!(world.add_game("Dungeons and Tests", "test", "#test"));
-                let p = try!(Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12));
-                world.add_user("test", p)
+                world.add_game("Dungeons and Tests", "test", "#test");
+                let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+                world.add_user("test", p);
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG test :test (test): 20 health\r\n".as_bytes());
@@ -349,9 +387,10 @@ mod test {
     fn lookup_query_failed_invalid_stat() {
         let data = test_helper(":test!test@test PRIVMSG test :lookup test test\r\n",
             |world| {
-                try!(world.add_game("Dungeons and Tests", "test", "#test"));
-                let p = try!(Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12));
-                world.add_user("test", p)
+                world.add_game("Dungeons and Tests", "test", "#test");
+                let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+                world.add_user("test", p);
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG test :test is not a valid stat.\r\n".as_bytes());
@@ -367,9 +406,10 @@ mod test {
     fn lookup_channel_success() {
         let data = test_helper(":test!test@test PRIVMSG #test :.lookup test\r\n",
             |world| {
-                try!(world.add_game("Dungeons and Tests", "test", "#test"));
-                let p = try!(Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12));
-                world.add_user("test", p)
+                world.add_game("Dungeons and Tests", "test", "#test");
+                let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+                world.add_user("test", p);
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG #test :test (test): Stats { health: 20, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 } Feats []\r\n".as_bytes());
@@ -379,9 +419,10 @@ mod test {
     fn lookup_channel_success_feats() {
         let data = test_helper(":test!test@test PRIVMSG #test :.lookup test feats\r\n",
             |world| {
-                try!(world.add_game("Dungeons and Tests", "test", "#test"));
-                let p = try!(Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12));
-                world.add_user("test", p)
+                world.add_game("Dungeons and Tests", "test", "#test");
+                let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+                world.add_user("test", p);
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG #test :test (test): []\r\n".as_bytes());
@@ -391,9 +432,10 @@ mod test {
     fn lookup_channel_success_stat() {
         let data = test_helper(":test!test@test PRIVMSG #test :.lookup test health\r\n",
             |world| {
-                try!(world.add_game("Dungeons and Tests", "test", "#test"));
-                let p = try!(Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12));
-                world.add_user("test", p)
+                world.add_game("Dungeons and Tests", "test", "#test");
+                let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+                world.add_user("test", p);
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG #test :test (test): 20 health\r\n".as_bytes());
@@ -403,9 +445,10 @@ mod test {
     fn lookup_channel_failed_invalid_stat() {
         let data = test_helper(":test!test@test PRIVMSG #test :.lookup test test\r\n",
             |world| {
-                try!(world.add_game("Dungeons and Tests", "test", "#test"));
-                let p = try!(Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12));
-                world.add_user("test", p)
+                world.add_game("Dungeons and Tests", "test", "#test");
+                let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+                world.add_user("test", p);
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG #test :test is not a valid stat.\r\n".as_bytes());
@@ -421,9 +464,10 @@ mod test {
     fn add_stat_success() {
         let data = test_helper(":test!test@test PRIVMSG #test :.increase str 1\r\n",
             |world| {
-                try!(world.add_game("Dungeons and Tests", "test", "#test"));
-                let p = try!(Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12));
-                world.add_user("test", p)
+                world.add_game("Dungeons and Tests", "test", "#test");
+                let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+                world.add_user("test", p);
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG #test :test (test) now has 13 str.\r\n".as_bytes());
@@ -433,9 +477,10 @@ mod test {
     fn update_stat_success() {
         let data = test_helper(":test!test@test PRIVMSG #test :.update str 16\r\n",
             |world| {
-                try!(world.add_game("Dungeons and Tests", "test", "#test"));
-                let p = try!(Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12));
-                world.add_user("test", p)
+                world.add_game("Dungeons and Tests", "test", "#test");
+                let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+                world.add_user("test", p);
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG #test :test (test) now has 16 str.\r\n".as_bytes());
@@ -445,9 +490,10 @@ mod test {
     fn add_update_failed_invalid_stat_value() {
         let data = test_helper(":test!test@test PRIVMSG #test :.update str a\r\n",
             |world| {
-                try!(world.add_game("Dungeons and Tests", "test", "#test"));
-                let p = try!(Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12));
-                world.add_user("test", p)
+                world.add_game("Dungeons and Tests", "test", "#test");
+                let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+                world.add_user("test", p);
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG #test :a is not a valid positive integer.\r\n".as_bytes());

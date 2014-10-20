@@ -1,22 +1,27 @@
 use std::io::IoResult;
+use data::{BotResult, as_io};
 use data::game::Game;
 use data::utils::join_from;
 use data::world::World;
 use func::incorrect_format;
 use irc::Bot;
 
-pub fn create(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> IoResult<()> {
+pub fn create(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> BotResult<()> {
     if params.len() >= 3 {
         if !world.game_exists(params[1]) {
-            try!(bot.send_join(params[1]));
+            try!(as_io(bot.send_join(params[1])));
             let name = join_from(params.clone(), 2);
-            try!(bot.send_topic(params[1], name.as_slice()));
-            try!(bot.send_mode(params[1], "+i"));
-            try!(world.add_game(name.as_slice(), user, params[1]));
-            try!(bot.send_privmsg(user, format!("Campaign created named {}.", name).as_slice()));
-            try!(bot.send_invite(user, params[1]));
+            try!(as_io(bot.send_topic(params[1], name.as_slice())));
+            try!(as_io(bot.send_mode(params[1], "+i")));
+            world.add_game(name.as_slice(), user, params[1]);
+            try!(as_io(
+                bot.send_privmsg(user, format!("Campaign created named {}.", name).as_slice())
+            ));
+            try!(as_io(bot.send_invite(user, params[1])));
         } else {
-            try!(bot.send_privmsg(user, format!("A campaign already exists on {}.", params[1]).as_slice()));
+            try!(as_io(
+                bot.send_privmsg(user, format!("A campaign already exists on {}.", params[1]).as_slice())
+            ));
         }
     } else {
         try!(incorrect_format(bot, user, "create", "channel campaign name"));
@@ -25,18 +30,16 @@ pub fn create(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> Io
 }
 
 pub fn private_roll(bot: &Bot, user: &str) -> IoResult<()> {
-    try!(bot.send_privmsg(user, format!("You rolled {}.", Game::roll()).as_slice()));
-    Ok(())
+    bot.send_privmsg(user, format!("You rolled {}.", Game::roll()).as_slice())
 }
 
 pub fn save_all(bot: &Bot, user: &str, world: &World) -> IoResult<()> {
     if bot.config().is_owner(user) {
         try!(world.save_all());
-        try!(bot.send_privmsg(user, "The world has been saved."));
+        bot.send_privmsg(user, "The world has been saved.")
     } else {
-        try!(bot.send_privmsg(user, "You must own the bot to do that!"));
+        bot.send_privmsg(user, "You must own the bot to do that!")
     }
-    Ok(())
 }
 
 #[cfg(test)]
@@ -59,7 +62,8 @@ mod test {
     fn create_failed_already_exists() {
         let data = test_helper(":test!test@test PRIVMSG test :create #test Dungeons and Tests\r\n",
             |world| {
-                world.add_game("Dungeons and Tests", "test", "#test")
+                world.add_game("Dungeons and Tests", "test", "#test");
+                Ok(())
             }
         ).unwrap();
         assert_eq!(data.as_slice(), "PRIVMSG test :A campaign already exists on #test.\r\n".as_bytes());
