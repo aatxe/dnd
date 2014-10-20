@@ -179,7 +179,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.slice_to(27), "PRIVMSG #test :Test rolled ".as_bytes());
+        assert_eq!(String::from_utf8(data.slice_to(27).to_vec()), Ok(format!("PRIVMSG #test :Test rolled ")));
     }
 
     #[test]
@@ -192,7 +192,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.slice_to(27), "PRIVMSG #test :Test rolled ".as_bytes());
+        assert_eq!(String::from_utf8(data.slice_to(27).to_vec()), Ok(format!("PRIVMSG #test :Test rolled ")));
     }
 
     #[test]
@@ -207,7 +207,7 @@ mod test {
         ).unwrap();
         let mut exp = String::from_str("PRIVMSG #test :test is not a valid stat.\r\n");
         exp.push_str("PRIVMSG #test :Options: str dex con wis int cha (or their full names).\r\n");
-        assert_eq!(data.as_slice(), exp.as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(exp));
     }
 
     #[test]
@@ -218,7 +218,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG #test :@0 is not a valid monster.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :@0 is not a valid monster.\r\n")));
     }
 
     #[test]
@@ -229,13 +229,14 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG #test :test is not logged in.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :test is not logged in.\r\n")));
     }
 
     #[test]
     fn roll_failed_invalid_format() {
         let data = test_helper(":test!test@test PRIVMSG #test :.roll a b c\r\n", |_| { Ok(()) }).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG #test :Invalid format. Use '.roll [@monster]' or '.roll [@monster] (stat)'.\r\n".as_bytes());
+        let exp = String::from_str("PRIVMSG #test :Invalid format. Use '.roll [@monster]' or '.roll [@monster] (stat)'.\r\n");
+        assert_eq!(String::from_utf8(data), Ok(exp));
     }
 
     #[test]
@@ -248,7 +249,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG #test :Test (@0) took 5 damage and has 15 health remaining.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :Test (@0) took 5 damage and has 15 health remaining.\r\n")));
     }
 
     #[test]
@@ -261,7 +262,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG #test :Test (@0) has fallen unconscious.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :Test (@0) has fallen unconscious.\r\n")));
     }
 
     #[test]
@@ -274,7 +275,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG #test :a is not a valid positive integer.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :a is not a valid positive integer.\r\n")));
     }
 
     #[test]
@@ -285,7 +286,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG #test :@0 is not a valid monster.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :@0 is not a valid monster.\r\n")));
     }
 
     #[test]
@@ -296,7 +297,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG #test :test is not logged in.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :test is not logged in.\r\n")));
     }
 
     #[test]
@@ -309,7 +310,8 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG #test :Test (@0) now has temporary Stats { health: 20, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }.\r\n".as_bytes());
+        let exp = String::from_str("PRIVMSG #test :Test (@0) now has temporary Stats { health: 20, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }.\r\n");
+        assert_eq!(String::from_utf8(data), Ok(exp));
     }
 
     #[test]
@@ -320,7 +322,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG #test :@0 is not a valid monster.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :@0 is not a valid monster.\r\n")));
     }
 
     #[test]
@@ -335,7 +337,7 @@ mod test {
         ).unwrap();
         let mut exp = String::from_str("PRIVMSG #test :Stats must be non-zero positive integers. Format is:\r\n");
         exp.push_str("PRIVMSG #test :.temp target health str dex con wis int cha\r\n");
-        assert_eq!(data.as_slice(), exp.as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(exp));
     }
 
     #[test]
@@ -349,7 +351,8 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG #test :Test (@0) has reverted to Stats { health: 14, strength: 12, dexterity: 10, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }.\r\n".as_bytes());
+        let exp = String::from_str("PRIVMSG #test :Test (@0) has reverted to Stats { health: 14, strength: 12, dexterity: 10, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }.\r\n");
+        assert_eq!(String::from_utf8(data), Ok(exp));
     }
 
     #[test]
@@ -360,7 +363,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG #test :@0 is not a valid monster.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :@0 is not a valid monster.\r\n")));
     }
 
     #[test]
@@ -371,6 +374,6 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG #test :test is not logged in.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :test is not logged in.\r\n")));
     }
 }

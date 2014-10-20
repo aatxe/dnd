@@ -209,7 +209,7 @@ mod test {
     fn register_success() {
         let data = test_helper(":test!test@test PRIVMSG test :register test5 test 20 12 12 12 12 12 12\r\n",
                     |_| { Ok(()) }).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG test :Your account (test5) has been created.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :Your account (test5) has been created.\r\n")));
     }
 
     #[test]
@@ -218,7 +218,7 @@ mod test {
                     |_| { Ok(()) }).unwrap();
         let mut exp = String::from_str("PRIVMSG test :Stats must be non-zero positive integers. Format is: \r\n");
         exp.push_str("PRIVMSG test :register username password health str dex con wis int cha\r\n");
-        assert_eq!(data.as_slice(), exp.as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(exp));
     }
 
     #[test]
@@ -231,7 +231,7 @@ mod test {
         ).unwrap();
         let mut exp = String::from_str("PRIVMSG test :Login successful.\r\n");
         exp.push_str("INVITE test :#test\r\n");
-        assert_eq!(data.as_slice(), exp.as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(exp));
     }
 
     #[test]
@@ -242,19 +242,19 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG test :Password incorrect.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :Password incorrect.\r\n")));
     }
 
     #[test]
     fn login_failed_game_not_found() {
         let data = test_helper(":test!test@test PRIVMSG test :login login test #test\r\n", |_| { Ok(()) }).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG test :Game not found on #test.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :Game not found on #test.\r\n")));
     }
 
     #[test]
     fn login_failed_player_not_found() {
         let data = test_helper(":test!test@test PRIVMSG test :login missing test #test\r\n", |_| { Ok(()) }).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG test :Account missing does not exist, or could not be loaded.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :Account missing does not exist, or could not be loaded.\r\n")));
     }
 
     #[test]
@@ -274,7 +274,7 @@ mod test {
         ).unwrap();
         let mut exp = String::from_str("PRIVMSG test :You can only be logged into one account at once.\r\n");
         exp.push_str("PRIVMSG test :Use logout to log out.\r\n");
-        assert_eq!(data.as_slice(), exp.as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(exp));
     }
 
     #[test]
@@ -292,13 +292,13 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG test :You've been logged out.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :You've been logged out.\r\n")));
     }
 
     #[test]
     fn logout_failed_not_logged_in() {
         let data = test_helper(":test!test@test PRIVMSG test :logout\r\n", |_| { Ok(()) }).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG test :You're not currently logged in.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :You're not currently logged in.\r\n")));
     }
 
     #[test]
@@ -316,13 +316,13 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG test :Added Test Feat feat.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :Added Test Feat feat.\r\n")));
     }
 
     #[test]
     fn add_feat_failed_not_logged_in() {
         let data = test_helper(":test!test@test PRIVMSG test :addfeat Test Feat\r\n", |_| { Ok(()) }).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG test :You must be logged in to add a feat.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :You must be logged in to add a feat.\r\n")));
     }
 
     #[test]
@@ -335,13 +335,13 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG test :Saved test6.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :Saved test6.\r\n")));
     }
 
     #[test]
     fn save_failed_not_logged_in() {
         let data = test_helper(":test!test@test PRIVMSG test :save\r\n", |_| { Ok(()) }).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG test :You must be logged in to save.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :You must be logged in to save.\r\n")));
     }
 
     #[test]
@@ -354,7 +354,8 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG test :test (test): Stats { health: 20, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 } Feats []\r\n".as_bytes());
+        let exp = String::from_str("PRIVMSG test :test (test): Stats { health: 20, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 } Feats []\r\n");
+        assert_eq!(String::from_utf8(data), Ok(exp));
     }
 
     #[test]
@@ -367,7 +368,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG test :test (test): []\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :test (test): []\r\n")));
     }
 
     #[test]
@@ -380,7 +381,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG test :test (test): 20 health\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :test (test): 20 health\r\n")));
     }
 
     #[test]
@@ -393,13 +394,13 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG test :test is not a valid stat.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :test is not a valid stat.\r\n")));
     }
 
     #[test]
     fn lookup_query_failed_user_not_logged_in() {
         let data = test_helper(":test!test@test PRIVMSG test :lookup test\r\n", |_| { Ok(()) }).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG test :test is not logged in.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :test is not logged in.\r\n")));
     }
 
     #[test]
@@ -412,7 +413,8 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG #test :test (test): Stats { health: 20, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 } Feats []\r\n".as_bytes());
+        let exp = String::from_str("PRIVMSG #test :test (test): Stats { health: 20, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 } Feats []\r\n");
+        assert_eq!(String::from_utf8(data), Ok(exp));
     }
 
     #[test]
@@ -425,7 +427,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG #test :test (test): []\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :test (test): []\r\n")));
     }
 
     #[test]
@@ -438,7 +440,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG #test :test (test): 20 health\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :test (test): 20 health\r\n")));
     }
 
     #[test]
@@ -451,13 +453,13 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG #test :test is not a valid stat.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :test is not a valid stat.\r\n")));
     }
 
     #[test]
     fn lookup_channel_failed_user_not_logged_in() {
         let data = test_helper(":test!test@test PRIVMSG #test :.lookup test\r\n", |_| { Ok(()) }).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG #test :test is not logged in.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :test is not logged in.\r\n")));
     }
 
     #[test]
@@ -470,7 +472,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG #test :test (test) now has 13 str.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :test (test) now has 13 str.\r\n")));
     }
 
     #[test]
@@ -483,7 +485,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG #test :test (test) now has 16 str.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :test (test) now has 16 str.\r\n")));
     }
 
     #[test]
@@ -496,12 +498,12 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG #test :a is not a valid positive integer.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :a is not a valid positive integer.\r\n")));
     }
 
     #[test]
     fn add_update_failed_user_not_logged_in() {
         let data = test_helper(":test!test@test PRIVMSG #test :.update str 16\r\n", |_| { Ok(()) }).unwrap();
-        assert_eq!(data.as_slice(), "PRIVMSG #test :You're not logged in.\r\n".as_bytes());
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :You're not logged in.\r\n")));
     }
 }
