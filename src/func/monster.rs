@@ -1,76 +1,101 @@
-use data::{BotResult, Entity, as_io};
+use data::{BotResult, Entity, Propagated, as_io};
 use data::monster::Monster;
 use data::utils::str_to_u8;
 use data::world::World;
-use func::{incorrect_format, permissions_test};
+use func::{Functionality, get_target, incorrect_format_rf, permissions_test_rf, incorrect_format, permissions_test, validate_from};
 use irc::Bot;
 
-pub fn add(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> BotResult<()> {
-    if params.len() == 10 {
-        if !try!(permissions_test(bot, user, params[1], world)) { return Ok(()); }
-        let mut valid = true;
-        for s in params.slice_from(4).iter() {
-            if str_to_u8(*s) == 0 {
-                valid = false;
-            }
-        }
-        if valid {
-            let m = Monster::create(params[2], str_to_u8(params[3]),
-                str_to_u8(params[4]), str_to_u8(params[5]),
-                str_to_u8(params[6]), str_to_u8(params[7]),
-                str_to_u8(params[8]), str_to_u8(params[9]));
-            let i = world.add_monster(m, params[1]);
-            try!(as_io(
-                bot.send_privmsg(user, format!("Monster ({}) has been created as @{}.", params[2], i).as_slice())
-            ));
-        } else {
-            try!(as_io(
-                bot.send_privmsg(user, "Stats must be non-zero positive integers. Format is: ")
-            ));
-            try!(as_io(
-                bot.send_privmsg(user, "addmonster chan name health str dex con wis int cha")
-            ));
-        }
-    } else {
-        try!(incorrect_format(bot, user, "addmonster", "chan name health str dex con wis int cha"));
-    }
-    Ok(())
+pub struct AddMonster<'a> {
+    bot: &'a Bot + 'a,
+    user: &'a str,
+    world: &'a mut World,
+    chan: &'a str,
+    name: &'a str, health: u8,
+    st: u8, dx: u8, cn: u8,
+    ws: u8, it: u8, ch: u8,
 }
 
-pub fn look_up(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> BotResult<()> {
-    if (params.len() == 3 || params.len() == 4) && params[2].starts_with("@") {
-        if !try!(permissions_test(bot, user, params[1], world)) { return Ok(()); }
-        let res = world.get_entity(params[2], Some(params[1]));
-        if res.is_ok() {
-            let m = try!(res);
-            let tmp_msg = if m.has_temp_stats() {
-                "Temp. "
-            } else {
-                ""
-            };
-            if params.len() == 3 {
-                let s = format!("{} ({}): {}{}", m.identifier(), params[2], tmp_msg, m.stats());
-                try!(as_io(bot.send_privmsg(user, s.as_slice())));
-            } else {
-                let s = match m.stats().get_stat(params[3]) {
-                        Some(x) => format!("{} ({}): {}{} {}", m.identifier(), params[2], tmp_msg, x, params[3]),
-                        None => format!("{} is not a valid stat.", params[3]),
-                };
-                try!(as_io(bot.send_privmsg(user, s.as_slice())));
-            }
-        } else {
-            try!(as_io(
-                bot.send_privmsg(user, format!("{} is not a valid monster.", params[2]).as_slice())
-            ));
+impl <'a> AddMonster<'a> {
+    pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<AddMonster<'a>> {
+        if let Err(perm) = permissions_test_rf(user, args[1], world) {
+            return Err(perm);
+        } else if args.len() != 10 {
+            return Err(incorrect_format_rf(user, "addmonster", "chan name health str dex con wis int cha"));
         }
-    } else if params.len() == 3 || params.len() == 4 {
-        try!(as_io(
-            bot.send_privmsg(user, format!("{} is not a valid monster.", params[2]).as_slice())
-        ));
-    } else {
-        try!(incorrect_format(bot, user, "mlookup", "channel target [stat]"));
+        try!(validate_from(args.clone(), 3, user, "addmonster", "chan name health str dex con wis int cha"));
+        Ok(AddMonster {
+            bot: bot,
+            user: user,
+            world: world,
+            chan: args[1],
+            name: args[2], health: str_to_u8(args[3]),
+            st: str_to_u8(args[4]), dx: str_to_u8(args[5]), cn: str_to_u8(args[6]),
+            ws: str_to_u8(args[7]), it: str_to_u8(args[8]), ch: str_to_u8(args[9]),
+        })
     }
-    Ok(())
+}
+
+impl <'a> Functionality for AddMonster<'a> {
+    fn do_func(&mut self) -> BotResult<()> {
+        let m = Monster::create(self.name, self.health,
+                                self.st, self.dx, self.cn, self.ws, self.it, self.ch);
+        let s = format!("Monster ({}) has been created as @{}.",
+                        self.name, self.world.add_monster(m, self.chan));
+        as_io(self.bot.send_privmsg(self.user, s.as_slice()))
+    }
+}
+
+pub struct LookUpMonster<'a> {
+    bot: &'a Bot + 'a,
+    user: &'a str,
+    world: &'a mut World,
+    chan: &'a str,
+    target_str: &'a str,
+    stat_str: Option<&'a str>,
+}
+
+impl <'a> LookUpMonster<'a> {
+    pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<LookUpMonster<'a>> {
+        if args.len() != 3 && args.len() != 4 {
+            return Err(incorrect_format_rf(user, "mlookup", "channel target [stat]"));
+        } else if let Err(perm) = permissions_test_rf(user, args[1], world) {
+            return Err(perm);
+        } else if !args[2].starts_with("@") {
+            return Err(Propagated(format!("{}", user), format!("{} is not a valid monster.", args[2])));
+        }
+        Ok(LookUpMonster {
+            bot: bot,
+            user: user,
+            world: world,
+            chan: args[1],
+            target_str: args[2],
+            stat_str: if args.len() == 4 {
+                Some(args[3])
+            } else {
+                None
+            },
+        })
+    }
+}
+
+impl <'a> Functionality for LookUpMonster<'a> {
+    fn do_func(&mut self) -> BotResult<()> {
+        let target = try!(get_target(self.target_str, self.user, self.user, self.chan, self.world));
+        let temp = if target.has_temp_stats() {
+            "Temp. "
+        } else {
+            ""
+        };
+        if self.stat_str.is_none() {
+            let s = format!("{} ({}): {}{}", target.identifier(), self.target_str, temp, target.stats());
+            as_io(self.bot.send_privmsg(self.user, s.as_slice()))
+        } else if let Some(x) = target.stats().get_stat(self.stat_str.unwrap()) {
+            let s = format!("{} ({}): {}{} {}", target.identifier(), self.target_str, temp, x, self.stat_str.unwrap());
+            as_io(self.bot.send_privmsg(self.user, s.as_slice()))
+        } else {
+            Err(Propagated(format!("{}", self.user), format!("{} is not a valid stat.", self.stat_str.unwrap())))
+        }
+    }
 }
 
 #[cfg(test)]
@@ -99,7 +124,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let mut exp = String::from_str("PRIVMSG test :Stats must be non-zero positive integers. Format is: \r\n");
+        let mut exp = String::from_str("PRIVMSG test :Stats must be non-zero positive integers. Format is:\r\n");
         exp.push_str("PRIVMSG test :addmonster chan name health str dex con wis int cha\r\n");
         assert_eq!(data.as_slice(), exp.as_bytes());
     }

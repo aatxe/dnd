@@ -2,18 +2,8 @@ use data::{Basic, BotResult, Entity, Propagated, RollType, as_io};
 use data::stats::Stats;
 use data::utils::str_to_u8;
 use data::world::World;
-use func::{Functionality, incorrect_format_rf, permissions_test_rf};
+use func::{Functionality, get_target, incorrect_format_rf, permissions_test_rf, validate_from};
 use irc::Bot;
-
-fn get_target<'a>(maybe: &str, fallback: &str, chan: &str, world: &'a mut World) -> BotResult<&'a mut Entity + 'a> {
-    let (res, err) = if maybe.starts_with("@") {
-        if let Err(perm) = permissions_test_rf(fallback, chan, world) { return Err(perm); }
-        (world.get_entity(maybe, Some(chan)), format!("{} is not a valid monster.", maybe))
-    } else {
-        (world.get_entity(fallback, None), format!("{} is not logged in.", fallback))
-    };
-    if res.is_ok() { res } else { Err(Propagated(format!("{}", chan), err)) }
-}
 
 pub struct Roll<'a> {
     bot: &'a Bot + 'a,
@@ -39,7 +29,7 @@ impl <'a> Roll<'a> {
         Ok(Roll {
             bot: bot,
             chan: chan,
-            target: try!(get_target(if args.len() > 1 { args[1] } else { "" }, user, chan, world)),
+            target: try!(get_target(if args.len() > 1 { args[1] } else { "" }, user, chan, chan, world)),
             stat_str: stat_str,
             stat: stat,
         })
@@ -75,7 +65,7 @@ impl <'a> Damage<'a> {
             bot: bot,
             chan: chan,
             target_str: args[1],
-            target: try!(get_target(args[1], user, chan, world)),
+            target: try!(get_target(args[1], user, chan, chan, world)),
             value: if let Some(n) = from_str(args[2]) {
                 n
             } else {
@@ -117,19 +107,12 @@ impl <'a> SetTempStats<'a> {
         } else if args.len() != 9 {
             return Err(incorrect_format_rf(chan, ".temp", "target health str dex con wis int cha"));
         }
-        for s in args.slice_from(3).iter() {
-            if str_to_u8(*s) == 0 {
-                return Err(Propagated(
-                    format!("{}", chan),
-                    format!("Stats must be non-zero positive integers. Format is:\r\n.temp target health str dex con wis int cha")
-                ));
-            }
-        }
+        try!(validate_from(args.clone(), 3, chan, ".temp", "target health str dex con wis int cha"));
         Ok(SetTempStats {
             bot: bot,
             chan: chan,
             target_str: args[1],
-            target: try!(get_target(args[1], user, chan, world)),
+            target: try!(get_target(args[1], user, chan, chan, world)),
             health: str_to_u8(args[2]),
             st: str_to_u8(args[3]), dx: str_to_u8(args[4]), cn: str_to_u8(args[5]),
             ws: str_to_u8(args[6]), it: str_to_u8(args[7]), ch: str_to_u8(args[8]),
@@ -165,7 +148,7 @@ impl <'a> ClearTempStats<'a> {
             bot: bot,
             chan: chan,
             target_str: args[1],
-            target: try!(get_target(args[1], user, chan, world)),
+            target: try!(get_target(args[1], user, chan, chan, world)),
         })
     }
 }

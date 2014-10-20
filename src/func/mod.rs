@@ -1,9 +1,11 @@
 extern crate irc;
 
 use self::entity::{ClearTempStats, Damage, Roll, SetTempStats};
+use self::monster::{AddMonster, LookUpMonster};
 use self::world::{Create, PrivateRoll, SaveAll};
 use std::io::IoResult;
-use data::{BotError, BotResult, Propagated, as_io, to_io};
+use data::{BotError, BotResult, Entity, Propagated, as_io, to_io};
+use data::utils::str_to_u8;
 use data::world::World;
 use irc::Bot;
 use irc::bot::IrcBot;
@@ -62,8 +64,24 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
                     },
                     "save" => player::save(bot, user, world),
                     "lookup" => player::look_up(bot, user, world, tokens),
-                    "mlookup" => monster::look_up(bot, user, world, tokens),
-                    "addmonster" => monster::add(bot, user, world, tokens),
+                    "mlookup" => {
+                        let mlookup = LookUpMonster::new(bot, user, tokens, world);
+                        if let Err(Propagated(resp, msg)) = mlookup {
+                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                        } else if let Err(Propagated(resp, msg)) = mlookup.unwrap().do_func() {
+                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                        };
+                        Ok(())
+                    },
+                    "addmonster" => {
+                        let add = AddMonster::new(bot, user, tokens, world);
+                        if let Err(Propagated(resp, msg)) = add {
+                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                        } else if let Err(Propagated(resp, msg)) = add.unwrap().do_func() {
+                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                        };
+                        Ok(())
+                    },
                     _ => Ok(())
                 }
             } else {
@@ -116,6 +134,28 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
             }));
         },
         _ => (),
+    }
+    Ok(())
+}
+
+fn get_target<'a>(maybe: &str, fallback: &str, resp: &str, chan: &str, world: &'a mut World) -> BotResult<&'a mut Entity + 'a> {
+    let (res, err) = if maybe.starts_with("@") {
+        if let Err(perm) = permissions_test_rf(fallback, chan, world) { return Err(perm); }
+        (world.get_entity(maybe, Some(chan)), format!("{} is not a valid monster.", maybe))
+    } else {
+        (world.get_entity(fallback, None), format!("{} is not logged in.", fallback))
+    };
+    if res.is_ok() { res } else { Err(Propagated(format!("{}", resp), err)) }
+}
+
+pub fn validate_from(args: Vec<&str>, from: uint, resp: &str, cmd: &str, format: &str) -> BotResult<()> {
+    for s in args.slice_from(from).iter() {
+        if str_to_u8(*s) == 0 {
+            return Err(Propagated(
+                format!("{}", resp),
+                format!("Stats must be non-zero positive integers. Format is:\r\n{} {}", cmd, format)
+            ));
+        }
     }
     Ok(())
 }
