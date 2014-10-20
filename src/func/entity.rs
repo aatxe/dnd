@@ -54,10 +54,9 @@ impl <'a> Functionality for Roll<'a> {
                 format!("{} is not a valid stat.\r\nOptions: str dex con wis int cha (or their full names).", self.stat_str.unwrap())
             )); // We do not check if self.stat_str is none because it cannot be based on new(...).
         }
-        let r = self.target.roll(self.stat.unwrap());
-        as_io(
-            self.bot.send_privmsg(self.chan, format!("{} rolled {}.", self.target.identifier(), r).as_slice())
-        )
+        let s = format!("{} rolled {}.",
+                        self.target.identifier(), self.target.roll(self.stat.unwrap()));
+        as_io(self.bot.send_privmsg(self.chan, s.as_slice()))
     }
 }
 
@@ -71,9 +70,7 @@ pub struct Damage<'a> {
 
 impl <'a> Damage<'a> {
     pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Damage<'a>> {
-        if args.len() != 3 {
-            return Err(incorrect_format_rf(chan, ".damage", "target value"));
-        }
+        if args.len() != 3 { return Err(incorrect_format_rf(chan, ".damage", "target value")); }
         Ok(Damage {
             bot: bot,
             chan: chan,
@@ -146,9 +143,7 @@ impl <'a> Functionality for SetTempStats<'a> {
                                              self.st, self.dx, self.cn, self.ws, self.it, self.ch));
         let s = format!("{} ({}) now has temporary {}.",
                         self.target.identifier(), self.target_str, self.target.stats());
-        as_io(
-            self.bot.send_privmsg(self.chan, s.as_slice())
-        )
+        as_io(self.bot.send_privmsg(self.chan, s.as_slice()))
     }
 }
 
@@ -180,9 +175,7 @@ impl <'a> Functionality for ClearTempStats<'a> {
         self.target.clear_temp_stats();
         let s = format!("{} ({}) has reverted to {}.",
                         self.target.identifier(), self.target_str, self.target.stats());
-        as_io(
-            self.bot.send_privmsg(self.chan, s.as_slice())
-        )
+        as_io(self.bot.send_privmsg(self.chan, s.as_slice()))
     }
 }
 
