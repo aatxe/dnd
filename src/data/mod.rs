@@ -1,4 +1,5 @@
 use std::ascii::AsciiExt;
+use std::io::{IoError, IoResult};
 
 pub mod game;
 pub mod monster;
@@ -25,6 +26,21 @@ pub mod utils {
         }
     }
 }
+
+pub type BotResult<T> = Result<T, BotError>;
+
+pub enum BotError {
+    Io(IoError),
+}
+
+pub fn as_io<T>(res: IoResult<T>) -> BotResult<T> {
+    if res.is_ok() {
+        Ok(res.unwrap())
+    } else {
+        Err(Io(res.err().unwrap()))
+    }
+}
+
 
 pub trait Entity {
     fn identifier(&self) -> &str;
@@ -73,6 +89,7 @@ mod test {
     use super::RollType;
     use super::{Strength, Wisdom, Intellect};
     use super::utils;
+    use std::io::{InvalidInput, IoError, IoResult};
 
     #[test]
     fn to_roll_type() {
@@ -93,5 +110,16 @@ mod test {
     fn join_from() {
         assert_eq!(utils::join_from(vec!["hi","there","friend"], 0).as_slice(), "hi there friend");
         assert_eq!(utils::join_from(vec!["hi","their","friend"], 1).as_slice(), "their friend");
+    }
+
+    #[test]
+    fn as_io() {
+        assert!(super::as_io(Ok("This is okay!")).is_ok());
+        let e: IoResult<RollType> = Err(IoError {
+            kind: InvalidInput,
+            desc: "This is not okay.",
+            detail: None,
+        });
+        assert!(super::as_io(e).is_err());
     }
 }
