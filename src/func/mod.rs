@@ -18,6 +18,7 @@ pub mod world;
 
 pub trait Functionality {
     fn do_func(&mut self) -> BotResult<()>;
+    fn format() -> String;
 }
 
 pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&str], world: &mut World) -> IoResult<()> where T: IrcWriter, U: IrcReader {

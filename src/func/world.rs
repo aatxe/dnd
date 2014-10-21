@@ -36,6 +36,10 @@ impl <'a> Functionality for Create<'a> {
         try!(as_io(self.bot.send_privmsg(self.user, s.as_slice())));
         as_io(self.bot.send_invite(self.user, self.chan))
     }
+
+    fn format() -> String {
+        "channel campaign name".into_string()
+    }
 }
 
 pub struct PrivateRoll<'a> {
@@ -52,6 +56,10 @@ impl <'a> PrivateRoll<'a> {
 impl <'a> Functionality for PrivateRoll<'a> {
     fn do_func(&mut self) -> BotResult<()> {
         as_io(self.bot.send_privmsg(self.user, format!("You rolled {}.", Game::roll()).as_slice()))
+    }
+
+    fn format() -> String {
+        "".into_string()
     }
 }
 
@@ -75,6 +83,10 @@ impl <'a> Functionality for SaveAll<'a> {
     fn do_func(&mut self) -> BotResult<()> {
         try!(as_io(self.world.save_all()));
         as_io(self.bot.send_privmsg(self.user, "The world has been saved."))
+    }
+
+    fn format() -> String {
+        "".into_string()
     }
 }
 

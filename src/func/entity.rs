@@ -16,10 +16,7 @@ pub struct Roll<'a> {
 
 impl <'a> Roll<'a> {
     pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
-        if args.len() > 3 {
-            return Err(Propagated(format!("{}", chan),
-                   format!("Invalid format. Use '.roll [@monster]' or '.roll [@monster] (stat)'.")))
-        }
+        if args.len() > 3 { return Err(incorrect_format(chan, ".roll", "[@monster] [stat]")); }
         let (stat_str, stat) = if args.len() == 3 && args[1].starts_with("@") {
             (Some(args[2]), RollType::to_roll_type(args[2]))
         } else if args.len() == 2 && !args[1].starts_with("@") {
@@ -48,6 +45,10 @@ impl <'a> Functionality for Roll<'a> {
         let s = format!("{} rolled {}.",
                         self.target.identifier(), self.target.roll(self.stat.unwrap()));
         as_io(self.bot.send_privmsg(self.chan, s.as_slice()))
+    }
+
+    fn format() -> String {
+        "[@monster] [stat]".into_string()
     }
 }
 
@@ -89,6 +90,10 @@ impl <'a> Functionality for Damage<'a> {
         };
         as_io(self.bot.send_privmsg(self.chan, m.as_slice()))
     }
+
+    fn format() -> String {
+        "target value".into_string()
+    }
 }
 
 pub struct SetTempStats<'a> {
@@ -129,6 +134,10 @@ impl <'a> Functionality for SetTempStats<'a> {
                         self.target.identifier(), self.target_str, self.target.stats());
         as_io(self.bot.send_privmsg(self.chan, s.as_slice()))
     }
+
+    fn format() -> String {
+        "target health str dex con wis int cha".into_string()
+    }
 }
 
 pub struct ClearTempStats<'a> {
@@ -160,6 +169,10 @@ impl <'a> Functionality for ClearTempStats<'a> {
         let s = format!("{} ({}) has reverted to {}.",
                         self.target.identifier(), self.target_str, self.target.stats());
         as_io(self.bot.send_privmsg(self.chan, s.as_slice()))
+    }
+
+    fn format() -> String {
+        "target".into_string()
     }
 }
 
@@ -236,7 +249,8 @@ mod test {
     #[test]
     fn roll_failed_invalid_format() {
         let data = test_helper(":test!test@test PRIVMSG #test :.roll a b c\r\n", |_| { Ok(()) }).unwrap();
-        let exp = String::from_str("PRIVMSG #test :Invalid format. Use '.roll [@monster]' or '.roll [@monster] (stat)'.\r\n");
+        let mut exp = String::from_str("PRIVMSG #test :Incorrect format for .roll. Format is:\r\n");
+        exp.push_str("PRIVMSG #test :.roll [@monster] [stat]\r\n");
         assert_eq!(String::from_utf8(data), Ok(exp));
     }
 

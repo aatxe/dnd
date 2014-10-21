@@ -40,6 +40,10 @@ impl <'a> Functionality for Register<'a> {
         try!(as_io(p.save()));
         as_io(self.bot.send_privmsg(self.user, format!("Your account ({}) has been created.", self.username).as_slice()))
     }
+
+    fn format() -> String {
+        "username password health str dex con wis int cha".into_string()
+    }
 }
 
 pub struct Login<'a> {
@@ -94,6 +98,10 @@ impl <'a> Functionality for Login<'a> {
         self.world.add_user(self.user, self.player.clone());
         Ok(())
     }
+
+    fn format() -> String {
+        "username password channel".into_string()
+    }
 }
 
 pub struct Logout<'a> {
@@ -118,6 +126,10 @@ impl <'a> Functionality for Logout<'a> {
         }
         Ok(())
     }
+
+    fn format() -> String {
+        "".into_string()
+    }
 }
 
 pub struct AddFeat<'a> {
@@ -129,6 +141,7 @@ pub struct AddFeat<'a> {
 
 impl <'a> AddFeat<'a> {
     pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
+        if args.len() < 2 { return Err(incorrect_format(user, "addfeat", "name of feat")); }
         Ok(box AddFeat { bot: bot, user: user, world: world, feat_name: join_from(args, 1) } as Box<Functionality>)
     }
 }
@@ -142,6 +155,10 @@ impl <'a> Functionality for AddFeat<'a> {
         } else {
             Err(Propagated(format!("{}", self.user), format!("You must be logged in to add a feat.")))
         }
+    }
+
+    fn format() -> String {
+        "name of feat".into_string()
     }
 }
 
@@ -172,6 +189,10 @@ impl <'a> Functionality for Save<'a> {
         } else {
             Err(Propagated(format!("{}", self.user), format!("You must be logged in to save.")))
         }
+    }
+
+    fn format() -> String {
+        "".into_string()
     }
 }
 
@@ -228,6 +249,10 @@ impl <'a> Functionality for LookUpPlayer<'a> {
             Err(Propagated(format!("{}", self.resp), format!("{} is not a valid stat.", self.stat_str.unwrap())))
         }
     }
+
+    fn format() -> String {
+        "target [stat]".into_string()
+    }
 }
 
 pub struct AddUpdate<'a> {
@@ -280,6 +305,10 @@ impl <'a> Functionality for AddUpdate<'a> {
         } else {
             Err(Propagated(format!("{}", self.chan), format!("You're not logged in.")))
         }
+    }
+
+    fn format() -> String {
+        "stat value".into_string()
     }
 }
 
@@ -401,6 +430,14 @@ mod test {
             }
         ).unwrap();
         assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :Added Test Feat feat.\r\n")));
+    }
+
+    #[test]
+    fn add_feat_failed_invalid_format() {
+        let data = test_helper(":test!test@test PRIVMSG test :addfeat\r\n", |_| { Ok(()) }).unwrap();
+        let mut exp = String::from_str("PRIVMSG test :Incorrect format for addfeat. Format is:\r\n");
+        exp.push_str("PRIVMSG test :addfeat name of feat\r\n");
+        assert_eq!(String::from_utf8(data), Ok(exp));
     }
 
     #[test]

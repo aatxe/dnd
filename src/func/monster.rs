@@ -44,6 +44,10 @@ impl <'a> Functionality for AddMonster<'a> {
                         self.name, self.world.add_monster(m, self.chan));
         as_io(self.bot.send_privmsg(self.user, s.as_slice()))
     }
+
+    fn format() -> String {
+        "chan name health str dex con wis int cha".into_string()
+    }
 }
 
 pub struct LookUpMonster<'a> {
@@ -96,6 +100,10 @@ impl <'a> Functionality for LookUpMonster<'a> {
         } else {
             Err(Propagated(format!("{}", self.user), format!("{} is not a valid stat.", self.stat_str.unwrap())))
         }
+    }
+
+    fn format() -> String {
+        "channel target [stat]".into_string()
     }
 }
 
