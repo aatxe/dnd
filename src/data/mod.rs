@@ -1,6 +1,6 @@
 use std::ascii::AsciiExt;
 use std::fmt::{FormatError, Formatter, Show};
-use std::io::{IoError, IoResult, OtherIoError};
+use std::io::{IoError, IoResult};
 
 pub mod game;
 pub mod monster;
@@ -56,22 +56,6 @@ pub fn as_io<T>(res: IoResult<T>) -> BotResult<T> {
         Ok(res.unwrap())
     } else {
         Err(Io(res.err().unwrap()))
-    }
-}
-
-pub fn to_io<T>(res: BotResult<T>) -> IoResult<T> {
-    if res.is_ok() {
-        Ok(res.unwrap())
-    } else {
-        Err(if let Io(io) = res.err().unwrap() {
-            io
-        } else {
-            IoError {
-                kind: OtherIoError,
-                desc: "Something went wrong.",
-                detail: None,
-            }
-        })
     }
 }
 

@@ -14,9 +14,9 @@ pub struct Create<'a> {
 }
 
 impl <'a> Create<'a> {
-    pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Create<'a>> {
+    pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if args.len() < 3 { return Err(incorrect_format_rf(user, "create", "channel campaign name")); }
-        Ok(Create { bot: bot, user: user, world: world, chan: args[1], title: join_from(args, 2) })
+        Ok(box Create { bot: bot, user: user, world: world, chan: args[1], title: join_from(args, 2) } as Box<Functionality>)
     }
 }
 
@@ -43,8 +43,8 @@ pub struct PrivateRoll<'a> {
 }
 
 impl <'a> PrivateRoll<'a> {
-    pub fn new(bot: &'a Bot, user: &'a str) -> BotResult<PrivateRoll<'a>> {
-        Ok(PrivateRoll { bot: bot, user: user })
+    pub fn new(bot: &'a Bot, user: &'a str) -> BotResult<Box<Functionality + 'a>> {
+        Ok(box PrivateRoll { bot: bot, user: user } as Box<Functionality>)
     }
 }
 
@@ -61,11 +61,11 @@ pub struct SaveAll<'a> {
 }
 
 impl <'a> SaveAll<'a> {
-    pub fn new(bot: &'a Bot, user: &'a str, world: &'a World) -> BotResult<SaveAll<'a>> {
+    pub fn new(bot: &'a Bot, user: &'a str, world: &'a World) -> BotResult<Box<Functionality + 'a>> {
         if !bot.config().is_owner(user) {
             Err(Propagated(format!("{}", user), format!("You must own the bot to do that!")))
         } else {
-            Ok(SaveAll { bot: bot, user: user, world: world })
+            Ok(box SaveAll { bot: bot, user: user, world: world } as Box<Functionality>)
         }
     }
 }

@@ -5,7 +5,7 @@ use self::monster::{AddMonster, LookUpMonster};
 use self::player::{AddFeat, AddUpdate, Login, Logout, LookUpPlayer, Register, Save};
 use self::world::{Create, PrivateRoll, SaveAll};
 use std::io::IoResult;
-use data::{BotError, BotResult, Entity, Propagated, as_io, to_io};
+use data::{BotError, BotResult, Entity, NotFound, Propagated, as_io};
 use data::utils::str_to_u8;
 use data::world::World;
 use irc::Bot;
@@ -16,7 +16,6 @@ pub mod entity;
 pub mod monster;
 pub mod player;
 pub mod world;
-
 
 pub trait Functionality {
     fn do_func(&mut self) -> BotResult<()>;
@@ -30,181 +29,42 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
                 None => "",
             };
             let tokens: Vec<&str> = msg.split_str(" ").collect();
-            try!(to_io(if !chan.starts_with("#") {
+            let func = if !chan.starts_with("#") {
                 match tokens[0] {
-                    "register" => {
-                        let register = Register::new(bot, user, tokens);
-                        if let Err(Propagated(resp, msg)) = register {
-                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                        } else if let Err(Propagated(resp, msg)) = register.unwrap().do_func() {
-                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                        };
-                        Ok(())
-                    },
-                    "login" => {
-                        let login = Login::new(bot, user, tokens, world);
-                        if let Err(Propagated(resp, msg)) = login {
-                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                        } else if let Err(Propagated(resp, msg)) = login.unwrap().do_func() {
-                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                        };
-                        Ok(())
-                    },
-                    "create" => {
-                        let create = Create::new(bot, user, tokens, world);
-                        if let Err(Propagated(resp, msg)) = create {
-                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                        } else if let Err(Propagated(resp, msg)) = create.unwrap().do_func() {
-                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                        };
-                        Ok(())
-                    },
-                    "logout" => {
-                        let logout = Logout::new(bot, user, world);
-                        if let Err(Propagated(resp, msg)) = logout {
-                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                        } else if let Err(Propagated(resp, msg)) = logout.unwrap().do_func() {
-                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                        };
-                        Ok(())
-                    },
-                    "addfeat" => {
-                        let addfeat = AddFeat::new(bot, user, tokens, world);
-                        if let Err(Propagated(resp, msg)) = addfeat {
-                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                        } else if let Err(Propagated(resp, msg)) = addfeat.unwrap().do_func() {
-                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                        };
-                        Ok(())
-                    },
-                    "roll" => {
-                        let roll = PrivateRoll::new(bot, user);
-                        if let Err(Propagated(resp, msg)) = roll {
-                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                        } else if let Err(Propagated(resp, msg)) = roll.unwrap().do_func() {
-                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                        };
-                        Ok(())
-                    },
-                    "saveall" => {
-                        let saveall = SaveAll::new(bot, user, world);
-                        if let Err(Propagated(resp, msg)) = saveall {
-                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                        } else if let Err(Propagated(resp, msg)) = saveall.unwrap().do_func() {
-                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                        };
-                        Ok(())
-                    },
-                    "save" => {
-                        let save = Save::new(bot, user, world);
-                        if let Err(Propagated(resp, msg)) = save {
-                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                        } else if let Err(Propagated(resp, msg)) = save.unwrap().do_func() {
-                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                        };
-                        Ok(())
-                    },
-                    "lookup" => {
-                        let lookup = LookUpPlayer::new(bot, user, tokens, world);
-                        if let Err(Propagated(resp, msg)) = lookup {
-                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                        } else if let Err(Propagated(resp, msg)) = lookup.unwrap().do_func() {
-                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                        };
-                        Ok(())
-                    },
-                    "mlookup" => {
-                        let mlookup = LookUpMonster::new(bot, user, tokens, world);
-                        if let Err(Propagated(resp, msg)) = mlookup {
-                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                        } else if let Err(Propagated(resp, msg)) = mlookup.unwrap().do_func() {
-                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                        };
-                        Ok(())
-                    },
-                    "addmonster" => {
-                        let add = AddMonster::new(bot, user, tokens, world);
-                        if let Err(Propagated(resp, msg)) = add {
-                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                        } else if let Err(Propagated(resp, msg)) = add.unwrap().do_func() {
-                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                        };
-                        Ok(())
-                    },
-                    _ => Ok(())
+                    "register" => Register::new(bot, user, tokens),
+                    "login" => Login::new(bot, user, tokens, world),
+                    "create" => Create::new(bot, user, tokens, world),
+                    "logout" => Logout::new(bot, user, world),
+                    "addfeat" => AddFeat::new(bot, user, tokens, world),
+                    "roll" => PrivateRoll::new(bot, user),
+                    "saveall" => SaveAll::new(bot, user, world),
+                    "save" => Save::new(bot, user, world),
+                    "lookup" => LookUpPlayer::new(bot, user, tokens, world),
+                    "mlookup" => LookUpMonster::new(bot, user, tokens, world),
+                    "addmonster" => AddMonster::new(bot, user, tokens, world),
+                    _ => Err(Propagated(format!("{}", user), format!("{} is not a valid command.", tokens[0])))
                 }
             } else {
                 if tokens[0].starts_with(".") {
                     match tokens[0].slice_from(1) {
-                        "roll" => {
-                            let roll = Roll::new(bot, user, chan, tokens, world);
-                            if let Err(Propagated(resp, msg)) = roll {
-                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                            } else if let Err(Propagated(resp, msg)) = roll.unwrap().do_func() {
-                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                            };
-                            Ok(())
-                        },
-                        "lookup" => {
-                            let lookup = LookUpPlayer::new(bot, chan, tokens, world);
-                            if let Err(Propagated(resp, msg)) = lookup {
-                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                            } else if let Err(Propagated(resp, msg)) = lookup.unwrap().do_func() {
-                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                            };
-                            Ok(())
-                        },
-                        "update" => {
-                            let update = AddUpdate::new(bot, user, chan, tokens, world, true);
-                            if let Err(Propagated(resp, msg)) = update {
-                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                            } else if let Err(Propagated(resp, msg)) = update.unwrap().do_func() {
-                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                            };
-                            Ok(())
-                        },
-                        "increase" => {
-                            let update = AddUpdate::new(bot, user, chan, tokens, world, false);
-                            if let Err(Propagated(resp, msg)) = update {
-                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                            } else if let Err(Propagated(resp, msg)) = update.unwrap().do_func() {
-                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                            };
-                            Ok(())
-                        },
-                        "temp" => {
-                            let temp = SetTempStats::new(bot, user, chan, tokens, world);
-                            if let Err(Propagated(resp, msg)) = temp {
-                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                            } else if let Err(Propagated(resp, msg)) = temp.unwrap().do_func() {
-                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                            };
-                            Ok(())
-                        },
-                        "cleartemp" => {
-                            let clear = ClearTempStats::new(bot, user, chan, tokens, world);
-                            if let Err(Propagated(resp, msg)) = clear {
-                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                            } else if let Err(Propagated(resp, msg)) = clear.unwrap().do_func() {
-                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                            };
-                            Ok(())
-                        },
-                        "damage" => {
-                            let damage = Damage::new(bot, user, chan, tokens, world);
-                            if let Err(Propagated(resp, msg)) = damage {
-                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                            } else if let Err(Propagated(resp, msg)) = damage.unwrap().do_func() {
-                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
-                            };
-                            Ok(())
-                        },
-                        _ => Ok(())
+                        "roll" => Roll::new(bot, user, chan, tokens, world),
+                        "lookup" => LookUpPlayer::new(bot, chan, tokens, world),
+                        "update" => AddUpdate::new(bot, user, chan, tokens, world, true),
+                        "increase" => AddUpdate::new(bot, user, chan, tokens, world, false),
+                        "temp" => SetTempStats::new(bot, user, chan, tokens, world),
+                        "cleartemp" => ClearTempStats::new(bot, user, chan, tokens, world),
+                        "damage" => Damage::new(bot, user, chan, tokens, world),
+                        _ => Err(NotFound(tokens[0].into_string()))
                     }
                 } else {
-                    Ok(())
+                    Err(NotFound(tokens[0].into_string()))
                 }
-            }));
+            };
+            if let Err(Propagated(resp, msg)) = func {
+                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+            } else if let Err(Propagated(resp, msg)) = func.unwrap().do_func() {
+                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+            };
         },
         _ => (),
     }

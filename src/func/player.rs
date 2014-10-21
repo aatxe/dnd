@@ -3,7 +3,7 @@ use data::{BotResult, Entity, Propagated, as_io};
 use data::player::Player;
 use data::utils::{join_from, str_to_u8};
 use data::world::World;
-use func::{Functionality, incorrect_format_rf, incorrect_format, validate_from};
+use func::{Functionality, incorrect_format_rf, validate_from};
 use irc::Bot;
 
 pub struct Register<'a> {
@@ -16,19 +16,19 @@ pub struct Register<'a> {
 }
 
 impl <'a> Register<'a> {
-    pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>) -> BotResult<Register<'a>> {
+    pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 10 {
             return Err(incorrect_format_rf(user, "register", "username password health str dex con wis int cha"));
         }
         try!(validate_from(args.clone(), 3, user, "register", "username password health str dex con wis int cha"));
-        Ok(Register {
+        Ok(box Register {
             bot: bot,
             user: user,
             username: args[1], password: args[2],
             health: str_to_u8(args[3]),
             st: str_to_u8(args[4]), dx: str_to_u8(args[5]), cn: str_to_u8(args[6]),
             ws: str_to_u8(args[7]), it: str_to_u8(args[8]), ch: str_to_u8(args[9]),
-        })
+        } as Box<Functionality>)
     }
 }
 
@@ -50,7 +50,7 @@ pub struct Login<'a> {
 }
 
 impl <'a> Login<'a> {
-    pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Login<'a>> {
+    pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
             return Err(incorrect_format_rf(user, "login", "username password channel"));
         } else if world.is_user_logged_in(user) {
@@ -59,7 +59,7 @@ impl <'a> Login<'a> {
                 format!("You can only be logged into one account at once.\r\nUse logout to log out.")
             ));
         }
-        Ok(Login {
+        Ok(box Login {
             bot: bot,
             user: user,
             world: world,
@@ -73,7 +73,7 @@ impl <'a> Login<'a> {
                 ));
             },
             password: args[2],
-        })
+        } as Box<Functionality>)
     }
 }
 
@@ -102,8 +102,8 @@ pub struct Logout<'a> {
 }
 
 impl <'a> Logout<'a> {
-    pub fn new(bot: &'a Bot, user: &'a str, world: &'a mut World) -> BotResult<Logout<'a>> {
-        Ok(Logout { bot: bot, user: user, world: world })
+    pub fn new(bot: &'a Bot, user: &'a str, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
+        Ok(box Logout { bot: bot, user: user, world: world } as Box<Functionality>)
     }
 }
 
@@ -127,8 +127,8 @@ pub struct AddFeat<'a> {
 }
 
 impl <'a> AddFeat<'a> {
-    pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<AddFeat<'a>> {
-        Ok(AddFeat { bot: bot, user: user, world: world, feat_name: join_from(args, 1) })
+    pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
+        Ok(box AddFeat { bot: bot, user: user, world: world, feat_name: join_from(args, 1) } as Box<Functionality>)
     }
 }
 
@@ -151,8 +151,8 @@ pub struct Save<'a> {
 }
 
 impl <'a> Save<'a> {
-    pub fn new(bot: &'a Bot, user: &'a str, world: &'a mut World) -> BotResult<Save<'a>> {
-        Ok(Save { bot: bot, user: user, world: world })
+    pub fn new(bot: &'a Bot, user: &'a str, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
+        Ok(box Save { bot: bot, user: user, world: world } as Box<Functionality>)
     }
 }
 
@@ -183,7 +183,7 @@ pub struct LookUpPlayer<'a> {
 }
 
 impl <'a> LookUpPlayer<'a> {
-    pub fn new(bot: &'a Bot, resp: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<LookUpPlayer<'a>> {
+    pub fn new(bot: &'a Bot, resp: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 2 && args.len() != 3 {
             let dot = if resp.starts_with("#") {
                 "."
@@ -192,7 +192,7 @@ impl <'a> LookUpPlayer<'a> {
             };
             return Err(incorrect_format_rf(resp, format!("{}lookup", dot).as_slice(), "target [stat]"));
         }
-        Ok(LookUpPlayer {
+        Ok(box LookUpPlayer {
             bot: bot,
             resp: resp,
             world: world,
@@ -202,7 +202,7 @@ impl <'a> LookUpPlayer<'a> {
             } else {
                 None
             },
-        })
+        } as Box<Functionality>)
     }
 }
 
@@ -240,11 +240,11 @@ pub struct AddUpdate<'a> {
 }
 
 impl <'a> AddUpdate<'a> {
-    pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World, update: bool) -> BotResult<AddUpdate<'a>> {
+    pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World, update: bool) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 {
             return Err(incorrect_format_rf(chan, if update { ".update" } else { ".increase" }, "stat value"));
         }
-        Ok(AddUpdate {
+        Ok(box AddUpdate {
             bot: bot,
             user: user,
             chan: chan,
@@ -256,7 +256,7 @@ impl <'a> AddUpdate<'a> {
                 return Err(Propagated(format!("{}", chan), format!("{} is not a valid positive integer.", args[2])));
             },
             update: update,
-        })
+        } as Box<Functionality>)
     }
 }
 

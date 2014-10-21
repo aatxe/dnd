@@ -14,7 +14,7 @@ pub struct Roll<'a> {
 }
 
 impl <'a> Roll<'a> {
-    pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Roll<'a>> {
+    pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if args.len() > 3 {
             return Err(Propagated(format!("{}", chan),
                    format!("Invalid format. Use '.roll [@monster]' or '.roll [@monster] (stat)'.")))
@@ -26,13 +26,13 @@ impl <'a> Roll<'a> {
         } else {
             (None, Some(Basic))
         };
-        Ok(Roll {
+        Ok(box Roll {
             bot: bot,
             chan: chan,
             target: try!(get_target(if args.len() > 1 { args[1] } else { "" }, user, chan, chan, world)),
             stat_str: stat_str,
             stat: stat,
-        })
+        } as Box<Functionality>)
     }
 }
 
@@ -59,9 +59,9 @@ pub struct Damage<'a> {
 }
 
 impl <'a> Damage<'a> {
-    pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Damage<'a>> {
+    pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 { return Err(incorrect_format_rf(chan, ".damage", "target value")); }
-        Ok(Damage {
+        Ok(box Damage {
             bot: bot,
             chan: chan,
             target_str: args[1],
@@ -74,7 +74,7 @@ impl <'a> Damage<'a> {
                         format!("{} is not a valid positive integer.", args[2])
                 ));
             },
-        })
+        } as Box<Functionality>)
     }
 }
 
@@ -101,14 +101,14 @@ pub struct SetTempStats<'a> {
 }
 
 impl <'a> SetTempStats<'a> {
-    pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<SetTempStats<'a>> {
+    pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if let Err(perm) = permissions_test_rf(user, chan, world) {
             return Err(perm);
         } else if args.len() != 9 {
             return Err(incorrect_format_rf(chan, ".temp", "target health str dex con wis int cha"));
         }
         try!(validate_from(args.clone(), 3, chan, ".temp", "target health str dex con wis int cha"));
-        Ok(SetTempStats {
+        Ok(box SetTempStats {
             bot: bot,
             chan: chan,
             target_str: args[1],
@@ -116,7 +116,7 @@ impl <'a> SetTempStats<'a> {
             health: str_to_u8(args[2]),
             st: str_to_u8(args[3]), dx: str_to_u8(args[4]), cn: str_to_u8(args[5]),
             ws: str_to_u8(args[6]), it: str_to_u8(args[7]), ch: str_to_u8(args[8]),
-        })
+        } as Box<Functionality>)
     }
 }
 
@@ -138,18 +138,18 @@ pub struct ClearTempStats<'a> {
 }
 
 impl <'a> ClearTempStats<'a> {
-    pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<ClearTempStats<'a>> {
+    pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if let Err(perm) = permissions_test_rf(user, chan, world) {
             return Err(perm);
         } else if args.len() != 2 {
             return Err(incorrect_format_rf(chan, ".cleartemp", "target"));
         }
-        Ok(ClearTempStats {
+        Ok(box ClearTempStats {
             bot: bot,
             chan: chan,
             target_str: args[1],
             target: try!(get_target(args[1], user, chan, chan, world)),
-        })
+        } as Box<Functionality>)
     }
 }
 

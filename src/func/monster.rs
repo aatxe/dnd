@@ -16,14 +16,14 @@ pub struct AddMonster<'a> {
 }
 
 impl <'a> AddMonster<'a> {
-    pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<AddMonster<'a>> {
+    pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if let Err(perm) = permissions_test_rf(user, args[1], world) {
             return Err(perm);
         } else if args.len() != 10 {
             return Err(incorrect_format_rf(user, "addmonster", "chan name health str dex con wis int cha"));
         }
         try!(validate_from(args.clone(), 3, user, "addmonster", "chan name health str dex con wis int cha"));
-        Ok(AddMonster {
+        Ok(box AddMonster {
             bot: bot,
             user: user,
             world: world,
@@ -31,7 +31,7 @@ impl <'a> AddMonster<'a> {
             name: args[2], health: str_to_u8(args[3]),
             st: str_to_u8(args[4]), dx: str_to_u8(args[5]), cn: str_to_u8(args[6]),
             ws: str_to_u8(args[7]), it: str_to_u8(args[8]), ch: str_to_u8(args[9]),
-        })
+        } as Box<Functionality>)
     }
 }
 
@@ -55,7 +55,7 @@ pub struct LookUpMonster<'a> {
 }
 
 impl <'a> LookUpMonster<'a> {
-    pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<LookUpMonster<'a>> {
+    pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 && args.len() != 4 {
             return Err(incorrect_format_rf(user, "mlookup", "channel target [stat]"));
         } else if let Err(perm) = permissions_test_rf(user, args[1], world) {
@@ -63,7 +63,7 @@ impl <'a> LookUpMonster<'a> {
         } else if !args[2].starts_with("@") {
             return Err(Propagated(format!("{}", user), format!("{} is not a valid monster.", args[2])));
         }
-        Ok(LookUpMonster {
+        Ok(box LookUpMonster {
             bot: bot,
             user: user,
             world: world,
@@ -74,7 +74,7 @@ impl <'a> LookUpMonster<'a> {
             } else {
                 None
             },
-        })
+        } as Box<Functionality>)
     }
 }
 
