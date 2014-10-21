@@ -1,202 +1,285 @@
 use std::ascii::AsciiExt;
-use data::{BotResult, Entity, as_io};
+use data::{BotResult, Entity, Propagated, as_io};
 use data::player::Player;
 use data::utils::{join_from, str_to_u8};
 use data::world::World;
-use func::incorrect_format;
+use func::{Functionality, incorrect_format_rf, incorrect_format, validate_from};
 use irc::Bot;
 
-pub fn register(bot: &Bot, user: &str, params: Vec<&str>) -> BotResult<()> {
-    if params.len() == 10 {
-        let mut valid = true;
-        for s in params.slice_from(3).iter() {
-            if str_to_u8(*s) == 0 {
-                valid = false;
-            }
-        }
-        if valid {
-            let p = try!(Player::create(params[1], params[2], str_to_u8(params[3]),
-                str_to_u8(params[4]), str_to_u8(params[5]),
-                str_to_u8(params[6]), str_to_u8(params[7]),
-                str_to_u8(params[8]), str_to_u8(params[9])));
-            try!(as_io(p.save()));
-            try!(as_io(
-                bot.send_privmsg(user, format!("Your account ({}) has been created.", params[1]).as_slice())
-            ));
-        } else {
-            try!(as_io(
-                bot.send_privmsg(user, "Stats must be non-zero positive integers. Format is: ")
-            ));
-            try!(as_io(
-                bot.send_privmsg(user, "register username password health str dex con wis int cha")
-            ));
-        }
-    } else {
-        try!(incorrect_format(bot, user, "register", "username password health str dex con wis int cha"));
-    }
-    Ok(())
+pub struct Register<'a> {
+    bot: &'a Bot + 'a,
+    user: &'a str,
+    username: &'a str, password: &'a str,
+    health: u8,
+    st: u8, dx: u8, cn: u8,
+    ws: u8, it: u8, ch: u8,
 }
 
-pub fn login(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> BotResult<()> {
-    if params.len() == 4 {
-        let pr = Player::load(params[1]);
-        if pr.is_ok() && !world.is_user_logged_in(user) {
-            let p = pr.unwrap();
-            let mut success = false;
-            match world.games.find_mut(&String::from_str(params[3])) {
-                Some(game) => {
-                    let res = game.login(p.clone(), user, params[2]);
-                    if !res.is_err() {
-                        try!(as_io(bot.send_privmsg(user, try!(res))));
-                        try!(as_io(bot.send_invite(user, params[3])));
-                        success = true;
-                    } else {
-                        try!(as_io(
-                            bot.send_privmsg(user, format!("{}", res.unwrap_err()).as_slice())
-                        ));
-                    }
-                },
-                None => try!(as_io(
-                    bot.send_privmsg(user, format!("Game not found on {}.", params[3]).as_slice())
+impl <'a> Register<'a> {
+    pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>) -> BotResult<Register<'a>> {
+        if args.len() != 10 {
+            return Err(incorrect_format_rf(user, "register", "username password health str dex con wis int cha"));
+        }
+        try!(validate_from(args.clone(), 3, user, "register", "username password health str dex con wis int cha"));
+        Ok(Register {
+            bot: bot,
+            user: user,
+            username: args[1], password: args[2],
+            health: str_to_u8(args[3]),
+            st: str_to_u8(args[4]), dx: str_to_u8(args[5]), cn: str_to_u8(args[6]),
+            ws: str_to_u8(args[7]), it: str_to_u8(args[8]), ch: str_to_u8(args[9]),
+        })
+    }
+}
+
+impl <'a> Functionality for Register<'a> {
+    fn do_func(&mut self) -> BotResult<()> {
+        let p = try!(Player::create(self.username, self.password, self.health,
+                                self.st, self.dx, self.cn, self.ws, self.it, self.ch));
+        try!(as_io(p.save()));
+        as_io(self.bot.send_privmsg(self.user, format!("Your account ({}) has been created.", self.username).as_slice()))
+    }
+}
+
+pub struct Login<'a> {
+    bot: &'a Bot + 'a,
+    user: &'a str,
+    world: &'a mut World,
+    chan: &'a str,
+    player: Player, password: &'a str,
+}
+
+impl <'a> Login<'a> {
+    pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Login<'a>> {
+        if args.len() != 4 {
+            return Err(incorrect_format_rf(user, "login", "username password channel"));
+        } else if world.is_user_logged_in(user) {
+            return Err(Propagated(
+                format!("{}", user),
+                format!("You can only be logged into one account at once.\r\nUse logout to log out.")
+            ));
+        }
+        Ok(Login {
+            bot: bot,
+            user: user,
+            world: world,
+            chan: args[3],
+            player: if let Ok(player) = Player::load(args[1]) {
+                player
+            } else {
+                return Err(Propagated(
+                    format!("{}", user),
+                    format!("Account {} does not exist, or could not be loaded.", args[1])
+                ));
+            },
+            password: args[2],
+        })
+    }
+}
+
+impl <'a> Functionality for Login<'a> {
+    fn do_func(&mut self) -> BotResult<()> {
+        if let Some(game) = self.world.games.find_mut(&String::from_str(self.chan)) {
+            let res = game.login(self.player.clone(), self.user, self.password);
+            if res.is_ok() {
+                try!(as_io(self.bot.send_privmsg(self.user, try!(res))));
+                try!(as_io(self.bot.send_invite(self.user, self.chan)));
+            } else {
+                return Err(Propagated(format!("{}", self.user), format!("{}", res.unwrap_err())))
+            }
+        } else {
+            return Err(Propagated(format!("{}", self.user), format!("Game not found on {}.", self.chan)))
+        }
+        self.world.add_user(self.user, self.player.clone());
+        Ok(())
+    }
+}
+
+pub struct Logout<'a> {
+    bot: &'a Bot + 'a,
+    user: &'a str,
+    world: &'a mut World,
+}
+
+impl <'a> Logout<'a> {
+    pub fn new(bot: &'a Bot, user: &'a str, world: &'a mut World) -> BotResult<Logout<'a>> {
+        Ok(Logout { bot: bot, user: user, world: world })
+    }
+}
+
+impl <'a> Functionality for Logout<'a> {
+    fn do_func(&mut self) -> BotResult<()> {
+        if self.world.is_user_logged_in(self.user) {
+            try!(self.world.remove_user(self.user));
+            try!(as_io(self.bot.send_privmsg(self.user, "You've been logged out.")));
+        } else {
+            try!(as_io(self.bot.send_privmsg(self.user, "You're not currently logged in.")));
+        }
+        Ok(())
+    }
+}
+
+pub struct AddFeat<'a> {
+    bot: &'a Bot + 'a,
+    user: &'a str,
+    world: &'a mut World,
+    feat_name: String,
+}
+
+impl <'a> AddFeat<'a> {
+    pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<AddFeat<'a>> {
+        Ok(AddFeat { bot: bot, user: user, world: world, feat_name: join_from(args, 1) })
+    }
+}
+
+impl <'a> Functionality for AddFeat<'a> {
+    fn do_func(&mut self) -> BotResult<()> {
+        if let Ok(player) = self.world.get_user(self.user) {
+            player.add_feat(self.feat_name.as_slice());
+            try!(as_io(self.bot.send_privmsg(self.user, format!("Added {} feat.", self.feat_name).as_slice())));
+            Ok(())
+        } else {
+            Err(Propagated(format!("{}", self.user), format!("You must be logged in to add a feat.")))
+        }
+    }
+}
+
+pub struct Save<'a> {
+    bot: &'a Bot + 'a,
+    user: &'a str,
+    world: &'a mut World,
+}
+
+impl <'a> Save<'a> {
+    pub fn new(bot: &'a Bot, user: &'a str, world: &'a mut World) -> BotResult<Save<'a>> {
+        Ok(Save { bot: bot, user: user, world: world })
+    }
+}
+
+impl <'a> Functionality for Save<'a> {
+    fn do_func(&mut self) -> BotResult<()> {
+        if let Ok(player) = self.world.get_user(self.user) {
+            match player.save() {
+                Ok(_) => try!(as_io(
+                    self.bot.send_privmsg(self.user, format!("Saved {}.", player.username).as_slice())
                 )),
-            };
-            if success {
-                world.add_user(user, p);
+                Err(_) => try!(as_io(
+                    self.bot.send_privmsg(self.user, format!("Failed to save {}.", player.username).as_slice())
+                )),
             }
-        } else if pr.is_err() {
-            try!(as_io(
-                bot.send_privmsg(user, format!("Account {} does not exist, or could not be loaded.", params[1]).as_slice())
-            ));
+            Ok(())
         } else {
-            try!(as_io(
-                bot.send_privmsg(user, "You can only be logged into one account at once.")
-            ));
-            try!(as_io(
-                bot.send_privmsg(user, "Use logout to log out.")
-            ));
+            Err(Propagated(format!("{}", self.user), format!("You must be logged in to save.")))
         }
-    } else {
-        try!(incorrect_format(bot, user, "login", "username password channel"));
     }
-    Ok(())
 }
 
-pub fn logout(bot: &Bot, user: &str, world: &mut World) -> BotResult<()> {
-    if world.is_user_logged_in(user) {
-        try!(world.remove_user(user));
-        try!(as_io(bot.send_privmsg(user, "You've been logged out.")));
-    } else {
-        try!(as_io(bot.send_privmsg(user, "You're not currently logged in.")));
-    }
-    Ok(())
+pub struct LookUpPlayer<'a> {
+    bot: &'a Bot + 'a,
+    resp: &'a str,
+    world: &'a mut World,
+    target_str: &'a str,
+    stat_str: Option<&'a str>,
 }
 
-pub fn add_feat(bot: &Bot, user: &str, world: &mut World, params: Vec<&str>) -> BotResult<()> {
-    if params.len() > 1 {
-        let res = world.get_user(user);
-        if res.is_ok() {
-            let name = join_from(params.clone(), 1);
-            let player = try!(res);
-            player.add_feat(name.as_slice());
-            try!(as_io(bot.send_privmsg(user, format!("Added {} feat.", name).as_slice())));
-        } else {
-            try!(as_io(bot.send_privmsg(user, "You must be logged in to add a feat.")));
-        }
-    } else {
-        try!(incorrect_format(bot, user, "addfeat", "name of feat"));
-    }
-    Ok(())
-}
-
-pub fn save(bot: &Bot, user: &str, world: &mut World) -> BotResult<()> {
-    let res = world.get_user(user);
-    if res.is_ok() {
-        let player = try!(res);
-        match player.save() {
-            Ok(_) => try!(as_io(
-                bot.send_privmsg(user, format!("Saved {}.", player.username).as_slice())
-            )),
-            Err(_) => try!(as_io(
-                bot.send_privmsg(user, format!("Failed to save {}.", player.username).as_slice())
-            )),
-        }
-    } else {
-        try!(as_io(bot.send_privmsg(user, "You must be logged in to save.")));
-    }
-    Ok(())
-}
-
-pub fn look_up(bot: &Bot, resp: &str, world: &mut World, params: Vec<&str>) -> BotResult<()> {
-    if params.len() == 2 || params.len() == 3 {
-        let res = world.get_user(params[1]);
-        if res.is_ok() {
-            let p = try!(res);
-            let tmp_msg = if p.has_temp_stats() {
-                "Temp. "
+impl <'a> LookUpPlayer<'a> {
+    pub fn new(bot: &'a Bot, resp: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<LookUpPlayer<'a>> {
+        if args.len() != 2 && args.len() != 3 {
+            let dot = if resp.starts_with("#") {
+                "."
             } else {
                 ""
             };
-            if params.len() == 2 {
-                let s = format!("{} ({}): {}{} Feats {}", p.username, params[1], tmp_msg, p.stats(), p.feats);
-                try!(as_io(bot.send_privmsg(resp, s.as_slice())));
-            } else if params[2].eq_ignore_ascii_case("feats") || params[2].eq_ignore_ascii_case("feat") {
-                let s = format!("{} ({}): {}", p.username, params[1], p.feats);
-                try!(as_io(bot.send_privmsg(resp, s.as_slice())));
-            } else {
-                let s = match p.stats().get_stat(params[2]) {
-                        Some(x) => format!("{} ({}): {}{} {}", p.username, params[1], tmp_msg, x, params[2]),
-                        None => format!("{} is not a valid stat.", params[2]),
-                };
-                try!(as_io(bot.send_privmsg(resp, s.as_slice())));
-            }
-        } else {
-            try!(as_io(
-                bot.send_privmsg(resp, format!("{} is not logged in.", params[1]).as_slice())
-            ));
+            return Err(incorrect_format_rf(resp, format!("{}lookup", dot).as_slice(), "target [stat]"));
         }
-    } else {
-        let dot = if resp.starts_with("#") {
-            "."
-        } else {
-            ""
-        };
-        try!(incorrect_format(bot, resp, format!("{}lookup", dot).as_slice(), "target [stat]"));
+        Ok(LookUpPlayer {
+            bot: bot,
+            resp: resp,
+            world: world,
+            target_str: args[1],
+            stat_str: if args.len() == 3 {
+                Some(args[2])
+            } else {
+                None
+            },
+        })
     }
-    Ok(())
 }
 
-pub fn add_update(bot: &Bot, user: &str, chan: &str, world: &mut World, params: Vec<&str>, update: bool) -> BotResult<()> {
-    if params.len() == 3 {
-        let res = world.get_user(user);
-        if res.is_ok() {
-            let p = try!(res);
-            if let Some(n) = from_str(params[2]) {
-                if update {
-                    p.stats.update_stat(params[1], n);
-                    try!(as_io(
-                        bot.send_privmsg(chan, format!("{} ({}) now has {} {}.", p.username, user, n, params[1]).as_slice())
-                    ));
-                } else {
-                    p.stats.increase_stat(params[1], n);
-                    let k = if let Some(i) = p.stats.get_stat(params[1]) { i } else { 0 };
-                    try!(as_io(
-                        bot.send_privmsg(chan, format!("{} ({}) now has {} {}.", p.username, user, k, params[1]).as_slice())
-                    ));
-                }
+impl <'a> Functionality for LookUpPlayer<'a> {
+    fn do_func(&mut self) -> BotResult<()> {
+        let res = self.world.get_user(self.target_str);
+        if res.is_err() {
+            return Err(Propagated(format!("{}", self.resp), format!("{} is not logged in.", self.target_str)));
+        }
+        let p = try!(res);
+        let temp = if p.has_temp_stats() { "Temp. " } else { "" };
+        if self.stat_str.is_none() {
+            let s = format!("{} ({}): {}{} Feats {}", p.username, self.target_str, temp, p.stats(), p.feats);
+            as_io(self.bot.send_privmsg(self.resp, s.as_slice()))
+        } else if self.stat_str.unwrap().eq_ignore_ascii_case("feats") || self.stat_str.unwrap().eq_ignore_ascii_case("feat") {
+            let s = format!("{} ({}): {}", p.username, self.target_str, p.feats);
+            as_io(self.bot.send_privmsg(self.resp, s.as_slice()))
+        } else if let Some(x) = p.stats().get_stat(self.stat_str.unwrap()) {
+            let s = format!("{} ({}): {}{} {}", p.identifier(), self.target_str, temp, x, self.stat_str.unwrap());
+            as_io(self.bot.send_privmsg(self.resp, s.as_slice()))
+        } else {
+            Err(Propagated(format!("{}", self.resp), format!("{} is not a valid stat.", self.stat_str.unwrap())))
+        }
+    }
+}
+
+pub struct AddUpdate<'a> {
+    bot: &'a Bot + 'a,
+    user: &'a str,
+    chan: &'a str,
+    world: &'a mut World,
+    stat_str: &'a str,
+    value: u8,
+    update: bool,
+}
+
+impl <'a> AddUpdate<'a> {
+    pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World, update: bool) -> BotResult<AddUpdate<'a>> {
+        if args.len() != 3 {
+            return Err(incorrect_format_rf(chan, if update { ".update" } else { ".increase" }, "stat value"));
+        }
+        Ok(AddUpdate {
+            bot: bot,
+            user: user,
+            chan: chan,
+            world: world,
+            stat_str: args[1],
+            value: if let Some(n) = from_str(args[2]) {
+                n
             } else {
+                return Err(Propagated(format!("{}", chan), format!("{} is not a valid positive integer.", args[2])));
+            },
+            update: update,
+        })
+    }
+}
+
+impl <'a> Functionality for AddUpdate<'a> {
+    fn do_func(&mut self) -> BotResult<()> {
+        if let Ok(p) = self.world.get_user(self.user) {
+            if self.update {
+                p.stats.update_stat(self.stat_str, self.value);
                 try!(as_io(
-                    bot.send_privmsg(chan, format!("{} is not a valid positive integer.", params[2]).as_slice())
+                    self.bot.send_privmsg(self.chan, format!("{} ({}) now has {} {}.", p.username, self.user, self.value, self.stat_str).as_slice())
+                ));
+            } else {
+                p.stats.increase_stat(self.stat_str, self.value);
+                let k = if let Some(i) = p.stats.get_stat(self.stat_str) { i } else { 0 };
+                try!(as_io(
+                    self.bot.send_privmsg(self.chan, format!("{} ({}) now has {} {}.", p.username, self.user, k, self.stat_str).as_slice())
                 ));
             }
+            Ok(())
         } else {
-            try!(as_io(bot.send_privmsg(chan, "You're not logged in.")));
+            Err(Propagated(format!("{}", self.chan), format!("You're not logged in.")))
         }
-    } else if update {
-        try!(incorrect_format(bot, chan, ".update", "stat value"));
-    } else {
-        try!(incorrect_format(bot, chan, ".increase", "stat value"));
     }
-    Ok(())
 }
 
 #[cfg(test)]
@@ -216,7 +299,7 @@ mod test {
     fn register_failed_invalid_stats() {
         let data = test_helper(":test!test@test PRIVMSG test :register test5 test 20 12 -12 a 12 12 12\r\n",
                     |_| { Ok(()) }).unwrap();
-        let mut exp = String::from_str("PRIVMSG test :Stats must be non-zero positive integers. Format is: \r\n");
+        let mut exp = String::from_str("PRIVMSG test :Stats must be non-zero positive integers. Format is:\r\n");
         exp.push_str("PRIVMSG test :register username password health str dex con wis int cha\r\n");
         assert_eq!(String::from_utf8(data), Ok(exp));
     }

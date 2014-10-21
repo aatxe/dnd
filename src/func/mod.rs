@@ -2,6 +2,7 @@ extern crate irc;
 
 use self::entity::{ClearTempStats, Damage, Roll, SetTempStats};
 use self::monster::{AddMonster, LookUpMonster};
+use self::player::{AddFeat, AddUpdate, Login, Logout, LookUpPlayer, Register, Save};
 use self::world::{Create, PrivateRoll, SaveAll};
 use std::io::IoResult;
 use data::{BotError, BotResult, Entity, Propagated, as_io, to_io};
@@ -31,8 +32,24 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
             let tokens: Vec<&str> = msg.split_str(" ").collect();
             try!(to_io(if !chan.starts_with("#") {
                 match tokens[0] {
-                    "register" => player::register(bot, user, tokens),
-                    "login" => player::login(bot, user, world, tokens),
+                    "register" => {
+                        let register = Register::new(bot, user, tokens);
+                        if let Err(Propagated(resp, msg)) = register {
+                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                        } else if let Err(Propagated(resp, msg)) = register.unwrap().do_func() {
+                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                        };
+                        Ok(())
+                    },
+                    "login" => {
+                        let login = Login::new(bot, user, tokens, world);
+                        if let Err(Propagated(resp, msg)) = login {
+                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                        } else if let Err(Propagated(resp, msg)) = login.unwrap().do_func() {
+                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                        };
+                        Ok(())
+                    },
                     "create" => {
                         let create = Create::new(bot, user, tokens, world);
                         if let Err(Propagated(resp, msg)) = create {
@@ -42,8 +59,24 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
                         };
                         Ok(())
                     },
-                    "logout" => player::logout(bot, user, world),
-                    "addfeat" => player::add_feat(bot, user, world, tokens),
+                    "logout" => {
+                        let logout = Logout::new(bot, user, world);
+                        if let Err(Propagated(resp, msg)) = logout {
+                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                        } else if let Err(Propagated(resp, msg)) = logout.unwrap().do_func() {
+                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                        };
+                        Ok(())
+                    },
+                    "addfeat" => {
+                        let addfeat = AddFeat::new(bot, user, tokens, world);
+                        if let Err(Propagated(resp, msg)) = addfeat {
+                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                        } else if let Err(Propagated(resp, msg)) = addfeat.unwrap().do_func() {
+                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                        };
+                        Ok(())
+                    },
                     "roll" => {
                         let roll = PrivateRoll::new(bot, user);
                         if let Err(Propagated(resp, msg)) = roll {
@@ -62,8 +95,24 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
                         };
                         Ok(())
                     },
-                    "save" => player::save(bot, user, world),
-                    "lookup" => player::look_up(bot, user, world, tokens),
+                    "save" => {
+                        let save = Save::new(bot, user, world);
+                        if let Err(Propagated(resp, msg)) = save {
+                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                        } else if let Err(Propagated(resp, msg)) = save.unwrap().do_func() {
+                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                        };
+                        Ok(())
+                    },
+                    "lookup" => {
+                        let lookup = LookUpPlayer::new(bot, user, tokens, world);
+                        if let Err(Propagated(resp, msg)) = lookup {
+                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                        } else if let Err(Propagated(resp, msg)) = lookup.unwrap().do_func() {
+                            try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                        };
+                        Ok(())
+                    },
                     "mlookup" => {
                         let mlookup = LookUpMonster::new(bot, user, tokens, world);
                         if let Err(Propagated(resp, msg)) = mlookup {
@@ -96,9 +145,33 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
                             };
                             Ok(())
                         },
-                        "lookup" => player::look_up(bot, chan, world, tokens),
-                        "update" => player::add_update(bot, user, chan, world, tokens, true),
-                        "increase" => player::add_update(bot, user, chan, world, tokens, false),
+                        "lookup" => {
+                            let lookup = LookUpPlayer::new(bot, chan, tokens, world);
+                            if let Err(Propagated(resp, msg)) = lookup {
+                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                            } else if let Err(Propagated(resp, msg)) = lookup.unwrap().do_func() {
+                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                            };
+                            Ok(())
+                        },
+                        "update" => {
+                            let update = AddUpdate::new(bot, user, chan, tokens, world, true);
+                            if let Err(Propagated(resp, msg)) = update {
+                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                            } else if let Err(Propagated(resp, msg)) = update.unwrap().do_func() {
+                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                            };
+                            Ok(())
+                        },
+                        "increase" => {
+                            let update = AddUpdate::new(bot, user, chan, tokens, world, false);
+                            if let Err(Propagated(resp, msg)) = update {
+                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                            } else if let Err(Propagated(resp, msg)) = update.unwrap().do_func() {
+                                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                            };
+                            Ok(())
+                        },
                         "temp" => {
                             let temp = SetTempStats::new(bot, user, chan, tokens, world);
                             if let Err(Propagated(resp, msg)) = temp {
