@@ -12,7 +12,6 @@ use serialize::json::{decode, encode};
 pub struct Player {
     pub username: String,
     pub password: String,
-
     pub stats: Stats,
     pub feats: Vec<String>,
     pub temp_stats: Option<Stats>,
