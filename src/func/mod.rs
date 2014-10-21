@@ -5,7 +5,7 @@ use self::monster::{AddMonster, LookUpMonster};
 use self::player::{AddFeat, AddUpdate, Login, Logout, LookUpPlayer, Register, Save};
 use self::world::{Create, PrivateRoll, SaveAll};
 use std::io::IoResult;
-use data::{BotError, BotResult, Entity, NotFound, Propagated, as_io};
+use data::{BotError, BotResult, Entity, NotFound, Propagated};
 use data::utils::str_to_u8;
 use data::world::World;
 use irc::Bot;
@@ -73,7 +73,7 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
 
 fn get_target<'a>(maybe: &str, fallback: &str, resp: &str, chan: &str, world: &'a mut World) -> BotResult<&'a mut Entity + 'a> {
     let (res, err) = if maybe.starts_with("@") {
-        if let Err(perm) = permissions_test_rf(fallback, chan, world) { return Err(perm); }
+        if let Err(perm) = permissions_test(fallback, chan, world) { return Err(perm); }
         (world.get_entity(maybe, Some(chan)), format!("{} is not a valid monster.", maybe))
     } else {
         (world.get_entity(fallback, None), format!("{} is not logged in.", fallback))
@@ -93,7 +93,7 @@ pub fn validate_from(args: Vec<&str>, from: uint, resp: &str, cmd: &str, format:
     Ok(())
 }
 
-pub fn permissions_test_rf(user: &str, chan: &str, world: &mut World) -> BotResult<()> {
+pub fn permissions_test(user: &str, chan: &str, world: &mut World) -> BotResult<()> {
     let res = world.get_game(chan);
     if res.is_err() {
         Err(Propagated(String::from_str(user), format!("There is no game in {}.", chan)))
@@ -104,40 +104,18 @@ pub fn permissions_test_rf(user: &str, chan: &str, world: &mut World) -> BotResu
     }
 }
 
-pub fn permissions_test(bot: &Bot, user: &str, chan: &str, world: &mut World) -> BotResult<bool> {
-    let mut ret = true;
-    let res = world.get_game(chan);
-    if res.is_err() {
-        try!(as_io(bot.send_privmsg(user, format!("There is no game in {}.", chan).as_slice())));
-        ret = false;
-    } else if !try!(res).is_dm(user) {
-        try!(as_io(bot.send_privmsg(user, "You must be the DM to do that!")));
-        ret = false;
-    };
-    Ok(ret)
-}
-
-pub fn incorrect_format_rf(resp: &str, cmd: &str, format: &str) -> BotError {
+pub fn incorrect_format(resp: &str, cmd: &str, format: &str) -> BotError {
     Propagated(
         format!("{}", resp),
         format!("Incorrect format for {}. Format is:\r\n{} {}", cmd, cmd, format),
     )
 }
 
-pub fn incorrect_format(bot: &Bot, resp: &str, cmd: &str, format: &str) -> BotResult<()> {
-    try!(as_io(
-        bot.send_privmsg(resp, format!("Incorrect format for {}. Format is:", cmd).as_slice())
-    ));
-    try!(as_io(bot.send_privmsg(resp, format!("{} {}", cmd, format).as_slice())));
-    Ok(())
-}
-
 #[cfg(test)]
 mod test {
     use super::process_world;
     use std::io::{MemReader, MemWriter};
-    use std::io::util::NullReader;
-    use data::{BotResult, as_io};
+    use data::{BotResult, Propagated, as_io};
     use data::world::World;
     use irc::Bot;
     use irc::bot::IrcBot;
@@ -159,42 +137,45 @@ mod test {
 
     #[test]
     fn permissions_test_no_game() {
-        let bot = IrcBot::from_connection(Connection::new(MemWriter::new(), NullReader).unwrap(), |_, _, _, _| {
-            Ok(())
-        }).unwrap();
-        assert!(!super::permissions_test(&bot, "test", "#test", &mut World::new()).unwrap());
-        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG test :There is no game in #test.\r\n".as_bytes());
+        let res = super::permissions_test("test", "#test", &mut World::new());
+        assert!(res.is_err());
+        if let Propagated(left, right) = res.unwrap_err() {
+            assert_eq!(left, format!("test"))
+            assert_eq!(right, format!("There is no game in #test."))
+        } else {
+            fail!("permissions_test(...) returned an unexpected error type.");
+        }
     }
 
     #[test]
     fn permissions_test_not_dm() {
         let mut world = World::new();
-        let bot = IrcBot::from_connection(Connection::new(MemWriter::new(), NullReader).unwrap(), |_, _, _, _| {
-            Ok(())
-        }).unwrap();
         world.add_game("Test", "test", "#test");
-        assert!(!super::permissions_test(&bot, "test2", "#test", &mut world).unwrap());
-        assert_eq!(bot.conn.writer().deref_mut().get_ref(), "PRIVMSG test2 :You must be the DM to do that!\r\n".as_bytes());
+        let res = super::permissions_test("test2", "#test", &mut world);
+        assert!(res.is_err());
+        if let Propagated(left, right) = res.unwrap_err() {
+            assert_eq!(left, format!("test2"))
+            assert_eq!(right, format!("You must be the DM to do that!"))
+        } else {
+            fail!("permissions_test(...) returned an unexpected error type.");
+        }
     }
 
     #[test]
     fn permissions_test_success() {
         let mut world = World::new();
-        let bot = IrcBot::from_connection(Connection::new(MemWriter::new(), NullReader).unwrap(), |_, _, _, _| {
-            Ok(())
-        }).unwrap();
         world.add_game("Test", "test", "#test");
-        assert!(super::permissions_test(&bot, "test", "#test", &mut world).unwrap());
+        assert!(super::permissions_test("test", "#test", &mut world).is_ok());
     }
 
     #[test]
     fn incorrect_format() {
-        let bot = IrcBot::from_connection(Connection::new(MemWriter::new(), NullReader).unwrap(), |_, _, _, _| {
-            Ok(())
-        }).unwrap();
-        super::incorrect_format(&bot, "test", "a", "b c").unwrap();
-        let mut exp = String::from_str("PRIVMSG test :Incorrect format for a. Format is:\r\n");
-        exp.push_str("PRIVMSG test :a b c\r\n");
-        assert_eq!(bot.conn.writer().deref_mut().get_ref(), exp.as_bytes());
+        let res = super::incorrect_format("test", "a", "b c");
+        if let Propagated(left, right) = res {
+            assert_eq!(left, format!("test"))
+            assert_eq!(right, format!("Incorrect format for a. Format is:\r\na b c"))
+        } else {
+            fail!("incorrect_format(...) returned an unexpected error type.");
+        }
     }
 }

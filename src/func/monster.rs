@@ -2,7 +2,7 @@ use data::{BotResult, Entity, Propagated, as_io};
 use data::monster::Monster;
 use data::utils::str_to_u8;
 use data::world::World;
-use func::{Functionality, get_target, incorrect_format_rf, permissions_test_rf, validate_from};
+use func::{Functionality, get_target, incorrect_format, permissions_test, validate_from};
 use irc::Bot;
 
 pub struct AddMonster<'a> {
@@ -17,10 +17,10 @@ pub struct AddMonster<'a> {
 
 impl <'a> AddMonster<'a> {
     pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
-        if let Err(perm) = permissions_test_rf(user, args[1], world) {
+        if let Err(perm) = permissions_test(user, args[1], world) {
             return Err(perm);
         } else if args.len() != 10 {
-            return Err(incorrect_format_rf(user, "addmonster", "chan name health str dex con wis int cha"));
+            return Err(incorrect_format(user, "addmonster", "chan name health str dex con wis int cha"));
         }
         try!(validate_from(args.clone(), 3, user, "addmonster", "chan name health str dex con wis int cha"));
         Ok(box AddMonster {
@@ -57,8 +57,8 @@ pub struct LookUpMonster<'a> {
 impl <'a> LookUpMonster<'a> {
     pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 && args.len() != 4 {
-            return Err(incorrect_format_rf(user, "mlookup", "channel target [stat]"));
-        } else if let Err(perm) = permissions_test_rf(user, args[1], world) {
+            return Err(incorrect_format(user, "mlookup", "channel target [stat]"));
+        } else if let Err(perm) = permissions_test(user, args[1], world) {
             return Err(perm);
         } else if !args[2].starts_with("@") {
             return Err(Propagated(format!("{}", user), format!("{} is not a valid monster.", args[2])));

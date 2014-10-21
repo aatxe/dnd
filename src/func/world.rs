@@ -2,7 +2,7 @@ use data::{BotResult, Propagated, as_io};
 use data::game::Game;
 use data::utils::join_from;
 use data::world::World;
-use func::{Functionality, incorrect_format_rf};
+use func::{Functionality, incorrect_format};
 use irc::Bot;
 
 pub struct Create<'a> {
@@ -15,7 +15,7 @@ pub struct Create<'a> {
 
 impl <'a> Create<'a> {
     pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
-        if args.len() < 3 { return Err(incorrect_format_rf(user, "create", "channel campaign name")); }
+        if args.len() < 3 { return Err(incorrect_format(user, "create", "channel campaign name")); }
         Ok(box Create { bot: bot, user: user, world: world, chan: args[1], title: join_from(args, 2) } as Box<Functionality>)
     }
 }

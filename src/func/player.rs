@@ -3,7 +3,7 @@ use data::{BotResult, Entity, Propagated, as_io};
 use data::player::Player;
 use data::utils::{join_from, str_to_u8};
 use data::world::World;
-use func::{Functionality, incorrect_format_rf, validate_from};
+use func::{Functionality, incorrect_format, validate_from};
 use irc::Bot;
 
 pub struct Register<'a> {
@@ -18,7 +18,7 @@ pub struct Register<'a> {
 impl <'a> Register<'a> {
     pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 10 {
-            return Err(incorrect_format_rf(user, "register", "username password health str dex con wis int cha"));
+            return Err(incorrect_format(user, "register", "username password health str dex con wis int cha"));
         }
         try!(validate_from(args.clone(), 3, user, "register", "username password health str dex con wis int cha"));
         Ok(box Register {
@@ -52,7 +52,7 @@ pub struct Login<'a> {
 impl <'a> Login<'a> {
     pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
-            return Err(incorrect_format_rf(user, "login", "username password channel"));
+            return Err(incorrect_format(user, "login", "username password channel"));
         } else if world.is_user_logged_in(user) {
             return Err(Propagated(
                 format!("{}", user),
@@ -190,7 +190,7 @@ impl <'a> LookUpPlayer<'a> {
             } else {
                 ""
             };
-            return Err(incorrect_format_rf(resp, format!("{}lookup", dot).as_slice(), "target [stat]"));
+            return Err(incorrect_format(resp, format!("{}lookup", dot).as_slice(), "target [stat]"));
         }
         Ok(box LookUpPlayer {
             bot: bot,
@@ -242,7 +242,7 @@ pub struct AddUpdate<'a> {
 impl <'a> AddUpdate<'a> {
     pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World, update: bool) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 {
-            return Err(incorrect_format_rf(chan, if update { ".update" } else { ".increase" }, "stat value"));
+            return Err(incorrect_format(chan, if update { ".update" } else { ".increase" }, "stat value"));
         }
         Ok(box AddUpdate {
             bot: bot,

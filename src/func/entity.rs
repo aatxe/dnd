@@ -2,7 +2,7 @@ use data::{Basic, BotResult, Entity, Propagated, RollType, as_io};
 use data::stats::Stats;
 use data::utils::str_to_u8;
 use data::world::World;
-use func::{Functionality, get_target, incorrect_format_rf, permissions_test_rf, validate_from};
+use func::{Functionality, get_target, incorrect_format, permissions_test, validate_from};
 use irc::Bot;
 
 pub struct Roll<'a> {
@@ -60,7 +60,7 @@ pub struct Damage<'a> {
 
 impl <'a> Damage<'a> {
     pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
-        if args.len() != 3 { return Err(incorrect_format_rf(chan, ".damage", "target value")); }
+        if args.len() != 3 { return Err(incorrect_format(chan, ".damage", "target value")); }
         Ok(box Damage {
             bot: bot,
             chan: chan,
@@ -102,10 +102,10 @@ pub struct SetTempStats<'a> {
 
 impl <'a> SetTempStats<'a> {
     pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
-        if let Err(perm) = permissions_test_rf(user, chan, world) {
+        if let Err(perm) = permissions_test(user, chan, world) {
             return Err(perm);
         } else if args.len() != 9 {
-            return Err(incorrect_format_rf(chan, ".temp", "target health str dex con wis int cha"));
+            return Err(incorrect_format(chan, ".temp", "target health str dex con wis int cha"));
         }
         try!(validate_from(args.clone(), 3, chan, ".temp", "target health str dex con wis int cha"));
         Ok(box SetTempStats {
@@ -139,10 +139,10 @@ pub struct ClearTempStats<'a> {
 
 impl <'a> ClearTempStats<'a> {
     pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
-        if let Err(perm) = permissions_test_rf(user, chan, world) {
+        if let Err(perm) = permissions_test(user, chan, world) {
             return Err(perm);
         } else if args.len() != 2 {
-            return Err(incorrect_format_rf(chan, ".cleartemp", "target"));
+            return Err(incorrect_format(chan, ".cleartemp", "target"));
         }
         Ok(box ClearTempStats {
             bot: bot,
