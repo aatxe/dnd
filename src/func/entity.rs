@@ -2,7 +2,8 @@ use data::{Basic, BotResult, Entity, Propagated, RollType, as_io};
 use data::stats::Stats;
 use data::utils::str_to_u8;
 use data::world::World;
-use func::{Functionality, get_target, incorrect_format, permissions_test, validate_from};
+use func::Functionality;
+use func::utils::{get_target, incorrect_format, permissions_test, validate_from};
 use irc::Bot;
 
 pub struct Roll<'a> {

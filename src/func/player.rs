@@ -3,7 +3,8 @@ use data::{BotResult, Entity, Propagated, as_io};
 use data::player::Player;
 use data::utils::{join_from, str_to_u8};
 use data::world::World;
-use func::{Functionality, incorrect_format, validate_from};
+use func::Functionality;
+use func::utils::{incorrect_format, validate_from};
 use irc::Bot;
 
 pub struct Register<'a> {

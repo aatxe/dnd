@@ -5,8 +5,7 @@ use self::monster::{AddMonster, LookUpMonster};
 use self::player::{AddFeat, AddUpdate, Login, Logout, LookUpPlayer, Register, Save};
 use self::world::{Create, PrivateRoll, SaveAll};
 use std::io::IoResult;
-use data::{BotError, BotResult, Entity, NotFound, Propagated};
-use data::utils::str_to_u8;
+use data::{BotResult, NotFound, Propagated};
 use data::world::World;
 use irc::Bot;
 use irc::bot::IrcBot;
@@ -71,44 +70,50 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
     Ok(())
 }
 
-fn get_target<'a>(maybe: &str, fallback: &str, resp: &str, chan: &str, world: &'a mut World) -> BotResult<&'a mut Entity + 'a> {
-    let (res, err) = if maybe.starts_with("@") {
-        if let Err(perm) = permissions_test(fallback, chan, world) { return Err(perm); }
-        (world.get_entity(maybe, Some(chan)), format!("{} is not a valid monster.", maybe))
-    } else {
-        (world.get_entity(fallback, None), format!("{} is not logged in.", fallback))
-    };
-    if res.is_ok() { res } else { Err(Propagated(format!("{}", resp), err)) }
-}
+mod utils {
+    use data::{BotError, BotResult, Entity, Propagated};
+    use data::utils::str_to_u8;
+    use data::world::World;
 
-pub fn validate_from(args: Vec<&str>, from: uint, resp: &str, cmd: &str, format: &str) -> BotResult<()> {
-    for s in args.slice_from(from).iter() {
-        if str_to_u8(*s) == 0 {
-            return Err(Propagated(
-                format!("{}", resp),
-                format!("Stats must be non-zero positive integers. Format is:\r\n{} {}", cmd, format)
-            ));
-        }
+    pub fn get_target<'a>(maybe: &str, fallback: &str, resp: &str, chan: &str, world: &'a mut World) -> BotResult<&'a mut Entity + 'a> {
+        let (res, err) = if maybe.starts_with("@") {
+            if let Err(perm) = permissions_test(fallback, chan, world) { return Err(perm); }
+            (world.get_entity(maybe, Some(chan)), format!("{} is not a valid monster.", maybe))
+        } else {
+            (world.get_entity(fallback, None), format!("{} is not logged in.", fallback))
+        };
+        if res.is_ok() { res } else { Err(Propagated(format!("{}", resp), err)) }
     }
-    Ok(())
-}
 
-pub fn permissions_test(user: &str, chan: &str, world: &mut World) -> BotResult<()> {
-    let res = world.get_game(chan);
-    if res.is_err() {
-        Err(Propagated(String::from_str(user), format!("There is no game in {}.", chan)))
-    } else if !try!(res).is_dm(user) {
-        Err(Propagated(String::from_str(user), String::from_str("You must be the DM to do that!")))
-    } else {
+    pub fn validate_from(args: Vec<&str>, from: uint, resp: &str, cmd: &str, format: &str) -> BotResult<()> {
+        for s in args.slice_from(from).iter() {
+            if str_to_u8(*s) == 0 {
+                return Err(Propagated(
+                    format!("{}", resp),
+                    format!("Stats must be non-zero positive integers. Format is:\r\n{} {}", cmd, format)
+                ));
+            }
+        }
         Ok(())
     }
-}
 
-pub fn incorrect_format(resp: &str, cmd: &str, format: &str) -> BotError {
-    Propagated(
-        format!("{}", resp),
-        format!("Incorrect format for {}. Format is:\r\n{} {}", cmd, cmd, format),
-    )
+    pub fn permissions_test(user: &str, chan: &str, world: &mut World) -> BotResult<()> {
+        let res = world.get_game(chan);
+        if res.is_err() {
+            Err(Propagated(String::from_str(user), format!("There is no game in {}.", chan)))
+        } else if !try!(res).is_dm(user) {
+            Err(Propagated(String::from_str(user), String::from_str("You must be the DM to do that!")))
+        } else {
+            Ok(())
+        }
+    }
+
+    pub fn incorrect_format(resp: &str, cmd: &str, format: &str) -> BotError {
+        Propagated(
+            format!("{}", resp),
+            format!("Incorrect format for {}. Format is:\r\n{} {}", cmd, cmd, format),
+        )
+    }
 }
 
 #[cfg(test)]
@@ -137,7 +142,7 @@ mod test {
 
     #[test]
     fn permissions_test_no_game() {
-        let res = super::permissions_test("test", "#test", &mut World::new());
+        let res = super::utils::permissions_test("test", "#test", &mut World::new());
         assert!(res.is_err());
         if let Propagated(left, right) = res.unwrap_err() {
             assert_eq!(left, format!("test"))
@@ -151,7 +156,7 @@ mod test {
     fn permissions_test_not_dm() {
         let mut world = World::new();
         world.add_game("Test", "test", "#test");
-        let res = super::permissions_test("test2", "#test", &mut world);
+        let res = super::utils::permissions_test("test2", "#test", &mut world);
         assert!(res.is_err());
         if let Propagated(left, right) = res.unwrap_err() {
             assert_eq!(left, format!("test2"))
@@ -165,12 +170,12 @@ mod test {
     fn permissions_test_success() {
         let mut world = World::new();
         world.add_game("Test", "test", "#test");
-        assert!(super::permissions_test("test", "#test", &mut world).is_ok());
+        assert!(super::utils::permissions_test("test", "#test", &mut world).is_ok());
     }
 
     #[test]
     fn incorrect_format() {
-        let res = super::incorrect_format("test", "a", "b c");
+        let res = super::utils::incorrect_format("test", "a", "b c");
         if let Propagated(left, right) = res {
             assert_eq!(left, format!("test"))
             assert_eq!(right, format!("Incorrect format for a. Format is:\r\na b c"))

@@ -2,7 +2,8 @@ use data::{BotResult, Propagated, as_io};
 use data::game::Game;
 use data::utils::join_from;
 use data::world::World;
-use func::{Functionality, incorrect_format};
+use func::Functionality;
+use func::utils::incorrect_format;
 use irc::Bot;
 
 pub struct Create<'a> {
