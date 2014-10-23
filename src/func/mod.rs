@@ -245,4 +245,16 @@ mod test {
             fail!("incorrect_format(...) returned an unexpected error type.");
         }
     }
+
+    #[test]
+    fn non_command_message_in_channel() {
+        let data = test_helper(":test!test@test PRIVMSG #test :Hi there!\r\n", |_| { Ok(()) }).unwrap();
+        assert_eq!(String::from_utf8(data), Ok(format!("")));
+    }
+
+    #[test]
+    fn non_command_message_in_query() {
+        let data = test_helper(":test!test@test PRIVMSG test :Hi there!\r\n", |_| { Ok(()) }).unwrap();
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :Hi is not a valid command.\r\n")));
+    }
 }
