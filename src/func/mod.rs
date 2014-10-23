@@ -82,6 +82,10 @@ impl <'a> Functionality for Help<'a> {
     }
 }
 
+fn tokenize(line: &str) -> Vec<&str> {
+    line.split_str(" ").collect()
+}
+
 pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&str], world: &mut World) -> IoResult<()> where T: IrcWriter, U: IrcReader {
     match (command, args) {
         ("PRIVMSG", [chan, msg]) => {
@@ -89,7 +93,7 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
                 Some(i) => source.slice_to(i),
                 None => "",
             };
-            let tokens: Vec<&str> = msg.split_str(" ").collect();
+            let tokens: Vec<&str> = tokenize(msg);
             let func = if !chan.starts_with("#") {
                 match tokens[0] {
                     "register" => Register::new(bot, user, tokens),

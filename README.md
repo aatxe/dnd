@@ -7,6 +7,3 @@ Here are some of the features to be implemented soon:
 * More robust command parsing
 * More player inquiry tools
 * Battle maps!
-
-Here are some specific tasks to do:
-* Implement a useful help system.
