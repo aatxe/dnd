@@ -5,7 +5,7 @@ use self::monster::{AddMonster, LookUpMonster};
 use self::player::{AddFeat, AddUpdate, Login, Logout, LookUpPlayer, Register, Save};
 use self::world::{Create, PrivateRoll, SaveAll};
 use std::io::IoResult;
-use data::{BotResult, NotFound, Propagated};
+use data::{BotResult, NotFound, Propagated, as_io};
 use data::world::World;
 use irc::Bot;
 use irc::bot::IrcBot;
@@ -19,6 +19,63 @@ pub mod world;
 pub trait Functionality {
     fn do_func(&mut self) -> BotResult<()>;
     fn format() -> String;
+}
+
+pub struct Help<'a> {
+    bot: &'a Bot + 'a,
+    resp: &'a str,
+    cmd: Option<&'a str>,
+}
+
+impl <'a> Help<'a> {
+    pub fn new(bot: &'a Bot, resp: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
+        if args.len() != 1 && args.len() != 2 { return Err(utils::incorrect_format(resp, "help", "[command]")); }
+        Ok(box Help { bot: bot, resp: resp,
+                      cmd: if args.len() == 2 { Some(args[1]) } else { None }
+        } as Box<Functionality>)
+    }
+}
+
+impl <'a> Functionality for Help<'a> {
+    fn do_func(&mut self) -> BotResult<()> {
+        if let Some(cmd) = self.cmd {
+            // FIXME: Replace this when universal function call syntax is released.
+            let format: &str = if cmd.starts_with(".") {
+                match cmd.slice_from(1) {
+                    "roll" => "[@monster] [stat]",
+                    "lookup" => "target [stat]",
+                    "update" => "stat value",
+                    "increase" => "stat value",
+                    "temp" => "target health str dex con wis int cha",
+                    "cleartemp" => "target",
+                    "damage" => "target value",
+                    _ => return Err(Propagated(format!("{}", self.resp), format!("{} is not a valid command.", self.cmd)))
+                }
+            } else {
+                match cmd {
+                    "register" => "username password health str dex con wis int cha",
+                    "login" => "username password channel",
+                    "create" => "channel campaign name",
+                    "logout" => "",
+                    "addfeat" => "name of feat",
+                    "roll" => "",
+                    "saveall" => "",
+                    "save" => "",
+                    "lookup" => "target [stat]",
+                    "mlookup" => "channel target [stat]",
+                    "addmonster" => "chan name health str dex con wis int cha",
+                    _ => return Err(Propagated(format!("{}", self.resp), format!("{} is not a valid command.", self.cmd)))
+                }
+            };
+            as_io(self.bot.send_privmsg(self.resp, format!("Format: {} {}", self.cmd, format).as_slice()))
+        } else {
+            Ok(())
+        }
+    }
+
+    fn format() -> String {
+        "[command]".into_string()
+    }
 }
 
 pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&str], world: &mut World) -> IoResult<()> where T: IrcWriter, U: IrcReader {
@@ -42,6 +99,7 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
                     "lookup" => LookUpPlayer::new(bot, user, tokens, world),
                     "mlookup" => LookUpMonster::new(bot, user, tokens, world),
                     "addmonster" => AddMonster::new(bot, user, tokens, world),
+                    "help" => Help::new(bot, user, tokens),
                     _ => Err(Propagated(format!("{}", user), format!("{} is not a valid command.", tokens[0])))
                 }
             } else {
@@ -54,6 +112,7 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
                         "temp" => SetTempStats::new(bot, user, chan, tokens, world),
                         "cleartemp" => ClearTempStats::new(bot, user, chan, tokens, world),
                         "damage" => Damage::new(bot, user, chan, tokens, world),
+                        "help" => Help::new(bot, chan, tokens),
                         _ => Err(NotFound(tokens[0].into_string()))
                     }
                 } else {
@@ -62,6 +121,8 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
             };
             if let Err(Propagated(resp, msg)) = func {
                 try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+            } else if func.is_err() {
+                ()
             } else if let Err(Propagated(resp, msg)) = func.unwrap().do_func() {
                 try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
             };
