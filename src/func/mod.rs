@@ -211,6 +211,12 @@ mod test {
     }
 
     #[test]
+    fn tokenize() {
+        assert_eq!(super::tokenize("a bb ccc"), vec!("a", "bb", "ccc"));
+        assert_eq!(super::tokenize("ab 3 ca"), vec!("ab", "3", "ca"));
+    }
+
+    #[test]
     fn permissions_test_no_game() {
         let res = super::utils::permissions_test("test", "#test", &mut World::new());
         assert!(res.is_err());
