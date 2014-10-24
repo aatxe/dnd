@@ -5,7 +5,7 @@ use self::monster::{AddMonster, LookUpMonster};
 use self::player::{AddFeat, AddUpdate, Login, Logout, LookUpPlayer, Register, Save};
 use self::world::{Create, PrivateRoll, SaveAll};
 use std::io::IoResult;
-use data::{BotResult, NotFound, Propagated, as_io};
+use data::{BotResult, InvalidInput, NotFound, Propagated, as_io};
 use data::world::World;
 use irc::Bot;
 use irc::bot::IrcBot;
@@ -82,8 +82,33 @@ impl <'a> Functionality for Help<'a> {
     }
 }
 
-fn tokenize(line: &str) -> Vec<&str> {
-    line.split_str(" ").collect()
+fn tokenize(line: &str) -> BotResult<Vec<String>> {
+    let mut ret = Vec::new();
+    let mut flag = false;
+    let mut s = String::new();
+    for token in line.split_str(" ") {
+        if token.starts_with("\"") {
+            s.push_str(token);
+            s.push_str(" ");
+            flag = true;
+        } else if flag {
+            s.push_str(token);
+            if token.ends_with("\"") {
+                ret.push(s[1..s.len() - 1].into_string());
+                s = String::new();
+                flag = false;
+            } else {
+                s.push_str(" ");
+            }
+        } else {
+            ret.push(token.into_string());
+        }
+    }
+    if s.len() != 0 {
+        Err(InvalidInput("Could not tokenize malformed arguments.".into_string()))
+    } else {
+        Ok(ret)
+    }
 }
 
 pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&str], world: &mut World) -> IoResult<()> where T: IrcWriter, U: IrcReader {
@@ -93,7 +118,17 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
                 Some(i) => source.slice_to(i),
                 None => "",
             };
-            let tokens: Vec<&str> = tokenize(msg);
+            let token_res = tokenize(msg);
+            let tokens_vals = if let Err(InvalidInput(msg)) = token_res {
+                try!(bot.send_privmsg(user, msg.as_slice()));
+                return Ok(());
+            } else {
+                token_res.unwrap()
+            };
+            let mut tokens = Vec::new();
+            for string in tokens_vals.iter() {
+                tokens.push(string.as_slice())
+            }
             let func = if !chan.starts_with("#") {
                 match tokens[0] {
                     "register" => Register::new(bot, user, tokens),
@@ -212,8 +247,11 @@ mod test {
 
     #[test]
     fn tokenize() {
-        assert_eq!(super::tokenize("a bb ccc"), vec!("a", "bb", "ccc"));
-        assert_eq!(super::tokenize("ab 3 ca"), vec!("ab", "3", "ca"));
+        assert_eq!(super::tokenize("a bb ccc"), Ok(vec!(format!("a"), format!("bb"), format!("ccc"))));
+        assert_eq!(super::tokenize("ab 3 ca"), Ok(vec!(format!("ab"), format!("3"), format!("ca"))));
+        assert_eq!(super::tokenize("\"a b c\" d"), Ok(vec!(format!("a b c"), format!("d"))));
+        assert_eq!(super::tokenize("e \"a b c\" d"), Ok(vec!(format!("e"), format!("a b c"), format!("d"))));
+        assert!(super::tokenize("\"a b c d").is_err());
     }
 
     #[test]

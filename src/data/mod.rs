@@ -30,7 +30,9 @@ pub mod utils {
 
 pub type BotResult<T> = Result<T, BotError>;
 
+#[deriving(PartialEq)]
 pub enum BotError {
+    InvalidInput(String),
     Io(IoError),
     NotFound(String),
     PasswordIncorrect,
@@ -40,6 +42,7 @@ pub enum BotError {
 impl Show for BotError {
     fn fmt(&self, fmt: &mut Formatter) -> Result<(), FormatError> {
         match self {
+            &InvalidInput(ref s) => s.fmt(fmt),
             &Io(ref io_err) => io_err.fmt(fmt),
             &NotFound(ref s) => s.fmt(fmt),
             &PasswordIncorrect => "Password incorrect.".fmt(fmt),
