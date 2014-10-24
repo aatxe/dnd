@@ -44,7 +44,7 @@ impl <'a> Functionality for Roll<'a> {
         }
         let s = format!("{} rolled {}.",
                         self.target.identifier(), self.target.roll(self.stat.unwrap()));
-        as_io(self.bot.send_privmsg(self.chan, s.as_slice()))
+        as_io(self.bot.send_privmsg(self.chan, s[]))
     }
 
     fn format() -> String {
@@ -88,7 +88,7 @@ impl <'a> Functionality for Damage<'a> {
         } else {
             format!("{} ({}) has fallen unconscious.", self.target.identifier(), self.target_str)
         };
-        as_io(self.bot.send_privmsg(self.chan, m.as_slice()))
+        as_io(self.bot.send_privmsg(self.chan, m[]))
     }
 
     fn format() -> String {
@@ -132,7 +132,7 @@ impl <'a> Functionality for SetTempStats<'a> {
                                              self.st, self.dx, self.cn, self.ws, self.it, self.ch));
         let s = format!("{} ({}) now has temporary {}.",
                         self.target.identifier(), self.target_str, self.target.stats());
-        as_io(self.bot.send_privmsg(self.chan, s.as_slice()))
+        as_io(self.bot.send_privmsg(self.chan, s[]))
     }
 
     fn format() -> String {
@@ -168,7 +168,7 @@ impl <'a> Functionality for ClearTempStats<'a> {
         self.target.clear_temp_stats();
         let s = format!("{} ({}) has reverted to {}.",
                         self.target.identifier(), self.target_str, self.target.stats());
-        as_io(self.bot.send_privmsg(self.chan, s.as_slice()))
+        as_io(self.bot.send_privmsg(self.chan, s[]))
     }
 
     fn format() -> String {
@@ -193,7 +193,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data.slice_to(27).to_vec()), Ok(format!("PRIVMSG #test :Test rolled ")));
+        assert_eq!(String::from_utf8(data[..27].to_vec()), Ok(format!("PRIVMSG #test :Test rolled ")));
     }
 
     #[test]
@@ -206,7 +206,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data.slice_to(27).to_vec()), Ok(format!("PRIVMSG #test :Test rolled ")));
+        assert_eq!(String::from_utf8(data[..27].to_vec()), Ok(format!("PRIVMSG #test :Test rolled ")));
     }
 
     #[test]

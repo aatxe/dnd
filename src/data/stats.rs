@@ -26,7 +26,7 @@ impl Stats {
     }
 
     fn stat_func(&mut self, stat: &str, f: |&mut u8| -> Option<u8>) -> Option<u8> {
-        match stat.to_ascii_lower().as_slice() {
+        match stat.to_ascii_lower()[] {
             "health" => f(&mut self.health),
             "hp" => f(&mut self.health),
             "strength" => f(&mut self.strength),
@@ -47,7 +47,7 @@ impl Stats {
 
     // This should be updated if there's a way to use stat_func(...) without making it mutable.
     pub fn get_stat(&self, stat: &str) -> Option<u8> {
-        match stat.to_ascii_lower().as_slice() {
+        match stat.to_ascii_lower()[] {
             "health" => Some(self.health),
             "hp" => Some(self.health),
             "strength" => Some(self.strength),

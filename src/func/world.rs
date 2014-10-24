@@ -29,11 +29,11 @@ impl <'a> Functionality for Create<'a> {
             ));
         }
         try!(as_io(self.bot.send_join(self.chan)));
-        try!(as_io(self.bot.send_topic(self.chan, self.title.as_slice())));
+        try!(as_io(self.bot.send_topic(self.chan, self.title[])));
         try!(as_io(self.bot.send_mode(self.chan, "+i")));
-        self.world.add_game(self.title.as_slice(), self.user, self.chan);
+        self.world.add_game(self.title[], self.user, self.chan);
         let s = format!("Campaign created named {}.", self.title);
-        try!(as_io(self.bot.send_privmsg(self.user, s.as_slice())));
+        try!(as_io(self.bot.send_privmsg(self.user, s[])));
         as_io(self.bot.send_invite(self.user, self.chan))
     }
 
@@ -55,7 +55,7 @@ impl <'a> PrivateRoll<'a> {
 
 impl <'a> Functionality for PrivateRoll<'a> {
     fn do_func(&mut self) -> BotResult<()> {
-        as_io(self.bot.send_privmsg(self.user, format!("You rolled {}.", Game::roll()).as_slice()))
+        as_io(self.bot.send_privmsg(self.user, format!("You rolled {}.", Game::roll())[]))
     }
 
     fn format() -> String {
@@ -120,7 +120,7 @@ mod test {
     #[test]
     fn private_roll() {
         let data = test_helper(":test!test@test PRIVMSG test :roll\r\n", |_| { Ok(()) }).unwrap();
-        assert_eq!(String::from_utf8(data.slice_to(25).to_vec()), Ok(format!("PRIVMSG test :You rolled ")));
+        assert_eq!(String::from_utf8(data[..25].to_vec()), Ok(format!("PRIVMSG test :You rolled ")));
     }
 
     #[test]

@@ -42,7 +42,7 @@ impl <'a> Functionality for AddMonster<'a> {
                                 self.st, self.dx, self.cn, self.ws, self.it, self.ch);
         let s = format!("Monster ({}) has been created as @{}.",
                         self.name, self.world.add_monster(m, self.chan));
-        as_io(self.bot.send_privmsg(self.user, s.as_slice()))
+        as_io(self.bot.send_privmsg(self.user, s[]))
     }
 
     fn format() -> String {
@@ -93,10 +93,10 @@ impl <'a> Functionality for LookUpMonster<'a> {
         };
         if self.stat_str.is_none() {
             let s = format!("{} ({}): {}{}", target.identifier(), self.target_str, temp, target.stats());
-            as_io(self.bot.send_privmsg(self.user, s.as_slice()))
+            as_io(self.bot.send_privmsg(self.user, s[]))
         } else if let Some(x) = target.stats().get_stat(self.stat_str.unwrap()) {
             let s = format!("{} ({}): {}{} {}", target.identifier(), self.target_str, temp, x, self.stat_str.unwrap());
-            as_io(self.bot.send_privmsg(self.user, s.as_slice()))
+            as_io(self.bot.send_privmsg(self.user, s[]))
         } else {
             Err(Propagated(format!("{}", self.user), format!("{} is not a valid stat.", self.stat_str.unwrap())))
         }

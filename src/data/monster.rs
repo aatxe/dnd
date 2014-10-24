@@ -24,7 +24,7 @@ impl Monster {
 
 impl Entity for Monster {
     fn identifier(&self) -> &str {
-        self.name.as_slice()
+        self.name[]
     }
 
     fn damage(&mut self, amount: u8) -> bool {

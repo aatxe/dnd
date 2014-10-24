@@ -41,7 +41,7 @@ impl <'a> Functionality for Help<'a> {
         if let Some(cmd) = self.cmd {
             // FIXME: Replace this when universal function call syntax is released.
             let format: &str = if cmd.starts_with(".") {
-                match cmd.slice_from(1) {
+                match cmd[1..] {
                     "roll" => "[@monster] [stat]",
                     "lookup" => "target [stat]",
                     "update" => "stat value",
@@ -67,13 +67,13 @@ impl <'a> Functionality for Help<'a> {
                     _ => return Err(Propagated(format!("{}", self.resp), format!("{} is not a valid command.", self.cmd.unwrap())))
                 }
             };
-            as_io(self.bot.send_privmsg(self.resp, format!("Format: {} {}", self.cmd.unwrap(), format).as_slice()))
+            as_io(self.bot.send_privmsg(self.resp, format!("Format: {} {}", self.cmd.unwrap(), format)[]))
         } else {
             let mut s = String::from_str("List of Commands:\r\n");
             s.push_str("Channel commands: .roll .lookup .update .increase .temp .cleartemp .damage\r\n");
             s.push_str("Query commands: register login create logout addfeat roll saveall save lookup mlookup addmonster\r\n");
-            s.push_str(format!("If you need additional help, use {}help [command].", if self.resp.starts_with("#") { "." } else { "" }).as_slice());
-            as_io(self.bot.send_privmsg(self.resp, s.as_slice()))
+            s.push_str(format!("If you need additional help, use {}help [command].", if self.resp.starts_with("#") { "." } else { "" })[]);
+            as_io(self.bot.send_privmsg(self.resp, s[]))
         }
     }
 
@@ -115,20 +115,15 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
     match (command, args) {
         ("PRIVMSG", [chan, msg]) => {
             let user = match source.find('!') {
-                Some(i) => source.slice_to(i),
+                Some(i) => source[..i],
                 None => "",
             };
-            let token_res = tokenize(msg);
-            let tokens_vals = if let Err(InvalidInput(msg)) = token_res {
-                try!(bot.send_privmsg(user, msg.as_slice()));
-                return Ok(());
-            } else {
-                token_res.unwrap()
+            let tokens_vals = match tokenize(msg) {
+                Err(InvalidInput(msg)) => return bot.send_privmsg(user, msg[]),
+                Err(_) => return bot.send_privmsg(user, "Something went seriously wrong."),
+                Ok(tokens) => tokens,
             };
-            let mut tokens = Vec::new();
-            for string in tokens_vals.iter() {
-                tokens.push(string.as_slice())
-            }
+            let tokens: Vec<_> = tokens_vals.iter().map(|string| string[]).collect();
             let func = if !chan.starts_with("#") {
                 match tokens[0] {
                     "register" => Register::new(bot, user, tokens),
@@ -147,7 +142,7 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
                 }
             } else {
                 if tokens[0].starts_with(".") {
-                    match tokens[0].slice_from(1) {
+                    match tokens[0][1..] {
                         "roll" => Roll::new(bot, user, chan, tokens, world),
                         "lookup" => LookUpPlayer::new(bot, chan, tokens, world),
                         "update" => AddUpdate::new(bot, user, chan, tokens, world, true),
@@ -163,11 +158,11 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
                 }
             };
             if let Err(Propagated(resp, msg)) = func {
-                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                try!(bot.send_privmsg(resp[], msg[]));
             } else if func.is_err() {
                 ()
             } else if let Err(Propagated(resp, msg)) = func.unwrap().do_func() {
-                try!(bot.send_privmsg(resp.as_slice(), msg.as_slice()));
+                try!(bot.send_privmsg(resp[], msg[]));
             };
         },
         _ => (),
@@ -191,7 +186,7 @@ mod utils {
     }
 
     pub fn validate_from(args: Vec<&str>, from: uint, resp: &str, cmd: &str, format: &str) -> BotResult<()> {
-        for s in args.slice_from(from).iter() {
+        for s in args[from..].iter() {
             if str_to_u8(*s) == 0 {
                 return Err(Propagated(
                     format!("{}", resp),

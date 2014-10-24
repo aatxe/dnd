@@ -50,7 +50,7 @@ impl World {
     }
 
     pub fn add_game(&mut self, name: &str, dm_nick: &str, chan: &str) {
-        let game = Game::new(name.as_slice(), dm_nick.as_slice());
+        let game = Game::new(name[], dm_nick[]);
         self.games.insert(String::from_str(chan), game);
     }
 
@@ -74,7 +74,7 @@ impl World {
 
     pub fn get_entity(&mut self, identifier: &str, chan: Option<&str>) -> BotResult<&mut Entity> {
         if identifier.starts_with("@") {
-            let i: uint = match from_str(identifier.slice_from(1)) {
+            let i: uint = match from_str(identifier[1..]) {
                 Some(n) => n,
                 None => return Err(Io(IoError {
                     kind: InvalidInput,

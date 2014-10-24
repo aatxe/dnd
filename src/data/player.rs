@@ -44,9 +44,9 @@ impl Player {
     pub fn load(username: &str) -> IoResult<Player> {
         let mut path = String::from_str(username);
         path.push_str(".json");
-        let mut file = try!(File::open(&Path::new(path.as_slice())));
+        let mut file = try!(File::open(&Path::new(path[])));
         let data = try!(file.read_to_string());
-        decode(data.as_slice()).map_err(|e| IoError {
+        decode(data[]).map_err(|e| IoError {
             kind: InvalidInput,
             desc: "Decoder error",
             detail: Some(e.to_string()),
@@ -56,8 +56,8 @@ impl Player {
     pub fn save(&self) -> IoResult<()> {
         let mut path = self.username.clone();
         path.push_str(".json");
-        let mut f = File::create(&Path::new(path.as_slice()));
-        f.write_str(encode(self).as_slice())
+        let mut f = File::create(&Path::new(path[]));
+        f.write_str(encode(self)[])
     }
 
     pub fn add_feat(&mut self, feat: &str) {
@@ -67,7 +67,7 @@ impl Player {
 
 impl Entity for Player {
     fn identifier(&self) -> &str {
-        self.username.as_slice()
+        self.username[]
     }
 
     fn damage(&mut self, amount: u8) -> bool {
@@ -156,7 +156,7 @@ mod test {
         assert_eq!(p.feats.len(), 0);
         p.add_feat("Test Feat");
         assert_eq!(p.feats.len(), 1);
-        assert_eq!(p.feats[0].as_slice(), "Test Feat");
+        assert_eq!(p.feats[0][], "Test Feat");
     }
 
     #[test]

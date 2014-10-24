@@ -38,7 +38,7 @@ impl <'a> Functionality for Register<'a> {
         let p = try!(Player::create(self.username, self.password, self.health,
                                 self.st, self.dx, self.cn, self.ws, self.it, self.ch));
         try!(as_io(p.save()));
-        as_io(self.bot.send_privmsg(self.user, format!("Your account ({}) has been created.", self.username).as_slice()))
+        as_io(self.bot.send_privmsg(self.user, format!("Your account ({}) has been created.", self.username)[]))
     }
 
     fn format() -> String {
@@ -149,8 +149,8 @@ impl <'a> AddFeat<'a> {
 impl <'a> Functionality for AddFeat<'a> {
     fn do_func(&mut self) -> BotResult<()> {
         if let Ok(player) = self.world.get_user(self.user) {
-            player.add_feat(self.feat_name.as_slice());
-            try!(as_io(self.bot.send_privmsg(self.user, format!("Added {} feat.", self.feat_name).as_slice())));
+            player.add_feat(self.feat_name[]);
+            try!(as_io(self.bot.send_privmsg(self.user, format!("Added {} feat.", self.feat_name)[])));
             Ok(())
         } else {
             Err(Propagated(format!("{}", self.user), format!("You must be logged in to add a feat.")))
@@ -179,10 +179,10 @@ impl <'a> Functionality for Save<'a> {
         if let Ok(player) = self.world.get_user(self.user) {
             match player.save() {
                 Ok(_) => try!(as_io(
-                    self.bot.send_privmsg(self.user, format!("Saved {}.", player.username).as_slice())
+                    self.bot.send_privmsg(self.user, format!("Saved {}.", player.username)[])
                 )),
                 Err(_) => try!(as_io(
-                    self.bot.send_privmsg(self.user, format!("Failed to save {}.", player.username).as_slice())
+                    self.bot.send_privmsg(self.user, format!("Failed to save {}.", player.username)[])
                 )),
             }
             Ok(())
@@ -212,7 +212,7 @@ impl <'a> LookUpPlayer<'a> {
             } else {
                 ""
             };
-            return Err(incorrect_format(resp, format!("{}lookup", dot).as_slice(), "target [stat]"));
+            return Err(incorrect_format(resp, format!("{}lookup", dot)[], "target [stat]"));
         }
         Ok(box LookUpPlayer {
             bot: bot,
@@ -238,13 +238,13 @@ impl <'a> Functionality for LookUpPlayer<'a> {
         let temp = if p.has_temp_stats() { "Temp. " } else { "" };
         if self.stat_str.is_none() {
             let s = format!("{} ({}): {}{} Feats {}", p.username, self.target_str, temp, p.stats(), p.feats);
-            as_io(self.bot.send_privmsg(self.resp, s.as_slice()))
+            as_io(self.bot.send_privmsg(self.resp, s[]))
         } else if self.stat_str.unwrap().eq_ignore_ascii_case("feats") || self.stat_str.unwrap().eq_ignore_ascii_case("feat") {
             let s = format!("{} ({}): {}", p.username, self.target_str, p.feats);
-            as_io(self.bot.send_privmsg(self.resp, s.as_slice()))
+            as_io(self.bot.send_privmsg(self.resp, s[]))
         } else if let Some(x) = p.stats().get_stat(self.stat_str.unwrap()) {
             let s = format!("{} ({}): {}{} {}", p.identifier(), self.target_str, temp, x, self.stat_str.unwrap());
-            as_io(self.bot.send_privmsg(self.resp, s.as_slice()))
+            as_io(self.bot.send_privmsg(self.resp, s[]))
         } else {
             Err(Propagated(format!("{}", self.resp), format!("{} is not a valid stat.", self.stat_str.unwrap())))
         }
@@ -292,13 +292,13 @@ impl <'a> Functionality for AddUpdate<'a> {
             if self.update {
                 p.stats.update_stat(self.stat_str, self.value);
                 try!(as_io(
-                    self.bot.send_privmsg(self.chan, format!("{} ({}) now has {} {}.", p.username, self.user, self.value, self.stat_str).as_slice())
+                    self.bot.send_privmsg(self.chan, format!("{} ({}) now has {} {}.", p.username, self.user, self.value, self.stat_str)[])
                 ));
             } else {
                 p.stats.increase_stat(self.stat_str, self.value);
                 let k = if let Some(i) = p.stats.get_stat(self.stat_str) { i } else { 0 };
                 try!(as_io(
-                    self.bot.send_privmsg(self.chan, format!("{} ({}) now has {} {}.", p.username, self.user, k, self.stat_str).as_slice())
+                    self.bot.send_privmsg(self.chan, format!("{} ({}) now has {} {}.", p.username, self.user, k, self.stat_str)[])
                 ));
             }
             Ok(())

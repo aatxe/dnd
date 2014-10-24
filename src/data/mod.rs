@@ -11,7 +11,7 @@ pub mod world;
 pub mod utils {
     pub fn join_from(words: Vec<&str>, pos: uint) -> String {
         let mut res = String::new();
-        for word in words.slice_from(pos).iter() {
+        for word in words[pos..].iter() {
             res.push_str(*word);
             res.push(' ');
         }
@@ -85,7 +85,7 @@ pub enum RollType {
 
 impl RollType {
     pub fn to_roll_type(roll_type: &str) -> Option<RollType> {
-        match roll_type.to_ascii_lower().as_slice() {
+        match roll_type.to_ascii_lower()[] {
             "strength" => Some(Strength),
             "str" => Some(Strength),
             "dexterity" => Some(Dexterity),
@@ -128,8 +128,8 @@ mod test {
 
     #[test]
     fn join_from() {
-        assert_eq!(utils::join_from(vec!["hi","there","friend"], 0).as_slice(), "hi there friend");
-        assert_eq!(utils::join_from(vec!["hi","their","friend"], 1).as_slice(), "their friend");
+        assert_eq!(utils::join_from(vec!["hi","there","friend"], 0)[], "hi there friend");
+        assert_eq!(utils::join_from(vec!["hi","their","friend"], 1)[], "their friend");
     }
 
     #[test]
