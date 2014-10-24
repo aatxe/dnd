@@ -24,7 +24,7 @@ impl Game {
     }
 
     pub fn login(&mut self, account: Player, nickname: &str, password: &str) -> BotResult<&str> {
-        if account.password.eq(&try!(as_io(Game::password_hash(password)))) {
+        if account.password == try!(as_io(Game::password_hash(password))) {
             self.users.insert(String::from_str(nickname), account);
             Ok("Login successful.")
         } else {
