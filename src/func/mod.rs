@@ -247,6 +247,7 @@ mod test {
         assert_eq!(super::tokenize("\"a b c\" d"), Ok(vec!(format!("a b c"), format!("d"))));
         assert_eq!(super::tokenize("e \"a b c\" d"), Ok(vec!(format!("e"), format!("a b c"), format!("d"))));
         assert!(super::tokenize("\"a b c d").is_err());
+        assert!(super::tokenize("a \"b \"c d").is_err());
     }
 
     #[test]
