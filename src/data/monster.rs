@@ -14,11 +14,12 @@ pub struct Monster {
 
 
 impl Monster {
-    pub fn create(name: &str, health: u8, strength: u8, dexterity: u8, constitution: u8,
-                  wisdom: u8, intellect: u8, charisma: u8) -> Monster {
+    pub fn create(name: &str, health: u8, movement: u8, strength: u8, dexterity: u8,
+                  constitution: u8, wisdom: u8, intellect: u8, charisma: u8) -> Monster {
         Monster {
             name: String::from_str(name),
-            stats: Stats::new(health, strength, dexterity, constitution, wisdom, intellect, charisma),
+            stats: Stats::new(health, movement, strength, dexterity, constitution, wisdom,
+                              intellect, charisma),
             temp_stats: None,
             position: Position(0, 0),
         }
@@ -91,10 +92,10 @@ mod test {
 
     #[test]
     fn create_monster() {
-        let m = Monster::create("test", 20, 12, 12, 12, 12, 12, 12);
+        let m = Monster::create("test", 20, 30, 12, 12, 12, 12, 12, 12);
         let n = Monster {
             name: String::from_str("test"),
-            stats: Stats::new(20, 12, 12, 12, 12, 12, 12),
+            stats: Stats::new(20, 30, 12, 12, 12, 12, 12, 12),
             temp_stats: None,
             position: Position(0, 0),
         };
@@ -103,7 +104,7 @@ mod test {
 
     #[test]
     fn damage() {
-        let mut m = Monster::create("test", 20, 12, 12, 12, 12, 12, 12);
+        let mut m = Monster::create("test", 20, 30, 12, 12, 12, 12, 12, 12);
         assert_eq!(m.stats().health, 20);
         assert!(m.damage(5));
         assert_eq!(m.stats().health, 15);
@@ -113,8 +114,8 @@ mod test {
 
     #[test]
     fn damage_temp_health() {
-        let mut m = Monster::create("test", 20, 12, 12, 12, 12, 12, 12);
-        m.set_temp_stats(Stats::new(40, 10, 10, 10, 10, 10, 10));
+        let mut m = Monster::create("test", 20, 30, 12, 12, 12, 12, 12, 12);
+        m.set_temp_stats(Stats::new(40, 30, 10, 10, 10, 10, 10, 10));
         assert_eq!(m.stats().health, 40);
         assert!(m.damage(5));
         assert_eq!(m.stats().health, 35);
@@ -124,25 +125,25 @@ mod test {
 
     #[test]
     fn stats_fn() {
-        let mut m = Monster::create("test", 20, 12, 12, 12, 12, 12, 12);
-        let s = Stats::new(20, 10, 10, 10, 10, 10, 10);
-        assert_eq!(m.stats(), Stats::new(20, 12, 12, 12, 12, 12, 12));
+        let mut m = Monster::create("test", 20, 30, 12, 12, 12, 12, 12, 12);
+        let s = Stats::new(20, 30, 10, 10, 10, 10, 10, 10);
+        assert_eq!(m.stats(), Stats::new(20, 30, 12, 12, 12, 12, 12, 12));
         m.set_temp_stats(s);
         assert_eq!(m.stats(), s);
     }
 
     #[test]
     fn set_temp_stats() {
-        let mut m = Monster::create("test", 20, 12, 12, 12, 12, 12, 12);
-        let s = Stats::new(20, 10, 10, 10, 10, 10, 10);
+        let mut m = Monster::create("test", 20, 30, 12, 12, 12, 12, 12, 12);
+        let s = Stats::new(20, 30, 10, 10, 10, 10, 10, 10);
         m.set_temp_stats(s);
         assert_eq!(m.temp_stats, Some(s));
     }
 
     #[test]
     fn has_temp_stats() {
-        let mut m = Monster::create("test", 20, 12, 12, 12, 12, 12, 12);
-        let s = Stats::new(20, 10, 10, 10, 10, 10, 10);
+        let mut m = Monster::create("test", 20, 30, 12, 12, 12, 12, 12, 12);
+        let s = Stats::new(20, 30, 10, 10, 10, 10, 10, 10);
         assert!(!m.has_temp_stats());
         m.set_temp_stats(s);
         assert!(m.has_temp_stats());
@@ -150,8 +151,8 @@ mod test {
 
     #[test]
     fn clear_temp_stats() {
-        let mut m = Monster::create("test", 20, 12, 12, 12, 12, 12, 12);
-        let s = Stats::new(20, 10, 10, 10, 10, 10, 10);
+        let mut m = Monster::create("test", 20, 30, 12, 12, 12, 12, 12, 12);
+        let s = Stats::new(20, 30, 10, 10, 10, 10, 10, 10);
         m.set_temp_stats(s);
         assert!(m.has_temp_stats());
         m.clear_temp_stats()
@@ -159,7 +160,7 @@ mod test {
 
     #[test]
     fn basic_roll() {
-        let m = Monster::create("test", 20, 12, 12, 8, 12, 12, 12);
+        let m = Monster::create("test", 20, 30, 12, 12, 8, 12, 12, 12);
         for _ in range(0i, 1000i) {
             let r = m.roll(Basic);
             assert!(r >= 1 && r <= 20);
@@ -168,7 +169,7 @@ mod test {
 
     #[test]
     fn positive_stat_roll() {
-        let m = Monster::create("test", 20, 12, 12, 8, 12, 12, 12);
+        let m = Monster::create("test", 20, 30, 12, 12, 8, 12, 12, 12);
         for _ in range(0i, 1000i) {
             let r = m.roll(Dexterity);
             println!("{}", r)
@@ -178,7 +179,7 @@ mod test {
 
     #[test]
     fn negative_stat_roll() {
-        let m = Monster::create("test", 20, 12, 12, 8, 12, 12, 12);
+        let m = Monster::create("test", 20, 30, 12, 12, 8, 12, 12, 12);
         for _ in range(0i, 1000i) {
             let r = m.roll(Constitution);
             println!("{}", r)

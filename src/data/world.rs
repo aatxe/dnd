@@ -124,7 +124,7 @@ mod test {
     #[test]
     fn world_user() {
         let mut w = World::new();
-        let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+        let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
         assert!(!w.is_user_logged_in("test"));
         w.add_user("test", p.clone());
         assert_eq!(*w.get_user("test").unwrap(), p);
@@ -153,15 +153,15 @@ mod test {
     #[test]
     fn add_monster() {
         let mut w = World::new();
-        assert_eq!(w.add_monster(Monster::create("test", 20, 12, 12, 12, 12, 12, 12), "#test"), 0);
-        assert_eq!(w.add_monster(Monster::create("test2", 20, 12, 12, 12, 12, 12, 12), "#test"), 1);
+        assert_eq!(w.add_monster(Monster::create("test", 20, 30, 12, 12, 12, 12, 12, 12), "#test"), 0);
+        assert_eq!(w.add_monster(Monster::create("test2", 20, 30, 12, 12, 12, 12, 12, 12), "#test"), 1);
     }
 
     #[test]
     fn get_entity() {
         let mut w = World::new();
-        let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
-        let m = Monster::create("TestZombie", 20, 12, 12, 12, 12, 12, 12);
+        let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
+        let m = Monster::create("TestZombie", 20, 30, 12, 12, 12, 12, 12, 12);
         w.add_user("test", p.clone());
         w.add_monster(m.clone(), "#test");
         assert_eq!(w.get_entity("test", None).unwrap().identifier(), p.identifier());
@@ -172,8 +172,8 @@ mod test {
     #[test]
     fn save_all() {
         let mut w = World::new();
-        let p = Player::create_test("test2", "test", 20, 12, 12, 12, 12, 12, 12);
-        let q = Player::create_test("test3", "test", 20, 12, 12, 12, 12, 12, 12);
+        let p = Player::create_test("test2", "test", 20, 30, 12, 12, 12, 12, 12, 12);
+        let q = Player::create_test("test3", "test", 20, 30, 12, 12, 12, 12, 12, 12);
         w.add_user("test2", p.clone());
         w.add_user("test3", q.clone());
         w.save_all().unwrap();

@@ -9,8 +9,18 @@ pub mod stats;
 pub mod world;
 
 pub mod utils {
+    use std::num::pow;
+
     #[deriving(Decodable, Encodable, Show, PartialEq, Clone)]
     pub struct Position(pub int, pub int);
+
+    impl Position {
+        pub fn distance_sq(&self, rhs: &Position) -> int {
+            let Position(x1, y1) = *self;
+            let Position(x2, y2) = *rhs;
+            pow(y2 - y1, 2) + pow(x2 - x1, 2)
+        }
+    }
 
     impl Add<Position, Position> for Position {
         fn add(&self, rhs: &Position) -> Position {

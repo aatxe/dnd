@@ -101,7 +101,7 @@ pub struct SetTempStats<'a> {
     chan: &'a str,
     target_str: &'a str,
     target: &'a mut Entity + 'a,
-    health: u8,
+    health: u8, movement: u8,
     st: u8, dx: u8, cn: u8,
     ws: u8, it: u8, ch: u8,
 }
@@ -110,33 +110,35 @@ impl <'a> SetTempStats<'a> {
     pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if let Err(perm) = permissions_test(user, chan, world) {
             return Err(perm);
-        } else if args.len() != 9 {
-            return Err(incorrect_format(chan, ".temp", "target health str dex con wis int cha"));
+        } else if args.len() != 10 {
+            return Err(incorrect_format(chan, ".temp",
+                                        "target health movement str dex con wis int cha"));
         }
-        try!(validate_from(args.clone(), 3, chan, ".temp", "target health str dex con wis int cha"));
+        try!(validate_from(args.clone(), 3, chan, ".temp",
+                           "target health movement str dex con wis int cha"));
         Ok(box SetTempStats {
             bot: bot,
             chan: chan,
             target_str: args[1],
             target: try!(get_target(args[1], user, chan, chan, world)),
-            health: str_to_u8(args[2]),
-            st: str_to_u8(args[3]), dx: str_to_u8(args[4]), cn: str_to_u8(args[5]),
-            ws: str_to_u8(args[6]), it: str_to_u8(args[7]), ch: str_to_u8(args[8]),
+            health: str_to_u8(args[2]), movement: str_to_u8(args[3]),
+            st: str_to_u8(args[4]), dx: str_to_u8(args[5]), cn: str_to_u8(args[6]),
+            ws: str_to_u8(args[7]), it: str_to_u8(args[8]), ch: str_to_u8(args[9]),
         } as Box<Functionality>)
     }
 }
 
 impl <'a> Functionality for SetTempStats<'a> {
     fn do_func(&mut self) -> BotResult<()> {
-        self.target.set_temp_stats(Stats::new(self.health,
-                                             self.st, self.dx, self.cn, self.ws, self.it, self.ch));
+        self.target.set_temp_stats(Stats::new(self.health, self.movement, self.st, self.dx, self.cn,
+                                              self.ws, self.it, self.ch));
         let s = format!("{} ({}) now has temporary {}.",
                         self.target.identifier(), self.target_str, self.target.stats());
         as_io(self.bot.send_privmsg(self.chan, s[]))
     }
 
     fn format() -> String {
-        "target health str dex con wis int cha".into_string()
+        "target movement health str dex con wis int cha".into_string()
     }
 }
 
@@ -188,7 +190,7 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG #test :.roll @0\r\n",
             |world| {
                 world.add_game("Test", "test", "#test");
-                let m = Monster::create("Test", 14, 12, 10, 12, 12, 12, 12);
+                let m = Monster::create("Test", 14, 30, 12, 10, 12, 12, 12, 12);
                 world.add_monster(m, "#test");
                 Ok(())
             }
@@ -201,7 +203,7 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG #test :.roll @0 con\r\n",
             |world| {
                 world.add_game("Test", "test", "#test");
-                let m = Monster::create("Test", 14, 12, 10, 12, 12, 12, 12);
+                let m = Monster::create("Test", 14, 30, 12, 10, 12, 12, 12, 12);
                 world.add_monster(m, "#test");
                 Ok(())
             }
@@ -214,7 +216,7 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG #test :.roll @0 test\r\n",
             |world| {
                 world.add_game("Test", "test", "#test");
-                let m = Monster::create("Test", 14, 12, 10, 12, 12, 12, 12);
+                let m = Monster::create("Test", 14, 30, 12, 10, 12, 12, 12, 12);
                 world.add_monster(m, "#test");
                 Ok(())
             }
@@ -259,7 +261,7 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG #test :.damage @0 5\r\n",
             |world| {
                 world.add_game("Test", "test", "#test");
-                let m = Monster::create("Test", 20, 12, 12, 12, 12, 12, 12);
+                let m = Monster::create("Test", 20, 30, 12, 12, 12, 12, 12, 12);
                 world.add_monster(m, "#test");
                 Ok(())
             }
@@ -272,7 +274,7 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG #test :.damage @0 20\r\n",
             |world| {
                 world.add_game("Test", "test", "#test");
-                let m = Monster::create("Test", 20, 12, 12, 12, 12, 12, 12);
+                let m = Monster::create("Test", 20, 30, 12, 12, 12, 12, 12, 12);
                 world.add_monster(m, "#test");
                 Ok(())
             }
@@ -285,7 +287,7 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG #test :.damage @0 a\r\n",
             |world| {
                 world.add_game("Test", "test", "#test");
-                let m = Monster::create("Test", 20, 12, 12, 12, 12, 12, 12);
+                let m = Monster::create("Test", 20, 30, 12, 12, 12, 12, 12, 12);
                 world.add_monster(m, "#test");
                 Ok(())
             }
@@ -317,21 +319,21 @@ mod test {
 
     #[test]
     fn set_temp_stats_success() {
-        let data = test_helper(":test!test@test PRIVMSG #test :.temp @0 20 12 12 12 12 12 12\r\n",
+        let data = test_helper(":test!test@test PRIVMSG #test :.temp @0 20 30 12 12 12 12 12 12\r\n",
             |world| {
                 world.add_game("Test", "test", "#test");
-                let m = Monster::create("Test", 14, 12, 10, 12, 12, 12, 12);
+                let m = Monster::create("Test", 14, 30, 12, 10, 12, 12, 12, 12);
                 world.add_monster(m, "#test");
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG #test :Test (@0) now has temporary Stats { health: 20, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }.\r\n");
+        let exp = String::from_str("PRIVMSG #test :Test (@0) now has temporary Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }.\r\n");
         assert_eq!(String::from_utf8(data), Ok(exp));
     }
 
     #[test]
     fn set_temp_stats_failed_monster_does_not_exist() {
-        let data = test_helper(":test!test@test PRIVMSG #test :.temp @0 20 12 12 12 12 12 12\r\n",
+        let data = test_helper(":test!test@test PRIVMSG #test :.temp @0 20 30 12 12 12 12 12 12\r\n",
             |world| {
                 world.add_game("Test", "test", "#test");
                 Ok(())
@@ -342,16 +344,16 @@ mod test {
 
     #[test]
     fn set_temp_stats_failed_non_integers() {
-        let data = test_helper(":test!test@test PRIVMSG #test :.temp @0 20 -12 a 12 12 12 12\r\n",
+        let data = test_helper(":test!test@test PRIVMSG #test :.temp @0 20 30 -12 a 12 12 12 12\r\n",
             |world| {
                 world.add_game("Test", "test", "#test");
-                let m = Monster::create("Test", 14, 12, 10, 12, 12, 12, 12);
+                let m = Monster::create("Test", 14, 30, 12, 10, 12, 12, 12, 12);
                 world.add_monster(m, "#test");
                 Ok(())
             }
         ).unwrap();
         let mut exp = String::from_str("PRIVMSG #test :Stats must be non-zero positive integers. Format is:\r\n");
-        exp.push_str("PRIVMSG #test :.temp target health str dex con wis int cha\r\n");
+        exp.push_str("PRIVMSG #test :.temp target health movement str dex con wis int cha\r\n");
         assert_eq!(String::from_utf8(data), Ok(exp));
     }
 
@@ -360,13 +362,13 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG #test :.cleartemp @0\r\n",
             |world| {
                 world.add_game("Test", "test", "#test");
-                let mut m = Monster::create("Test", 14, 12, 10, 12, 12, 12, 12);
-                m.set_temp_stats(Stats::new(20, 12, 12, 12, 12, 12, 12));
+                let mut m = Monster::create("Test", 14, 30, 12, 10, 12, 12, 12, 12);
+                m.set_temp_stats(Stats::new(20, 30, 12, 12, 12, 12, 12, 12));
                 world.add_monster(m, "#test");
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG #test :Test (@0) has reverted to Stats { health: 14, strength: 12, dexterity: 10, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }.\r\n");
+        let exp = String::from_str("PRIVMSG #test :Test (@0) has reverted to Stats { health: 14, movement: 30, strength: 12, dexterity: 10, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }.\r\n");
         assert_eq!(String::from_utf8(data), Ok(exp));
     }
 

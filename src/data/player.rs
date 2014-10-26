@@ -20,12 +20,14 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn create(username: &str, password: &str, health: u8, strength: u8, dexterity: u8, constitution: u8,
-                  wisdom: u8, intellect: u8, charisma: u8) -> BotResult<Player> {
+    pub fn create(username: &str, password: &str, health: u8, movement: u8, strength: u8,
+                  dexterity: u8, constitution: u8, wisdom: u8, intellect: u8, charisma: u8)
+                  -> BotResult<Player> {
         Ok(Player {
             username: String::from_str(username),
             password: try!(as_io(Game::password_hash(password))),
-            stats: Stats::new(health, strength, dexterity, constitution, wisdom, intellect, charisma),
+            stats: Stats::new(health, movement, strength, dexterity, constitution, wisdom,
+                              intellect, charisma),
             feats: Vec::new(),
             temp_stats: None,
             position: Position(0, 0),
@@ -33,12 +35,14 @@ impl Player {
     }
 
     #[cfg(test)]
-    pub fn create_test(username: &str, password: &str, health: u8, strength: u8, dexterity: u8, constitution: u8,
-                  wisdom: u8, intellect: u8, charisma: u8) -> Player {
+    pub fn create_test(username: &str, password: &str, health: u8, movement: u8, strength: u8,
+                       dexterity: u8, constitution: u8, wisdom: u8, intellect: u8, charisma: u8)
+                       -> Player {
         Player {
             username: String::from_str(username),
             password: String::from_str(password),
-            stats: Stats::new(health, strength, dexterity, constitution, wisdom, intellect, charisma),
+            stats: Stats::new(health, movement, strength, dexterity, constitution, wisdom,
+                              intellect, charisma),
             feats: Vec::new(),
             temp_stats: None,
             position: Position(0, 0),
@@ -136,11 +140,11 @@ mod test {
 
     #[test]
     fn create_player() {
-        let p = Player::create("test", "test", 20, 12, 12, 12, 12, 12, 12).unwrap();
+        let p = Player::create("test", "test", 20, 30, 12, 12, 12, 12, 12, 12).unwrap();
         let m = Player {
             username: String::from_str("test"),
             password: Game::password_hash("test").unwrap(),
-            stats: Stats::new(20, 12, 12, 12, 12, 12, 12),
+            stats: Stats::new(20, 30, 12, 12, 12, 12, 12, 12),
             feats: Vec::new(),
             temp_stats: None,
             position: Position(0, 0),
@@ -150,7 +154,7 @@ mod test {
 
     #[test]
     fn save_load_player() {
-        let p = Player::create_test("test4", "test", 20, 12, 12, 12, 12, 12, 12);
+        let p = Player::create_test("test4", "test", 20, 30, 12, 12, 12, 12, 12, 12);
         p.save().unwrap();
         let l = Player::load("test4").unwrap();
         assert_eq!(l, p);
@@ -158,7 +162,7 @@ mod test {
 
     #[test]
     fn add_feat() {
-        let mut p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+        let mut p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
         assert_eq!(p.feats.len(), 0);
         p.add_feat("Test Feat");
         assert_eq!(p.feats.len(), 1);
@@ -167,7 +171,7 @@ mod test {
 
     #[test]
     fn damage() {
-        let mut p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+        let mut p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
         assert_eq!(p.stats().health, 20);
         assert!(p.damage(5));
         assert_eq!(p.stats().health, 15);
@@ -177,8 +181,8 @@ mod test {
 
     #[test]
     fn damage_temp_health() {
-        let mut p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
-        p.set_temp_stats(Stats::new(40, 10, 10, 10, 10, 10, 10));
+        let mut p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
+        p.set_temp_stats(Stats::new(40, 30, 10, 10, 10, 10, 10, 10));
         assert_eq!(p.stats().health, 40);
         assert!(p.damage(5));
         assert_eq!(p.stats().health, 35);
@@ -188,25 +192,25 @@ mod test {
 
     #[test]
     fn stats_fn() {
-        let mut p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
-        let s = Stats::new(20, 10, 10, 10, 10, 10, 10);
-        assert_eq!(p.stats(), Stats::new(20, 12, 12, 12, 12, 12, 12));
+        let mut p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
+        let s = Stats::new(20, 30, 10, 10, 10, 10, 10, 10);
+        assert_eq!(p.stats(), Stats::new(20, 30, 12, 12, 12, 12, 12, 12));
         p.set_temp_stats(s);
         assert_eq!(p.stats(), s);
     }
 
     #[test]
     fn set_temp_stats() {
-        let mut p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
-        let s = Stats::new(20, 10, 10, 10, 10, 10, 10);
+        let mut p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
+        let s = Stats::new(20, 30, 10, 10, 10, 10, 10, 10);
         p.set_temp_stats(s);
         assert_eq!(p.temp_stats, Some(s));
     }
 
     #[test]
     fn has_temp_stats() {
-        let mut p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
-        let s = Stats::new(20, 10, 10, 10, 10, 10, 10);
+        let mut p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
+        let s = Stats::new(20, 30, 10, 10, 10, 10, 10, 10);
         assert!(!p.has_temp_stats());
         p.set_temp_stats(s);
         assert!(p.has_temp_stats());
@@ -214,8 +218,8 @@ mod test {
 
     #[test]
     fn clear_temp_stats() {
-        let mut p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
-        let s = Stats::new(20, 10, 10, 10, 10, 10, 10);
+        let mut p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
+        let s = Stats::new(20, 30, 10, 10, 10, 10, 10, 10);
         p.set_temp_stats(s);
         assert!(p.has_temp_stats());
         p.clear_temp_stats()
@@ -223,7 +227,7 @@ mod test {
 
     #[test]
     fn basic_roll() {
-        let p = Player::create_test("test", "test", 20, 12, 12, 8, 12, 12, 12);
+        let p = Player::create_test("test", "test", 20, 30, 12, 12, 8, 12, 12, 12);
         for _ in range(0i, 1000i) {
             let r = p.roll(Basic);
             assert!(r >= 1 && r <= 20);
@@ -232,7 +236,7 @@ mod test {
 
     #[test]
     fn positive_stat_roll() {
-        let p = Player::create_test("test", "test", 20, 12, 12, 8, 12, 12, 12);
+        let p = Player::create_test("test", "test", 20, 30, 12, 12, 8, 12, 12, 12);
         for _ in range(0i, 1000i) {
             let r = p.roll(Dexterity);
             println!("{}", r)
@@ -242,7 +246,7 @@ mod test {
 
     #[test]
     fn negative_stat_roll() {
-        let p = Player::create_test("test", "test", 20, 12, 12, 8, 12, 12, 12);
+        let p = Player::create_test("test", "test", 20, 30, 12, 12, 8, 12, 12, 12);
         for _ in range(0i, 1000i) {
             let r = p.roll(Constitution);
             println!("{}", r)

@@ -11,38 +11,41 @@ pub struct Register<'a> {
     bot: &'a Bot + 'a,
     user: &'a str,
     username: &'a str, password: &'a str,
-    health: u8,
+    health: u8, movement: u8,
     st: u8, dx: u8, cn: u8,
     ws: u8, it: u8, ch: u8,
 }
 
 impl <'a> Register<'a> {
     pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
-        if args.len() != 10 {
-            return Err(incorrect_format(user, "register", "username password health str dex con wis int cha"));
+        if args.len() != 11 {
+            return Err(incorrect_format(user, "register",
+                                        "username password health movement str dex con wis int cha")
+            );
         }
-        try!(validate_from(args.clone(), 3, user, "register", "username password health str dex con wis int cha"));
+        try!(validate_from(args.clone(), 3, user, "register",
+                           "username password health movement str dex con wis int cha"));
         Ok(box Register {
             bot: bot,
             user: user,
             username: args[1], password: args[2],
-            health: str_to_u8(args[3]),
-            st: str_to_u8(args[4]), dx: str_to_u8(args[5]), cn: str_to_u8(args[6]),
-            ws: str_to_u8(args[7]), it: str_to_u8(args[8]), ch: str_to_u8(args[9]),
+            health: str_to_u8(args[3]), movement: str_to_u8(args[4]),
+            st: str_to_u8(args[5]), dx: str_to_u8(args[6]), cn: str_to_u8(args[7]),
+            ws: str_to_u8(args[8]), it: str_to_u8(args[9]), ch: str_to_u8(args[10]),
         } as Box<Functionality>)
     }
 }
 
 impl <'a> Functionality for Register<'a> {
     fn do_func(&mut self) -> BotResult<()> {
-        let p = try!(Player::create(self.username, self.password, self.health,
-                                self.st, self.dx, self.cn, self.ws, self.it, self.ch));
+        let p = try!(Player::create(self.username, self.password, self.health, self.movement,
+                                    self.st, self.dx, self.cn, self.ws, self.it, self.ch));
         try!(as_io(p.save()));
         as_io(self.bot.send_privmsg(self.user, format!("Your account ({}) has been created.", self.username)[]))
     }
 
     fn format() -> String {
-        "username password health str dex con wis int cha".into_string()
+        "username password health movement str dex con wis int cha".into_string()
     }
 }
 
@@ -320,17 +323,17 @@ mod test {
 
     #[test]
     fn register_success() {
-        let data = test_helper(":test!test@test PRIVMSG test :register test5 test 20 12 12 12 12 12 12\r\n",
+        let data = test_helper(":test!test@test PRIVMSG test :register test5 test 20 30 12 12 12 12 12 12\r\n",
                     |_| { Ok(()) }).unwrap();
         assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :Your account (test5) has been created.\r\n")));
     }
 
     #[test]
     fn register_failed_invalid_stats() {
-        let data = test_helper(":test!test@test PRIVMSG test :register test5 test 20 12 -12 a 12 12 12\r\n",
+        let data = test_helper(":test!test@test PRIVMSG test :register test5 test 20 30 12 -12 a 12 12 12\r\n",
                     |_| { Ok(()) }).unwrap();
         let mut exp = String::from_str("PRIVMSG test :Stats must be non-zero positive integers. Format is:\r\n");
-        exp.push_str("PRIVMSG test :register username password health str dex con wis int cha\r\n");
+        exp.push_str("PRIVMSG test :register username password health movement str dex con wis int cha\r\n");
         assert_eq!(String::from_utf8(data), Ok(exp));
     }
 
@@ -451,7 +454,7 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG test :save\r\n",
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
-                let p = Player::create_test("test6", "test", 20, 12, 12, 12, 12, 12, 12);
+                let p = Player::create_test("test6", "test", 20, 30, 12, 12, 12, 12, 12, 12);
                 world.add_user("test", p);
                 Ok(())
             }
@@ -470,12 +473,12 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG test :lookup test\r\n",
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
-                let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+                let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
                 world.add_user("test", p);
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG test :test (test): Stats { health: 20, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 } Feats []\r\n");
+        let exp = String::from_str("PRIVMSG test :test (test): Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 } Feats []\r\n");
         assert_eq!(String::from_utf8(data), Ok(exp));
     }
 
@@ -484,7 +487,7 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG test :lookup test feats\r\n",
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
-                let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+                let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
                 world.add_user("test", p);
                 Ok(())
             }
@@ -497,7 +500,7 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG test :lookup test health\r\n",
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
-                let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+                let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
                 world.add_user("test", p);
                 Ok(())
             }
@@ -510,7 +513,7 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG test :lookup test test\r\n",
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
-                let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+                let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
                 world.add_user("test", p);
                 Ok(())
             }
@@ -529,12 +532,12 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG #test :.lookup test\r\n",
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
-                let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+                let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
                 world.add_user("test", p);
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG #test :test (test): Stats { health: 20, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 } Feats []\r\n");
+        let exp = String::from_str("PRIVMSG #test :test (test): Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 } Feats []\r\n");
         assert_eq!(String::from_utf8(data), Ok(exp));
     }
 
@@ -543,7 +546,7 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG #test :.lookup test feats\r\n",
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
-                let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+                let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
                 world.add_user("test", p);
                 Ok(())
             }
@@ -556,7 +559,7 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG #test :.lookup test health\r\n",
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
-                let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+                let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
                 world.add_user("test", p);
                 Ok(())
             }
@@ -569,7 +572,7 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG #test :.lookup test test\r\n",
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
-                let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+                let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
                 world.add_user("test", p);
                 Ok(())
             }
@@ -588,7 +591,7 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG #test :.increase str 1\r\n",
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
-                let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+                let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
                 world.add_user("test", p);
                 Ok(())
             }
@@ -601,7 +604,7 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG #test :.update str 16\r\n",
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
-                let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+                let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
                 world.add_user("test", p);
                 Ok(())
             }
@@ -614,7 +617,7 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG #test :.update str a\r\n",
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
-                let p = Player::create_test("test", "test", 20, 12, 12, 12, 12, 12, 12);
+                let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
                 world.add_user("test", p);
                 Ok(())
             }

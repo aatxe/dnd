@@ -3,6 +3,7 @@ use std::ascii::AsciiExt;
 #[deriving(Decodable, Encodable, Show, PartialEq, Clone)]
 pub struct Stats {
     pub health: u8,
+    pub movement: u8,
     pub strength: u8,
     pub dexterity: u8,
     pub constitution: u8,
@@ -12,10 +13,11 @@ pub struct Stats {
 }
 
 impl Stats {
-    pub fn new(health: u8, strength: u8, dexterity: u8, constitution: u8, wisdom: u8,
+    pub fn new(health: u8, movement: u8, strength: u8, dexterity: u8, constitution: u8, wisdom: u8,
                intellect: u8, charisma: u8) -> Stats {
         Stats {
             health: health,
+            movement: movement,
             strength: strength,
             dexterity: dexterity,
             constitution: constitution,
@@ -29,6 +31,8 @@ impl Stats {
         match stat.to_ascii_lower()[] {
             "health" => f(&mut self.health),
             "hp" => f(&mut self.health),
+            "move" => f(&mut self.movement),
+            "movement" => f(&mut self.movement),
             "strength" => f(&mut self.strength),
             "str" => f(&mut self.strength),
             "dexterity" => f(&mut self.dexterity),
@@ -50,6 +54,8 @@ impl Stats {
         match stat.to_ascii_lower()[] {
             "health" => Some(self.health),
             "hp" => Some(self.health),
+            "move" => Some(self.movement),
+            "movement" => Some(self.movement),
             "strength" => Some(self.strength),
             "str" => Some(self.strength),
             "dexterity" => Some(self.dexterity),
@@ -96,7 +102,7 @@ mod test {
 
     #[test]
     fn get_stat() {
-        let s = Stats::new(20, 12, 12, 8, 12, 14, 12);
+        let s = Stats::new(20, 30, 12, 12, 8, 12, 14, 12);
         assert_eq!(s.get_stat("str"), Some(12));
         assert_eq!(s.get_stat("constitution"), Some(8));
         assert_eq!(s.get_stat("INTELLECT"), Some(14));
@@ -104,7 +110,7 @@ mod test {
 
     #[test]
     fn update_stat() {
-        let mut s = Stats::new(20, 12, 12, 12, 12, 12, 12);
+        let mut s = Stats::new(20, 30, 12, 12, 12, 12, 12, 12);
         s.update_stat("str", 10);
         assert_eq!(s.get_stat("str"), Some(10));
         s.update_stat("Con", 8);
@@ -115,7 +121,7 @@ mod test {
 
     #[test]
     fn increase_stat() {
-        let mut s = Stats::new(20, 12, 12, 7, 12, 12, 12);
+        let mut s = Stats::new(20, 30, 12, 12, 7, 12, 12, 12);
         s.increase_stat("str", 2);
         assert_eq!(s.get_stat("str"), Some(14));
         s.increase_stat("Con", 1);
@@ -133,7 +139,7 @@ mod test {
 
     #[test]
     fn damage() {
-        let mut s = Stats::new(20, 12, 12, 12, 12, 12, 12);
+        let mut s = Stats::new(20, 30, 12, 12, 12, 12, 12, 12);
         assert!(s.damage(4));
         assert_eq!(s.get_stat("health"), Some(16));
         assert!(!s.damage(18));
