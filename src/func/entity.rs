@@ -1,6 +1,6 @@
-use data::{Basic, BotResult, Entity, Propagated, RollType, as_io};
+use data::{Basic, BotResult, Entity, InvalidInput, Propagated, RollType, as_io};
 use data::stats::Stats;
-use data::utils::str_to_u8;
+use data::utils::{Position, str_to_u8};
 use data::world::World;
 use func::Functionality;
 use func::utils::{get_target, incorrect_format, permissions_test, validate_from};
@@ -178,10 +178,73 @@ impl <'a> Functionality for ClearTempStats<'a> {
     }
 }
 
+pub struct Move<'a> {
+    bot: &'a Bot + 'a,
+    chan: &'a str,
+    target_str: &'a str,
+    target: &'a mut Entity + 'a,
+    position: Position,
+}
+
+impl <'a> Move<'a> {
+    fn to_pos(x: &str, y: &str) -> Option<Position> {
+        if let Some(m) = from_str(x) {
+            if let Some(n) = from_str(y) {
+                return Some(Position(m, n))
+            }
+        }
+        None
+    }
+
+    pub fn new(bot: &'a Bot, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
+        if args.len() != 3 && args.len() != 4 {
+            return Err(incorrect_format(chan, ".move", "[@monster] x y"));
+        }
+        let (target, position) = if args.len() == 4 {
+            (args[1], Move::to_pos(args[2], args[3]))
+        } else {
+            (user, Move::to_pos(args[1], args[2]))
+        };
+        Ok(box Move {
+            bot: bot,
+            chan: chan,
+            target_str: target,
+            target: try!(get_target(target, user, chan, chan, world)),
+            position: if let Some(pos) = position {
+                pos
+            } else {
+                return Err(Propagated(
+                        format!("{}", chan),
+                        format!("({}, {}) is not a valid position.",
+                                args[args.len() - 2], args[args.len() - 1])
+                ));
+            },
+        } as Box<Functionality>)
+    }
+}
+
+impl <'a> Functionality for Move<'a> {
+    fn do_func(&mut self) -> BotResult<()> {
+        let res = self.target.do_move(self.position);
+        let s = if let Err(InvalidInput(msg)) = res {
+            msg
+        } else {
+            format!("{} ({}) moved to {}.",
+                    self.target.identifier(), self.target_str, self.position)
+        };
+        as_io(self.bot.send_privmsg(self.chan, s[]))
+    }
+
+    fn format() -> String {
+        "[@monster] x y".into_string()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use data::Entity;
     use data::monster::Monster;
+    use data::player::Player;
     use data::stats::Stats;
     use func::test::test_helper;
 
@@ -392,5 +455,93 @@ mod test {
             }
         ).unwrap();
         assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :test is not logged in.\r\n")));
+    }
+
+    #[test]
+    fn move_monster_success() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.move @0 6 0\r\n",
+            |world| {
+                world.add_game("Test", "test", "#test");
+                let m = Monster::create("Test", 14, 30, 12, 10, 12, 12, 12, 12);
+                world.add_monster(m, "#test");
+                Ok(())
+            }
+        ).unwrap();
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :Test (@0) moved to Position(6, 0).\r\n")));
+    }
+
+    #[test]
+    fn move_monster_failed_invalid_position() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.move @0 a b\r\n",
+            |world| {
+                world.add_game("Test", "test", "#test");
+                let m = Monster::create("Test", 14, 30, 12, 10, 12, 12, 12, 12);
+                world.add_monster(m, "#test");
+                Ok(())
+            }
+        ).unwrap();
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :(a, b) is not a valid position.\r\n")));
+    }
+
+    #[test]
+    fn move_monster_failed_monster_does_not_exist() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.move @0 6 0\r\n",
+            |world| {
+                world.add_game("Test", "test", "#test");
+                Ok(())
+            }
+        ).unwrap();
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :@0 is not a valid monster.\r\n")));
+    }
+    #[test]
+    fn move_monster_failed_too_far() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.move @0 7 0\r\n",
+            |world| {
+                world.add_game("Test", "test", "#test");
+                let m = Monster::create("Test", 14, 30, 12, 10, 12, 12, 12, 12);
+                world.add_monster(m, "#test");
+                Ok(())
+            }
+        ).unwrap();
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :Test can move at most 6 spaces in a turn.\r\n")));
+    }
+
+    #[test]
+    fn move_player_success() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.move 6 0\r\n",
+            |world| {
+                world.add_game("Test", "test", "#test");
+                let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
+                world.add_user("test", p);
+                Ok(())
+            }
+        ).unwrap();
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :test (test) moved to Position(6, 0).\r\n")));
+    }
+
+    #[test]
+    fn move_player_failed_invalid_position() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.move a b\r\n",
+            |world| {
+                world.add_game("Test", "test", "#test");
+                let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
+                world.add_user("test", p);
+                Ok(())
+            }
+        ).unwrap();
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :(a, b) is not a valid position.\r\n")));
+    }
+
+    #[test]
+    fn move_player_failed_too_far() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.move 7 0\r\n",
+            |world| {
+                world.add_game("Test", "test", "#test");
+                let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
+                world.add_user("test", p);
+                Ok(())
+            }
+        ).unwrap();
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :You can move at most 6 spaces in a turn.\r\n")));
     }
 }

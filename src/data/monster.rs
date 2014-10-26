@@ -67,7 +67,8 @@ impl Entity for Monster {
             Ok(())
         } else {
             Err(super::InvalidInput(
-                format!("You can move at most {} spaces in a turn.", self.stats().movement / 5)
+                format!("{} can move at most {} spaces in a turn.",
+                        self.identifier(), self.stats().movement / 5)
             ))
         }
     }

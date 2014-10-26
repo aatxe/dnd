@@ -1,6 +1,6 @@
 extern crate irc;
 
-use self::entity::{ClearTempStats, Damage, Roll, SetTempStats};
+use self::entity::{ClearTempStats, Damage, Move, Roll, SetTempStats};
 use self::monster::{AddMonster, LookUpMonster};
 use self::player::{AddFeat, AddUpdate, Login, Logout, LookUpPlayer, Register, Save};
 use self::world::{Create, PrivateRoll, SaveAll};
@@ -49,6 +49,7 @@ impl <'a> Functionality for Help<'a> {
                     "temp" => "target health str dex con wis int cha",
                     "cleartemp" => "target",
                     "damage" => "target value",
+                    "move" => "[@monster] x y",
                     _ => return Err(Propagated(format!("{}", self.resp), format!("{} is not a valid command.", self.cmd.unwrap())))
                 }
             } else {
@@ -70,7 +71,7 @@ impl <'a> Functionality for Help<'a> {
             as_io(self.bot.send_privmsg(self.resp, format!("Format: {} {}", self.cmd.unwrap(), format)[]))
         } else {
             let mut s = String::from_str("List of Commands:\r\n");
-            s.push_str("Channel commands: .roll .lookup .update .increase .temp .cleartemp .damage\r\n");
+            s.push_str("Channel commands: .roll .lookup .update .increase .temp .cleartemp .damage .move\r\n");
             s.push_str("Query commands: register login create logout addfeat roll saveall save lookup mlookup addmonster\r\n");
             s.push_str(format!("If you need additional help, use {}help [command].", if self.resp.starts_with("#") { "." } else { "" })[]);
             as_io(self.bot.send_privmsg(self.resp, s[]))
@@ -150,6 +151,7 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
                         "temp" => SetTempStats::new(bot, user, chan, tokens, world),
                         "cleartemp" => ClearTempStats::new(bot, user, chan, tokens, world),
                         "damage" => Damage::new(bot, user, chan, tokens, world),
+                        "move" => Move::new(bot, user, chan, tokens, world),
                         "help" => Help::new(bot, chan, tokens),
                         _ => Err(NotFound(tokens[0].into_string()))
                     }
@@ -163,7 +165,7 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
                 ()
             } else if let Err(Propagated(resp, msg)) = func.unwrap().do_func() {
                 try!(bot.send_privmsg(resp[], msg[]));
-            };
+            }
         },
         _ => (),
     }
@@ -334,7 +336,7 @@ mod test {
     fn general_help_in_channel() {
         let data = test_helper(":test!test@test PRIVMSG #test :.help\r\n", |_| { Ok(()) }).unwrap();
         let mut exp = String::from_str("PRIVMSG #test :List of Commands:\r\n");
-        exp.push_str("PRIVMSG #test :Channel commands: .roll .lookup .update .increase .temp .cleartemp .damage\r\n");
+        exp.push_str("PRIVMSG #test :Channel commands: .roll .lookup .update .increase .temp .cleartemp .damage .move\r\n");
         exp.push_str("PRIVMSG #test :Query commands: register login create logout addfeat roll saveall save lookup mlookup addmonster\r\n");
         exp.push_str("PRIVMSG #test :If you need additional help, use .help [command].\r\n");
         assert_eq!(String::from_utf8(data), Ok(exp))
@@ -344,7 +346,7 @@ mod test {
     fn general_help_in_query() {
         let data = test_helper(":test!test@test PRIVMSG test :help\r\n", |_| { Ok(()) }).unwrap();
         let mut exp = String::from_str("PRIVMSG test :List of Commands:\r\n");
-        exp.push_str("PRIVMSG test :Channel commands: .roll .lookup .update .increase .temp .cleartemp .damage\r\n");
+        exp.push_str("PRIVMSG test :Channel commands: .roll .lookup .update .increase .temp .cleartemp .damage .move\r\n");
         exp.push_str("PRIVMSG test :Query commands: register login create logout addfeat roll saveall save lookup mlookup addmonster\r\n");
         exp.push_str("PRIVMSG test :If you need additional help, use help [command].\r\n");
         assert_eq!(String::from_utf8(data), Ok(exp))
