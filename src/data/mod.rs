@@ -22,6 +22,8 @@ pub mod utils {
             pow(y2 - y1, 2) + pow(x2 - x1, 2)
         }
 
+        // FIXME: distance doesn't work the way we'd want it to.
+        // e.g. (0, 0).distance(5, 5) is 7, when we want it to be 5.
         pub fn distance(&self, rhs: &Position) -> BotResult<int> {
             if let Some(n) = self.distance_sq(rhs).to_f32() {
                 if let Some(x) = from_f32(n.sqrt().floor()) {
@@ -175,6 +177,13 @@ mod test {
         let Position(x2, y2) = Position(-1, 2) - Position(3, -1);
         assert_eq!(x2, -4);
         assert_eq!(y2, 3);
+    }
+
+    #[test]
+    fn distance() {
+        assert_eq!(Position(0, 0).distance(&Position(5, 4)), Ok(6));
+        assert_eq!(Position(0, 0).distance(&Position(6, 0)), Ok(6));
+        assert_eq!(Position(0, 0).distance(&Position(0, 6)), Ok(6));
     }
 
     #[test]

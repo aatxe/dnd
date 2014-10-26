@@ -140,6 +140,7 @@ mod test {
         let mut m = Monster::create("test", 20, 30, 12, 12, 12, 12, 12, 12);
         assert!(m.do_move(Position(6, 0)).is_ok());
         assert!(m.do_move(Position(6, 6)).is_ok());
+        assert!(m.do_move(Position(9, 9)).is_ok());
     }
 
     #[test]
@@ -148,6 +149,7 @@ mod test {
         m.set_temp_stats(Stats::new(20, 25, 12, 12, 12, 12, 12, 12));
         assert!(m.do_move(Position(5, 0)).is_ok());
         assert!(m.do_move(Position(5, 5)).is_ok());
+        assert!(m.do_move(Position(8, 7)).is_ok());
     }
 
     #[test]
