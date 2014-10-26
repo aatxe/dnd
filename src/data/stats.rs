@@ -25,7 +25,7 @@ impl Stats {
         }
     }
 
-    fn stat_func(&mut self, stat: &str, f: |&mut u8| -> Option<u8>) -> Option<u8> {
+    fn stat_func(&mut self, stat: &str, f: |&mut u8| -> ()) {
         match stat.to_ascii_lower()[] {
             "health" => f(&mut self.health),
             "hp" => f(&mut self.health),
@@ -41,7 +41,7 @@ impl Stats {
             "int" => f(&mut self.intellect),
             "charisma" => f(&mut self.charisma),
             "cha" => f(&mut self.charisma),
-            _ => None,
+            _ => (),
         }
     }
 
@@ -67,11 +67,11 @@ impl Stats {
     }
 
     pub fn update_stat(&mut self, stat: &str, value: u8) {
-        self.stat_func(stat, |s: &mut u8| { *s = value; None });
+        self.stat_func(stat, |s: &mut u8| { *s = value; });
     }
 
     pub fn increase_stat(&mut self, stat: &str, value: u8) {
-        self.stat_func(stat, |s: &mut u8| { *s += value; None });
+        self.stat_func(stat, |s: &mut u8| { *s += value; });
     }
 
     pub fn calc_bonus(stat: u8) -> i8 {
