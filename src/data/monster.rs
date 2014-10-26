@@ -2,12 +2,14 @@ use std::rand::task_rng;
 use std::rand::distributions::{IndependentSample, Range};
 use data::{Entity, RollType, Basic, Strength, Dexterity, Constitution, Wisdom, Intellect, Charisma};
 use data::stats::Stats;
+use data::utils::Position;
 
 #[deriving(Show, PartialEq, Clone)]
 pub struct Monster {
     pub name: String,
     pub stats: Stats,
     pub temp_stats: Option<Stats>,
+    pub position: Position,
 }
 
 
@@ -18,6 +20,7 @@ impl Monster {
             name: String::from_str(name),
             stats: Stats::new(health, strength, dexterity, constitution, wisdom, intellect, charisma),
             temp_stats: None,
+            position: Position(0, 0),
         }
     }
 }
@@ -84,6 +87,7 @@ mod test {
     use super::Monster;
     use data::{Entity, Basic, Dexterity, Constitution};
     use data::stats::Stats;
+    use data::utils::Position;
 
     #[test]
     fn create_monster() {
@@ -92,6 +96,7 @@ mod test {
             name: String::from_str("test"),
             stats: Stats::new(20, 12, 12, 12, 12, 12, 12),
             temp_stats: None,
+            position: Position(0, 0),
         };
         assert_eq!(m, n);
     }

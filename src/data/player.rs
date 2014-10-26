@@ -6,6 +6,7 @@ use data::{BotResult, Entity, RollType, as_io};
 use data::{Basic, Strength, Dexterity, Constitution, Wisdom, Intellect, Charisma};
 use data::game::Game;
 use data::stats::Stats;
+use data::utils::Position;
 use serialize::json::{decode, encode};
 
 #[deriving(Decodable, Encodable, Show, PartialEq, Clone)]
@@ -15,6 +16,7 @@ pub struct Player {
     pub stats: Stats,
     pub feats: Vec<String>,
     pub temp_stats: Option<Stats>,
+    pub position: Position,
 }
 
 impl Player {
@@ -26,6 +28,7 @@ impl Player {
             stats: Stats::new(health, strength, dexterity, constitution, wisdom, intellect, charisma),
             feats: Vec::new(),
             temp_stats: None,
+            position: Position(0, 0),
         })
     }
 
@@ -38,6 +41,7 @@ impl Player {
             stats: Stats::new(health, strength, dexterity, constitution, wisdom, intellect, charisma),
             feats: Vec::new(),
             temp_stats: None,
+            position: Position(0, 0),
         }
     }
 
@@ -128,6 +132,7 @@ mod test {
     use data::{Entity, Basic, Dexterity, Constitution};
     use data::game::Game;
     use data::stats::Stats;
+    use data::utils::Position;
 
     #[test]
     fn create_player() {
@@ -138,6 +143,7 @@ mod test {
             stats: Stats::new(20, 12, 12, 12, 12, 12, 12),
             feats: Vec::new(),
             temp_stats: None,
+            position: Position(0, 0),
         };
         assert_eq!(p, m);
     }

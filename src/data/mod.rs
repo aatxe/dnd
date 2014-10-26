@@ -9,6 +9,25 @@ pub mod stats;
 pub mod world;
 
 pub mod utils {
+    #[deriving(Decodable, Encodable, Show, PartialEq, Clone)]
+    pub struct Position(pub int, pub int);
+
+    impl Add<Position, Position> for Position {
+        fn add(&self, rhs: &Position) -> Position {
+            let Position(x1, y1) = *self;
+            let Position(x2, y2) = *rhs;
+            Position(x1 + x2, y1 + y2)
+        }
+    }
+
+    impl Sub<Position, Position> for Position {
+        fn sub(&self, rhs: &Position) -> Position {
+            let Position(x1, y1) = *self;
+            let Position(x2, y2) = *rhs;
+            Position(x1 - x2, y1 - y2)
+        }
+    }
+
     pub fn join_from(words: Vec<&str>, pos: uint) -> String {
         let mut res = String::new();
         for word in words[pos..].iter() {
@@ -109,7 +128,36 @@ mod test {
     use super::RollType;
     use super::{Strength, Wisdom, Intellect};
     use super::utils;
+    use super::utils::Position;
     use std::io::{InvalidInput, IoError, IoResult};
+
+    #[test]
+    fn new_position() {
+        let pos = Position(3, -4);
+        let Position(x, y) = pos;
+        assert_eq!(x, 3);
+        assert_eq!(y, -4);
+    }
+
+    #[test]
+    fn add_position() {
+        let Position(x1, y1) = Position(1, 2) + Position(3, 1);
+        assert_eq!(x1, 4);
+        assert_eq!(y1, 3);
+        let Position(x2, y2) = Position(-1, 2) + Position(3, -1);
+        assert_eq!(x2, 2);
+        assert_eq!(y2, 1);
+    }
+
+    #[test]
+    fn subtract_position() {
+        let Position(x1, y1) = Position(1, 2) - Position(3, 1);
+        assert_eq!(x1, -2);
+        assert_eq!(y1, 1);
+        let Position(x2, y2) = Position(-1, 2) - Position(3, -1);
+        assert_eq!(x2, -4);
+        assert_eq!(y2, 3);
+    }
 
     #[test]
     fn to_roll_type() {
