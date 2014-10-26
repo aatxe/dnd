@@ -107,6 +107,17 @@ impl Entity for Player {
         }
     }
 
+    fn do_move(&mut self, pos: Position) -> BotResult<()> {
+        if try!(self.position.distance(&pos)) <= self.stats().movement as int / 5 {
+            self.position = pos;
+            Ok(())
+        } else {
+            Err(super::InvalidInput(
+                format!("You can move at most {} spaces in a turn.", self.stats().movement / 5)
+            ))
+        }
+    }
+
     fn stats(&self) -> Stats {
         match self.temp_stats {
             Some(stats) => stats,
@@ -188,6 +199,36 @@ mod test {
         assert_eq!(p.stats().health, 35);
         assert!(!p.damage(35));
         assert_eq!(p.stats().health, 0);
+    }
+
+    #[test]
+    fn do_move_valid() {
+        let mut p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
+        assert!(p.do_move(Position(6, 0)).is_ok());
+        assert!(p.do_move(Position(6, 6)).is_ok());
+    }
+
+    #[test]
+    fn do_move_temp_valid() {
+        let mut p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
+        p.set_temp_stats(Stats::new(20, 25, 12, 12, 12, 12, 12, 12));
+        assert!(p.do_move(Position(5, 0)).is_ok());
+        assert!(p.do_move(Position(5, 5)).is_ok());
+    }
+
+    #[test]
+    fn do_move_fail() {
+        let mut p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
+        assert!(p.do_move(Position(10, 1)).is_err());
+        assert!(p.do_move(Position(7, 0)).is_err());
+    }
+
+    #[test]
+    fn do_move_temp_fail() {
+        let mut p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
+        p.set_temp_stats(Stats::new(20, 25, 12, 12, 12, 12, 12, 12));
+        assert!(p.do_move(Position(10, 1)).is_err());
+        assert!(p.do_move(Position(6, 0)).is_err());
     }
 
     #[test]

@@ -9,7 +9,8 @@ pub mod stats;
 pub mod world;
 
 pub mod utils {
-    use std::num::pow;
+    use super::{BotResult, InvalidInput};
+    use std::num::{from_f32, pow};
 
     #[deriving(Decodable, Encodable, Show, PartialEq, Clone)]
     pub struct Position(pub int, pub int);
@@ -19,6 +20,15 @@ pub mod utils {
             let Position(x1, y1) = *self;
             let Position(x2, y2) = *rhs;
             pow(y2 - y1, 2) + pow(x2 - x1, 2)
+        }
+
+        pub fn distance(&self, rhs: &Position) -> BotResult<int> {
+            if let Some(n) = self.distance_sq(rhs).to_f32() {
+                if let Some(x) = from_f32(n.sqrt().floor()) {
+                    return Ok(x)
+                }
+            }
+            Err(InvalidInput("Something went wrong calculating the distance.".into_string()))
         }
     }
 
@@ -50,10 +60,7 @@ pub mod utils {
     }
 
     pub fn str_to_u8(s: &str) -> u8 {
-        match from_str(s) {
-            Some(n) => n,
-            None => 0,
-        }
+        from_str(s).unwrap_or(0)
     }
 }
 
@@ -95,6 +102,7 @@ pub trait Entity {
     fn identifier(&self) -> &str;
     fn damage(&mut self, amount: u8) -> bool;
     fn roll(&self, roll_type: RollType) -> u8;
+    fn do_move(&mut self, pos: utils::Position) -> BotResult<()>;
     fn stats(&self) -> stats::Stats;
     fn has_temp_stats(&self) -> bool;
     fn set_temp_stats(&mut self, stats: stats::Stats);

@@ -1,6 +1,7 @@
 use std::rand::task_rng;
 use std::rand::distributions::{IndependentSample, Range};
-use data::{Entity, RollType, Basic, Strength, Dexterity, Constitution, Wisdom, Intellect, Charisma};
+use data::{BotResult, Entity, InvalidInput, RollType};
+use data::{Basic, Strength, Dexterity, Constitution, Wisdom, Intellect, Charisma};
 use data::stats::Stats;
 use data::utils::Position;
 
@@ -57,6 +58,17 @@ impl Entity for Monster {
             Some(0) => 1,
             Some(n) => n,
             None => 1,
+        }
+    }
+
+    fn do_move(&mut self, pos: Position) -> BotResult<()> {
+        if try!(self.position.distance(&pos)) <= self.stats().movement as int / 5 {
+            self.position = pos;
+            Ok(())
+        } else {
+            Err(super::InvalidInput(
+                format!("You can move at most {} spaces in a turn.", self.stats().movement / 5)
+            ))
         }
     }
 
@@ -121,6 +133,36 @@ mod test {
         assert_eq!(m.stats().health, 35);
         assert!(!m.damage(35));
         assert_eq!(m.stats().health, 0);
+    }
+
+    #[test]
+    fn do_move_valid() {
+        let mut m = Monster::create("test", 20, 30, 12, 12, 12, 12, 12, 12);
+        assert!(m.do_move(Position(6, 0)).is_ok());
+        assert!(m.do_move(Position(6, 6)).is_ok());
+    }
+
+    #[test]
+    fn do_move_temp_valid() {
+        let mut m = Monster::create("test", 20, 30, 12, 12, 12, 12, 12, 12);
+        m.set_temp_stats(Stats::new(20, 25, 12, 12, 12, 12, 12, 12));
+        assert!(m.do_move(Position(5, 0)).is_ok());
+        assert!(m.do_move(Position(5, 5)).is_ok());
+    }
+
+    #[test]
+    fn do_move_fail() {
+        let mut m = Monster::create("test", 20, 30, 12, 12, 12, 12, 12, 12);
+        assert!(m.do_move(Position(10, 1)).is_err());
+        assert!(m.do_move(Position(7, 0)).is_err());
+    }
+
+    #[test]
+    fn do_move_temp_fail() {
+        let mut m = Monster::create("test", 20, 30, 12, 12, 12, 12, 12, 12);
+        m.set_temp_stats(Stats::new(20, 25, 12, 12, 12, 12, 12, 12));
+        assert!(m.do_move(Position(10, 1)).is_err());
+        assert!(m.do_move(Position(6, 0)).is_err());
     }
 
     #[test]
