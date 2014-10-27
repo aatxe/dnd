@@ -228,7 +228,7 @@ mod test {
     use irc::bot::IrcBot;
     use irc::conn::Connection;
 
-    pub fn test_helper(input: &str, world_hook: |&mut World| -> BotResult<()>) -> BotResult<Vec<u8>> {
+    pub fn test_helper(input: &str, world_hook: |&mut World| -> BotResult<()>) -> BotResult<String> {
         let mut world = World::new();
         try!(world_hook(&mut world));
         let mut bot = try!(as_io(
@@ -239,7 +239,7 @@ mod test {
             })
         ));
         try!(as_io(bot.output()));
-        Ok(bot.conn.writer().deref().get_ref().to_vec())
+        Ok(String::from_utf8(bot.conn.writer().deref().get_ref().to_vec()).unwrap())
     }
 
     #[test]
@@ -299,37 +299,37 @@ mod test {
     #[test]
     fn non_command_message_in_channel() {
         let data = test_helper(":test!test@test PRIVMSG #test :Hi there!\r\n", |_| { Ok(()) }).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("")));
+        assert_eq!(data, format!(""));
     }
 
     #[test]
     fn non_command_message_in_query() {
         let data = test_helper(":test!test@test PRIVMSG test :Hi there!\r\n", |_| { Ok(()) }).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :Hi is not a valid command.\r\n")));
+        assert_eq!(data, format!("PRIVMSG test :Hi is not a valid command.\r\n"));
     }
 
     #[test]
     fn specific_help_channel_command() {
         let data = test_helper(":test!test@test PRIVMSG test :help .roll\r\n", |_| { Ok(()) }).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :Format: .roll [@monster] [stat]\r\n")));
+        assert_eq!(data, format!("PRIVMSG test :Format: .roll [@monster] [stat]\r\n"));
     }
 
     #[test]
     fn specific_help_query_command() {
         let data = test_helper(":test!test@test PRIVMSG test :help register\r\n", |_| { Ok(()) }).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :Format: register username password health str dex con wis int cha\r\n")));
+        assert_eq!(data, format!("PRIVMSG test :Format: register username password health str dex con wis int cha\r\n"));
     }
 
     #[test]
     fn specific_help_channel_command_not_found() {
         let data = test_helper(":test!test@test PRIVMSG test :help .test\r\n", |_| { Ok(()) }).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :.test is not a valid command.\r\n")));
+        assert_eq!(data, format!("PRIVMSG test :.test is not a valid command.\r\n"));
     }
 
     #[test]
     fn specific_help_query_command_not_found() {
         let data = test_helper(":test!test@test PRIVMSG test :help test\r\n", |_| { Ok(()) }).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :test is not a valid command.\r\n")));
+        assert_eq!(data, format!("PRIVMSG test :test is not a valid command.\r\n"));
     }
 
     #[test]
@@ -339,7 +339,7 @@ mod test {
         exp.push_str("PRIVMSG #test :Channel commands: .roll .lookup .update .increase .temp .cleartemp .damage .move\r\n");
         exp.push_str("PRIVMSG #test :Query commands: register login create logout addfeat roll saveall save lookup mlookup addmonster\r\n");
         exp.push_str("PRIVMSG #test :If you need additional help, use .help [command].\r\n");
-        assert_eq!(String::from_utf8(data), Ok(exp))
+        assert_eq!(data, exp)
     }
 
     #[test]
@@ -349,6 +349,6 @@ mod test {
         exp.push_str("PRIVMSG test :Channel commands: .roll .lookup .update .increase .temp .cleartemp .damage .move\r\n");
         exp.push_str("PRIVMSG test :Query commands: register login create logout addfeat roll saveall save lookup mlookup addmonster\r\n");
         exp.push_str("PRIVMSG test :If you need additional help, use help [command].\r\n");
-        assert_eq!(String::from_utf8(data), Ok(exp))
+        assert_eq!(data, exp)
     }
 }

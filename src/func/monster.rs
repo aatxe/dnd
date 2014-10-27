@@ -128,7 +128,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :Monster (Test) has been created as @0.\r\n")));
+        assert_eq!(data, format!("PRIVMSG test :Monster (Test) has been created as @0.\r\n"));
     }
 
     #[test]
@@ -141,7 +141,7 @@ mod test {
         ).unwrap();
         let mut exp = String::from_str("PRIVMSG test :Stats must be non-zero positive integers. Format is:\r\n");
         exp.push_str("PRIVMSG test :addmonster chan name health movement str dex con wis int cha\r\n");
-        assert_eq!(String::from_utf8(data), Ok(exp));
+        assert_eq!(data, exp);
     }
 
     #[test]
@@ -154,7 +154,7 @@ mod test {
             }
         ).unwrap();
         let exp = String::from_str("PRIVMSG test :Test (@0): Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }\r\n");
-        assert_eq!(String::from_utf8(data), Ok(exp));
+        assert_eq!(data, exp);
     }
 
     #[test]
@@ -166,7 +166,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :@1 is not a valid monster.\r\n")));
+        assert_eq!(data, format!("PRIVMSG test :@1 is not a valid monster.\r\n"));
     }
 
     #[test]
@@ -178,7 +178,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :Test (@0): 20 health\r\n")));
+        assert_eq!(data, format!("PRIVMSG test :Test (@0): 20 health\r\n"));
     }
 
     #[test]
@@ -190,7 +190,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :test is not a valid stat.\r\n")));
+        assert_eq!(data, format!("PRIVMSG test :test is not a valid stat.\r\n"));
     }
 
     #[test]
@@ -205,7 +205,7 @@ mod test {
             }
         ).unwrap();
         let exp = String::from_str("PRIVMSG test :Test (@0): Temp. Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }\r\n");
-        assert_eq!(String::from_utf8(data), Ok(exp));
+        assert_eq!(data, exp);
     }
 
     #[test]
@@ -219,7 +219,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :Test (@0): Temp. 20 health\r\n")));
+        assert_eq!(data, format!("PRIVMSG test :Test (@0): Temp. 20 health\r\n"));
     }
 
     #[test]
@@ -232,6 +232,6 @@ mod test {
             }
         ).unwrap();
         let exp = String::from_str("PRIVMSG test :Test (@0): Position(0, 0)\r\n");
-        assert_eq!(String::from_utf8(data), Ok(exp));
+        assert_eq!(data, exp);
     }
 }

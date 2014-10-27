@@ -258,7 +258,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data[..27].to_vec()), Ok(format!("PRIVMSG #test :Test rolled ")));
+        assert_eq!(data[..27].into_string(), format!("PRIVMSG #test :Test rolled "));
     }
 
     #[test]
@@ -271,7 +271,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data[..27].to_vec()), Ok(format!("PRIVMSG #test :Test rolled ")));
+        assert_eq!(data[..27].into_string(), format!("PRIVMSG #test :Test rolled "));
     }
 
     #[test]
@@ -286,7 +286,7 @@ mod test {
         ).unwrap();
         let mut exp = String::from_str("PRIVMSG #test :test is not a valid stat.\r\n");
         exp.push_str("PRIVMSG #test :Options: str dex con wis int cha (or their full names).\r\n");
-        assert_eq!(String::from_utf8(data), Ok(exp));
+        assert_eq!(data, exp);
     }
 
     #[test]
@@ -297,7 +297,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :@0 is not a valid monster.\r\n")));
+        assert_eq!(data, format!("PRIVMSG #test :@0 is not a valid monster.\r\n"));
     }
 
     #[test]
@@ -308,7 +308,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :test is not logged in.\r\n")));
+        assert_eq!(data, format!("PRIVMSG #test :test is not logged in.\r\n"));
     }
 
     #[test]
@@ -316,7 +316,7 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG #test :.roll a b c\r\n", |_| { Ok(()) }).unwrap();
         let mut exp = String::from_str("PRIVMSG #test :Incorrect format for .roll. Format is:\r\n");
         exp.push_str("PRIVMSG #test :.roll [@monster] [stat]\r\n");
-        assert_eq!(String::from_utf8(data), Ok(exp));
+        assert_eq!(data, exp);
     }
 
     #[test]
@@ -329,7 +329,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :Test (@0) took 5 damage and has 15 health remaining.\r\n")));
+        assert_eq!(data, format!("PRIVMSG #test :Test (@0) took 5 damage and has 15 health remaining.\r\n"));
     }
 
     #[test]
@@ -342,7 +342,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :Test (@0) has fallen unconscious.\r\n")));
+        assert_eq!(data, format!("PRIVMSG #test :Test (@0) has fallen unconscious.\r\n"));
     }
 
     #[test]
@@ -355,7 +355,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :a is not a valid positive integer.\r\n")));
+        assert_eq!(data, format!("PRIVMSG #test :a is not a valid positive integer.\r\n"));
     }
 
     #[test]
@@ -366,7 +366,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :@0 is not a valid monster.\r\n")));
+        assert_eq!(data, format!("PRIVMSG #test :@0 is not a valid monster.\r\n"));
     }
 
     #[test]
@@ -377,7 +377,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :test is not logged in.\r\n")));
+        assert_eq!(data, format!("PRIVMSG #test :test is not logged in.\r\n"));
     }
 
     #[test]
@@ -391,7 +391,7 @@ mod test {
             }
         ).unwrap();
         let exp = String::from_str("PRIVMSG #test :Test (@0) now has temporary Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }.\r\n");
-        assert_eq!(String::from_utf8(data), Ok(exp));
+        assert_eq!(data, exp);
     }
 
     #[test]
@@ -402,7 +402,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :@0 is not a valid monster.\r\n")));
+        assert_eq!(data, format!("PRIVMSG #test :@0 is not a valid monster.\r\n"));
     }
 
     #[test]
@@ -417,7 +417,7 @@ mod test {
         ).unwrap();
         let mut exp = String::from_str("PRIVMSG #test :Stats must be non-zero positive integers. Format is:\r\n");
         exp.push_str("PRIVMSG #test :.temp target health movement str dex con wis int cha\r\n");
-        assert_eq!(String::from_utf8(data), Ok(exp));
+        assert_eq!(data, exp);
     }
 
     #[test]
@@ -432,7 +432,7 @@ mod test {
             }
         ).unwrap();
         let exp = String::from_str("PRIVMSG #test :Test (@0) has reverted to Stats { health: 14, movement: 30, strength: 12, dexterity: 10, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }.\r\n");
-        assert_eq!(String::from_utf8(data), Ok(exp));
+        assert_eq!(data, exp);
     }
 
     #[test]
@@ -443,7 +443,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :@0 is not a valid monster.\r\n")));
+        assert_eq!(data, format!("PRIVMSG #test :@0 is not a valid monster.\r\n"));
     }
 
     #[test]
@@ -454,7 +454,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :test is not logged in.\r\n")));
+        assert_eq!(data, format!("PRIVMSG #test :test is not logged in.\r\n"));
     }
 
     #[test]
@@ -467,7 +467,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :Test (@0) moved to Position(6, 0).\r\n")));
+        assert_eq!(data, format!("PRIVMSG #test :Test (@0) moved to Position(6, 0).\r\n"));
     }
 
     #[test]
@@ -480,7 +480,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :(a, b) is not a valid position.\r\n")));
+        assert_eq!(data, format!("PRIVMSG #test :(a, b) is not a valid position.\r\n"));
     }
 
     #[test]
@@ -491,7 +491,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :@0 is not a valid monster.\r\n")));
+        assert_eq!(data, format!("PRIVMSG #test :@0 is not a valid monster.\r\n"));
     }
     #[test]
     fn move_monster_failed_too_far() {
@@ -503,7 +503,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :Test can move at most 6 spaces in a turn.\r\n")));
+        assert_eq!(data, format!("PRIVMSG #test :Test can move at most 6 spaces in a turn.\r\n"));
     }
 
     #[test]
@@ -516,7 +516,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :test (test) moved to Position(6, 0).\r\n")));
+        assert_eq!(data, format!("PRIVMSG #test :test (test) moved to Position(6, 0).\r\n"));
     }
 
     #[test]
@@ -529,7 +529,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :(a, b) is not a valid position.\r\n")));
+        assert_eq!(data, format!("PRIVMSG #test :(a, b) is not a valid position.\r\n"));
     }
 
     #[test]
@@ -542,6 +542,6 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :You can move at most 6 spaces in a turn.\r\n")));
+        assert_eq!(data, format!("PRIVMSG #test :You can move at most 6 spaces in a turn.\r\n"));
     }
 }

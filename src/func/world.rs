@@ -103,7 +103,7 @@ mod test {
         exp.push_str("MODE #test :+i\r\n");
         exp.push_str("PRIVMSG test :Campaign created named Dungeons and Tests.\r\n");
         exp.push_str("INVITE test :#test\r\n");
-        assert_eq!(String::from_utf8(data), Ok(exp));
+        assert_eq!(data, exp);
     }
 
     #[test]
@@ -114,24 +114,24 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :A campaign already exists on #test.\r\n")));
+        assert_eq!(data, format!("PRIVMSG test :A campaign already exists on #test.\r\n"));
     }
 
     #[test]
     fn private_roll() {
         let data = test_helper(":test!test@test PRIVMSG test :roll\r\n", |_| { Ok(()) }).unwrap();
-        assert_eq!(String::from_utf8(data[..25].to_vec()), Ok(format!("PRIVMSG test :You rolled ")));
+        assert_eq!(data[..25].into_string(), format!("PRIVMSG test :You rolled "));
     }
 
     #[test]
     fn save_all_from_owner() {
         let data = test_helper(":test!test@test PRIVMSG test :saveall\r\n", |_| { Ok(()) }).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :The world has been saved.\r\n")));
+        assert_eq!(data, format!("PRIVMSG test :The world has been saved.\r\n"));
     }
 
     #[test]
     fn save_all_from_non_owner() {
         let data = test_helper(":test2!test@test PRIVMSG test :saveall\r\n", |_| { Ok(()) }).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test2 :You must own the bot to do that!\r\n")));
+        assert_eq!(data, format!("PRIVMSG test2 :You must own the bot to do that!\r\n"));
     }
 }
