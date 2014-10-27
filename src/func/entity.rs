@@ -512,7 +512,7 @@ mod test {
             |world| {
                 world.add_game("Test", "test", "#test");
                 let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
-                world.add_user("test", p);
+                world.add_user("test", "#test", p);
                 Ok(())
             }
         ).unwrap();
@@ -525,7 +525,7 @@ mod test {
             |world| {
                 world.add_game("Test", "test", "#test");
                 let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
-                world.add_user("test", p);
+                world.add_user("test", "#test", p);
                 Ok(())
             }
         ).unwrap();
@@ -538,7 +538,7 @@ mod test {
             |world| {
                 world.add_game("Test", "test", "#test");
                 let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
-                world.add_user("test", p);
+                world.add_user("test", "#test", p);
                 Ok(())
             }
         ).unwrap();

@@ -98,7 +98,7 @@ impl <'a> Functionality for Login<'a> {
         } else {
             return Err(Propagated(format!("{}", self.user), format!("Game not found on {}.", self.chan)))
         }
-        self.world.add_user(self.user, self.player.clone());
+        self.world.add_user(self.user, self.chan, self.player.clone());
         Ok(())
     }
 
@@ -122,7 +122,8 @@ impl <'a> Logout<'a> {
 impl <'a> Functionality for Logout<'a> {
     fn do_func(&mut self) -> BotResult<()> {
         if self.world.is_user_logged_in(self.user) {
-            try!(self.world.remove_user(self.user));
+            let chan = try!(self.world.remove_user(self.user));
+            try!(as_io(self.bot.send_kick(chan, self.user, "Logged out.")));
             try!(as_io(self.bot.send_privmsg(self.user, "You've been logged out.")));
         } else {
             try!(as_io(self.bot.send_privmsg(self.user, "You're not currently logged in.")));
@@ -387,7 +388,7 @@ mod test {
                 } else {
                     Ok("")
                 });
-                world.add_user("test", p);
+                world.add_user("test", "#test", p);
                 Ok(())
             }
         ).unwrap();
@@ -407,11 +408,11 @@ mod test {
                 } else {
                     Ok("")
                 });
-                world.add_user("test", p);
+                world.add_user("test", "#test", p);
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :You've been logged out.\r\n")));
+        assert_eq!(String::from_utf8(data), Ok(format!("KICK #test test :Logged out.\r\nPRIVMSG test :You've been logged out.\r\n")));
     }
 
     #[test]
@@ -431,7 +432,7 @@ mod test {
                 } else {
                     Ok("")
                 });
-                world.add_user("test", p);
+                world.add_user("test", "#test", p);
                 Ok(())
             }
         ).unwrap();
@@ -458,7 +459,7 @@ mod test {
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
                 let p = Player::create_test("test6", "test", 20, 30, 12, 12, 12, 12, 12, 12);
-                world.add_user("test", p);
+                world.add_user("test", "#test", p);
                 Ok(())
             }
         ).unwrap();
@@ -477,7 +478,7 @@ mod test {
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
                 let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
-                world.add_user("test", p);
+                world.add_user("test", "#test", p);
                 Ok(())
             }
         ).unwrap();
@@ -491,7 +492,7 @@ mod test {
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
                 let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
-                world.add_user("test", p);
+                world.add_user("test", "#test", p);
                 Ok(())
             }
         ).unwrap();
@@ -504,7 +505,7 @@ mod test {
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
                 let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
-                world.add_user("test", p);
+                world.add_user("test", "#test", p);
                 Ok(())
             }
         ).unwrap();
@@ -517,7 +518,7 @@ mod test {
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
                 let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
-                world.add_user("test", p);
+                world.add_user("test", "#test", p);
                 Ok(())
             }
         ).unwrap();
@@ -530,7 +531,7 @@ mod test {
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
                 let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
-                world.add_user("test", p);
+                world.add_user("test", "#test", p);
                 Ok(())
             }
         ).unwrap();
@@ -549,7 +550,7 @@ mod test {
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
                 let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
-                world.add_user("test", p);
+                world.add_user("test", "#test", p);
                 Ok(())
             }
         ).unwrap();
@@ -563,7 +564,7 @@ mod test {
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
                 let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
-                world.add_user("test", p);
+                world.add_user("test", "#test", p);
                 Ok(())
             }
         ).unwrap();
@@ -576,7 +577,7 @@ mod test {
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
                 let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
-                world.add_user("test", p);
+                world.add_user("test", "#test", p);
                 Ok(())
             }
         ).unwrap();
@@ -589,7 +590,7 @@ mod test {
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
                 let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
-                world.add_user("test", p);
+                world.add_user("test", "#test", p);
                 Ok(())
             }
         ).unwrap();
@@ -602,7 +603,7 @@ mod test {
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
                 let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
-                world.add_user("test", p);
+                world.add_user("test", "#test", p);
                 Ok(())
             }
         ).unwrap();
@@ -621,7 +622,7 @@ mod test {
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
                 let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
-                world.add_user("test", p);
+                world.add_user("test", "#test", p);
                 Ok(())
             }
         ).unwrap();
@@ -634,7 +635,7 @@ mod test {
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
                 let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
-                world.add_user("test", p);
+                world.add_user("test", "#test", p);
                 Ok(())
             }
         ).unwrap();
@@ -647,7 +648,7 @@ mod test {
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
                 let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
-                world.add_user("test", p);
+                world.add_user("test", "#test", p);
                 Ok(())
             }
         ).unwrap();

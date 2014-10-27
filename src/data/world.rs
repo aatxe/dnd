@@ -8,6 +8,7 @@ use data::player::Player;
 
 pub struct World {
     pub users: HashMap<String, Player>,
+    pub user_channels: HashMap<String, String>,
     pub games: HashMap<String, Game>,
     pub monsters: HashMap<String, Vec<Monster>>,
 }
@@ -16,6 +17,7 @@ impl World {
     pub fn new() -> World {
         World {
             users: HashMap::new(),
+            user_channels: HashMap::new(),
             games: HashMap::new(),
             monsters: HashMap::new(),
         }
@@ -25,15 +27,16 @@ impl World {
         self.users.contains_key(&String::from_str(nickname))
     }
 
-    pub fn add_user(&mut self, nickname: &str, player: Player) {
-        self.users.insert(String::from_str(nickname), player);
+    pub fn add_user(&mut self, nickname: &str, chan: &str, player: Player) {
+        self.users.insert(nickname.into_string(), player);
+        self.user_channels.insert(nickname.into_string(), chan.into_string());
     }
 
-    pub fn remove_user(&mut self, nickname: &str) -> BotResult<()> {
+    pub fn remove_user(&mut self, nickname: &str) -> BotResult<&str> {
         let nick = String::from_str(nickname);
         try!(as_io(self.users[nick].save()));
         self.users.remove(&nick);
-        Ok(())
+        Ok(self.user_channels[nick].as_slice())
     }
 
     pub fn get_user(&mut self, nickname: &str) -> BotResult<&mut Player> {
@@ -126,10 +129,10 @@ mod test {
         let mut w = World::new();
         let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
         assert!(!w.is_user_logged_in("test"));
-        w.add_user("test", p.clone());
+        w.add_user("test", "#test", p.clone());
         assert_eq!(*w.get_user("test").unwrap(), p);
         assert!(w.is_user_logged_in("test"));
-        w.remove_user("test").unwrap();
+        assert_eq!(w.remove_user("test").unwrap(), "#test");
         assert!(!w.is_user_logged_in("test"));
         assert!(w.get_user("test").is_err());
     }
@@ -162,7 +165,7 @@ mod test {
         let mut w = World::new();
         let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
         let m = Monster::create("TestZombie", 20, 30, 12, 12, 12, 12, 12, 12);
-        w.add_user("test", p.clone());
+        w.add_user("test", "#test", p.clone());
         w.add_monster(m.clone(), "#test");
         assert_eq!(w.get_entity("test", None).unwrap().identifier(), p.identifier());
         assert_eq!(w.get_entity("@0", Some("#test")).unwrap().identifier(), m.identifier());
@@ -174,8 +177,8 @@ mod test {
         let mut w = World::new();
         let p = Player::create_test("test2", "test", 20, 30, 12, 12, 12, 12, 12, 12);
         let q = Player::create_test("test3", "test", 20, 30, 12, 12, 12, 12, 12, 12);
-        w.add_user("test2", p.clone());
-        w.add_user("test3", q.clone());
+        w.add_user("test2", "#test", p.clone());
+        w.add_user("test3", "#test", q.clone());
         w.save_all().unwrap();
         let l = Player::load("test2").unwrap();
         let m = Player::load("test3").unwrap();
