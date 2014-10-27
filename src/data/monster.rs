@@ -32,6 +32,10 @@ impl Entity for Monster {
         self.name[]
     }
 
+    fn position(&self) -> &Position {
+        &self.position
+    }
+
     fn damage(&mut self, amount: u8) -> bool {
         if self.temp_stats.is_some() {
             let mut temp = self.temp_stats.unwrap();
@@ -139,18 +143,26 @@ mod test {
     #[test]
     fn do_move_valid() {
         let mut m = Monster::create("test", 20, 30, 12, 12, 12, 12, 12, 12);
+        assert_eq!(m.position(), &Position(0, 0));
         assert!(m.do_move(Position(6, 0)).is_ok());
+        assert_eq!(m.position(), &Position(6, 0));
         assert!(m.do_move(Position(6, 6)).is_ok());
+        assert_eq!(m.position(), &Position(6, 6));
         assert!(m.do_move(Position(9, 9)).is_ok());
+        assert_eq!(m.position(), &Position(9, 9));
     }
 
     #[test]
     fn do_move_temp_valid() {
         let mut m = Monster::create("test", 20, 30, 12, 12, 12, 12, 12, 12);
         m.set_temp_stats(Stats::new(20, 25, 12, 12, 12, 12, 12, 12));
+        assert_eq!(m.position(), &Position(0, 0));
         assert!(m.do_move(Position(5, 0)).is_ok());
+        assert_eq!(m.position(), &Position(5, 0));
         assert!(m.do_move(Position(5, 5)).is_ok());
+        assert_eq!(m.position(), &Position(5, 5));
         assert!(m.do_move(Position(8, 7)).is_ok());
+        assert_eq!(m.position(), &Position(8, 7));
     }
 
     #[test]

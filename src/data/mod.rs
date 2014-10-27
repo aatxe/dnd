@@ -102,6 +102,7 @@ pub fn as_io<T>(res: IoResult<T>) -> BotResult<T> {
 
 pub trait Entity {
     fn identifier(&self) -> &str;
+    fn position(&self) -> &utils::Position;
     fn damage(&mut self, amount: u8) -> bool;
     fn roll(&self, roll_type: RollType) -> u8;
     fn do_move(&mut self, pos: utils::Position) -> BotResult<()>;

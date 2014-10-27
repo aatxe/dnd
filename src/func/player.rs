@@ -245,6 +245,9 @@ impl <'a> Functionality for LookUpPlayer<'a> {
         } else if self.stat_str.unwrap().eq_ignore_ascii_case("feats") || self.stat_str.unwrap().eq_ignore_ascii_case("feat") {
             let s = format!("{} ({}): {}", p.username, self.target_str, p.feats);
             as_io(self.bot.send_privmsg(self.resp, s[]))
+        } else if self.stat_str.unwrap().eq_ignore_ascii_case("pos") || self.stat_str.unwrap().eq_ignore_ascii_case("position") {
+            let s = format!("{} ({}): {}", p.username, self.target_str, p.position());
+            as_io(self.bot.send_privmsg(self.resp, s[]))
         } else if let Some(x) = p.stats().get_stat(self.stat_str.unwrap()) {
             let s = format!("{} ({}): {}{} {}", p.identifier(), self.target_str, temp, x, self.stat_str.unwrap());
             as_io(self.bot.send_privmsg(self.resp, s[]))
@@ -496,6 +499,19 @@ mod test {
     }
 
     #[test]
+    fn lookup_query_success_position() {
+        let data = test_helper(":test!test@test PRIVMSG test :lookup test pos\r\n",
+            |world| {
+                world.add_game("Dungeons and Tests", "test", "#test");
+                let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
+                world.add_user("test", p);
+                Ok(())
+            }
+        ).unwrap();
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :test (test): Position(0, 0)\r\n")));
+    }
+
+    #[test]
     fn lookup_query_success_stat() {
         let data = test_helper(":test!test@test PRIVMSG test :lookup test health\r\n",
             |world| {
@@ -552,6 +568,19 @@ mod test {
             }
         ).unwrap();
         assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :test (test): []\r\n")));
+    }
+
+    #[test]
+    fn lookup_channel_success_position() {
+        let data = test_helper(":test!test@test PRIVMSG #test :.lookup test pos\r\n",
+            |world| {
+                world.add_game("Dungeons and Tests", "test", "#test");
+                let p = Player::create_test("test", "test", 20, 30, 12, 12, 12, 12, 12, 12);
+                world.add_user("test", p);
+                Ok(())
+            }
+        ).unwrap();
+        assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG #test :test (test): Position(0, 0)\r\n")));
     }
 
     #[test]

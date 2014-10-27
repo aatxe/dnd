@@ -1,3 +1,4 @@
+use std::ascii::AsciiExt;
 use data::{BotResult, Entity, Propagated, as_io};
 use data::monster::Monster;
 use data::utils::str_to_u8;
@@ -95,6 +96,9 @@ impl <'a> Functionality for LookUpMonster<'a> {
         };
         if self.stat_str.is_none() {
             let s = format!("{} ({}): {}{}", target.identifier(), self.target_str, temp, target.stats());
+            as_io(self.bot.send_privmsg(self.user, s[]))
+        } else if self.stat_str.unwrap().eq_ignore_ascii_case("pos") || self.stat_str.unwrap().eq_ignore_ascii_case("position") {
+            let s = format!("{} ({}): {}", target.identifier(), self.target_str, target.position());
             as_io(self.bot.send_privmsg(self.user, s[]))
         } else if let Some(x) = target.stats().get_stat(self.stat_str.unwrap()) {
             let s = format!("{} ({}): {}{} {}", target.identifier(), self.target_str, temp, x, self.stat_str.unwrap());
@@ -216,5 +220,18 @@ mod test {
             }
         ).unwrap();
         assert_eq!(String::from_utf8(data), Ok(format!("PRIVMSG test :Test (@0): Temp. 20 health\r\n")));
+    }
+
+    #[test]
+    fn look_up_position() {
+        let data = test_helper(":test!test@test PRIVMSG test :mlookup #test @0 pos\r\n",
+            |world| {
+                world.add_game("Test", "test", "#test");
+                world.add_monster(Monster::create("Test", 20, 30, 12, 12, 12, 12, 12, 12), "#test");
+                Ok(())
+            }
+        ).unwrap();
+        let exp = String::from_str("PRIVMSG test :Test (@0): Position(0, 0)\r\n");
+        assert_eq!(String::from_utf8(data), Ok(exp));
     }
 }
