@@ -115,10 +115,7 @@ fn tokenize(line: &str) -> BotResult<Vec<String>> {
 pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&str], world: &mut World) -> IoResult<()> where T: IrcWriter, U: IrcReader {
     match (command, args) {
         ("PRIVMSG", [chan, msg]) => {
-            let user = match source.find('!') {
-                Some(i) => source[..i],
-                None => "",
-            };
+            let user = source.find('!').map_or("", |i| source[..i]);
             let tokens_vals = match tokenize(msg) {
                 Err(InvalidInput(msg)) => return bot.send_privmsg(user, msg[]),
                 Err(_) => return bot.send_privmsg(user, "Something went seriously wrong."),
