@@ -158,9 +158,7 @@ pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args
             };
             if let Err(Propagated(resp, msg)) = func {
                 try!(bot.send_privmsg(resp[], msg[]));
-            } else if func.is_err() {
-                ()
-            } else if let Err(Propagated(resp, msg)) = func.unwrap().do_func() {
+            } else if let Err(Propagated(resp, msg)) = func.and_then(|mut f| f.do_func()) {
                 try!(bot.send_privmsg(resp[], msg[]));
             }
         },
