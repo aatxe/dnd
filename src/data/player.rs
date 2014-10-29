@@ -1,5 +1,5 @@
-use std::io::fs::File;
-use std::io::{InvalidInput, IoError, IoResult};
+use std::io::fs::{File, mkdir_recursive};
+use std::io::{FilePermission, InvalidInput, IoError, IoResult};
 use std::rand::task_rng;
 use std::rand::distributions::{IndependentSample, Range};
 use data::{BotResult, Entity, RollType, as_io};
@@ -50,7 +50,8 @@ impl Player {
     }
 
     pub fn load(username: &str) -> IoResult<Player> {
-        let mut path = String::from_str(username);
+        let mut path = "users/".into_string();
+        path.push_str(username);
         path.push_str(".json");
         let mut file = try!(File::open(&Path::new(path[])));
         let data = try!(file.read_to_string());
@@ -62,7 +63,9 @@ impl Player {
     }
 
     pub fn save(&self) -> IoResult<()> {
-        let mut path = self.username.clone();
+        let mut path = "users/".into_string();
+        try!(mkdir_recursive(&Path::new(path[]), FilePermission::all()));
+        path.push_str(self.username[]);
         path.push_str(".json");
         let mut f = File::create(&Path::new(path[]));
         f.write_str(encode(self)[])
