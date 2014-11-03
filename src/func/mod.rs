@@ -216,25 +216,47 @@ mod utils {
 #[cfg(test)]
 mod test {
     use super::process_world;
+    use std::collections::HashMap;
     use std::io::{MemReader, MemWriter};
     use data::{BotResult, Propagated, as_io};
     use data::world::World;
-    use irc::Bot;
-    use irc::bot::IrcBot;
     use irc::conn::Connection;
+    use irc::data::Config;
+    use irc::server::{IrcServer, Server};
+    use irc::server::utils::Wrapper;
 
     pub fn test_helper(input: &str, world_hook: |&mut World| -> BotResult<()>) -> BotResult<String> {
         let mut world = World::new();
         try!(world_hook(&mut world));
-        let mut bot = try!(as_io(
-            IrcBot::from_connection(try!(as_io(
-                Connection::new(MemWriter::new(), MemReader::new(input.as_bytes().to_vec()))
-            )), |bot, source, command, args| {
-                process_world(bot, source, command, args, &mut world)
-            })
-        ));
-        try!(as_io(bot.output()));
-        Ok(String::from_utf8(bot.conn.writer().deref().get_ref().to_vec()).unwrap())
+        let server = IrcServer::from_connection(Config {
+            owners: vec!["test".into_string()],
+            nickname: "test".into_string(),
+            username: "test".into_string(),
+            realname: "test".into_string(),
+            password: String::new(),
+            server: "irc.fyrechat.net".into_string(),
+            port: 6667,
+            channels: vec!["#test".into_string(), "#test2".into_string()],
+            options: {
+                let mut map = HashMap::new();
+                map.insert("oper-pass".into_string(), "test".into_string());
+                map
+            }
+        }, try!(as_io(
+            Connection::new(MemWriter::new(), MemReader::new(input.as_bytes().to_vec()))
+        )));
+        for message in server.iter() {
+            println!("{}", message);
+            let mut args = Vec::new();
+            let msg_args: Vec<_> = message.args.iter().map(|s| s[]).collect();
+            args.push_all(msg_args[]);
+            if let Some(ref suffix) = message.suffix {
+                args.push(suffix[])
+            }
+            let source = message.prefix.unwrap_or(String::new());
+            process_world(&Wrapper::new(&server), source[], message.command[], args[], &mut world).unwrap();
+        }
+        Ok(String::from_utf8(server.conn().writer().get_ref().to_vec()).unwrap())
     }
 
     #[test]
@@ -255,7 +277,7 @@ mod test {
             assert_eq!(left, format!("test"))
             assert_eq!(right, format!("There is no game in #test."))
         } else {
-            fail!("permissions_test(...) returned an unexpected error type.");
+            panic!("permissions_test(...) returned an unexpected error type.");
         }
     }
 
@@ -269,7 +291,7 @@ mod test {
             assert_eq!(left, format!("test2"))
             assert_eq!(right, format!("You must be the DM to do that!"))
         } else {
-            fail!("permissions_test(...) returned an unexpected error type.");
+            panic!("permissions_test(...) returned an unexpected error type.");
         }
     }
 
@@ -287,7 +309,7 @@ mod test {
             assert_eq!(left, format!("test"))
             assert_eq!(right, format!("Incorrect format for a. Format is:\r\na b c"))
         } else {
-            fail!("incorrect_format(...) returned an unexpected error type.");
+            panic!("incorrect_format(...) returned an unexpected error type.");
         }
     }
 
