@@ -5,8 +5,8 @@ extern crate irc;
 extern crate serialize;
 
 use data::world::World;
-use irc::Bot;
-use irc::bot::IrcBot;
+use irc::server::{IrcServer, Server};
+use irc::server::utils::Wrapper;
 
 mod data;
 mod func;
@@ -14,9 +14,17 @@ mod func;
 #[cfg(not(test))]
 fn main() {
     let mut world = World::new();
-    let mut bot = IrcBot::new(|bot, source, command, args| {
-        func::process_world(bot, source, command, args, &mut world)
-    }).unwrap();
-    bot.identify().unwrap();
-    bot.output().unwrap();
+    let mut server = IrcServer::new("config.json").unwrap();
+    for message in server.iter() {
+        println!("{}", message.into_string());
+        let mut args = Vec::new();
+        let msg_args: Vec<_> = message.args.iter().map(|s| s[]).collect();
+        args.push_all(msg_args[]);
+        if let Some(ref suffix) = message.suffix {
+            args.push(suffix[])
+        }
+        let source = message.prefix.unwrap_or(String::new());
+        func::process_world(&Wrapper::new(&server), source[], message.command[], args[],
+                            &mut world).unwrap();
+    }
 }

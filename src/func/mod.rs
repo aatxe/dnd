@@ -7,9 +7,9 @@ use self::world::{Create, PrivateRoll, SaveAll};
 use std::io::IoResult;
 use data::{BotResult, InvalidInput, NotFound, Propagated, as_io};
 use data::world::World;
-use irc::Bot;
-use irc::bot::IrcBot;
-use irc::data::{IrcReader, IrcWriter};
+use irc::data::kinds::{IrcReader, IrcWriter};
+use irc::server::Server;
+use irc::server::utils::Wrapper;
 
 pub mod entity;
 pub mod monster;
@@ -21,14 +21,14 @@ pub trait Functionality {
     fn format() -> String;
 }
 
-pub struct Help<'a> {
-    bot: &'a Bot + 'a,
+pub struct Help<'a, T, U> where T: IrcWriter, U: IrcReader {
+    bot: &'a Wrapper<'a, T, U>,
     resp: &'a str,
     cmd: Option<&'a str>,
 }
 
-impl <'a> Help<'a> {
-    pub fn new(bot: &'a Bot, resp: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T, U> Help<'a, T, U> where T: IrcWriter, U: IrcReader {
+    pub fn new(bot: &'a Wrapper<'a, T, U>, resp: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 1 && args.len() != 2 { return Err(utils::incorrect_format(resp, "help", "[command]")); }
         Ok(box Help { bot: bot, resp: resp,
                       cmd: if args.len() == 2 { Some(args[1]) } else { None }
@@ -36,7 +36,7 @@ impl <'a> Help<'a> {
     }
 }
 
-impl <'a> Functionality for Help<'a> {
+impl<'a, T, U> Functionality for Help<'a, T, U> where T: IrcWriter, U: IrcReader {
     fn do_func(&mut self) -> BotResult<()> {
         if let Some(cmd) = self.cmd {
             // FIXME: Replace this when universal function call syntax is released.
@@ -112,7 +112,7 @@ fn tokenize(line: &str) -> BotResult<Vec<String>> {
     }
 }
 
-pub fn process_world<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&str], world: &mut World) -> IoResult<()> where T: IrcWriter, U: IrcReader {
+pub fn process_world<T, U>(bot: &Wrapper<T, U>, source: &str, command: &str, args: &[&str], world: &mut World) -> IoResult<()> where T: IrcWriter, U: IrcReader {
     match (command, args) {
         ("PRIVMSG", [chan, msg]) => {
             let user = source.find('!').map_or("", |i| source[..i]);
@@ -172,7 +172,7 @@ mod utils {
     use data::utils::str_to_u8;
     use data::world::World;
 
-    pub fn get_target<'a>(maybe: &str, fallback: &str, resp: &str, chan: &str, world: &'a mut World) -> BotResult<&'a mut Entity + 'a> {
+    pub fn get_target<'a, T, U>(maybe: &str, fallback: &str, resp: &str, chan: &str, world: &'a mut World) -> BotResult<&'a mut Entity + 'a> {
         let (res, err) = if maybe.starts_with("@") {
             if let Err(perm) = permissions_test(fallback, chan, world) { return Err(perm); }
             (world.get_entity(maybe, Some(chan)), format!("{} is not a valid monster.", maybe))

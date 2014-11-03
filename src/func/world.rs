@@ -4,24 +4,26 @@ use data::utils::join_from;
 use data::world::World;
 use func::Functionality;
 use func::utils::incorrect_format;
-use irc::Bot;
+use irc::data::kinds::{IrcReader, IrcWriter};
+use irc::server::Server;
+use irc::server::utils::Wrapper;
 
-pub struct Create<'a> {
-    bot: &'a Bot + 'a,
+pub struct Create<'a, T, U> where T: IrcWriter, U: IrcReader {
+    bot: &'a Wrapper<'a, T, U>,
     user: &'a str,
     world: &'a mut World,
     chan: &'a str,
     title: String,
 }
 
-impl <'a> Create<'a> {
-    pub fn new(bot: &'a Bot, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T, U> Create<'a, T, U> where T: IrcWriter, U: IrcReader {
+    pub fn new(bot: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if args.len() < 3 { return Err(incorrect_format(user, "create", "channel campaign name")); }
         Ok(box Create { bot: bot, user: user, world: world, chan: args[1], title: join_from(args, 2) } as Box<Functionality>)
     }
 }
 
-impl <'a> Functionality for Create<'a> {
+impl<'a, T, U> Functionality for Create<'a, T, U> where T: IrcWriter, U: IrcReader {
     fn do_func(&mut self) -> BotResult<()> {
         if self.world.game_exists(self.chan) {
             return Err(Propagated(
@@ -42,18 +44,18 @@ impl <'a> Functionality for Create<'a> {
     }
 }
 
-pub struct PrivateRoll<'a> {
-    bot: &'a Bot + 'a,
+pub struct PrivateRoll<'a, T, U> where T: IrcWriter, U: IrcReader {
+    bot: &'a Wrapper<'a, T, U>,
     user: &'a str,
 }
 
-impl <'a> PrivateRoll<'a> {
-    pub fn new(bot: &'a Bot, user: &'a str) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T, U> PrivateRoll<'a, T, U> where T: IrcWriter, U: IrcReader {
+    pub fn new(bot: &'a Wrapper<'a, T, U>, user: &'a str) -> BotResult<Box<Functionality + 'a>> {
         Ok(box PrivateRoll { bot: bot, user: user } as Box<Functionality>)
     }
 }
 
-impl <'a> Functionality for PrivateRoll<'a> {
+impl<'a, T, U> Functionality for PrivateRoll<'a, T, U> where T: IrcWriter, U: IrcReader {
     fn do_func(&mut self) -> BotResult<()> {
         as_io(self.bot.send_privmsg(self.user, format!("You rolled {}.", Game::roll())[]))
     }
@@ -63,14 +65,14 @@ impl <'a> Functionality for PrivateRoll<'a> {
     }
 }
 
-pub struct SaveAll<'a> {
-    bot: &'a Bot + 'a,
+pub struct SaveAll<'a, T, U> where T: IrcWriter, U: IrcReader {
+    bot: &'a Wrapper<'a, T, U>,
     user: &'a str,
     world: &'a World,
 }
 
-impl <'a> SaveAll<'a> {
-    pub fn new(bot: &'a Bot, user: &'a str, world: &'a World) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T, U> SaveAll<'a, T, U> where T: IrcWriter, U: IrcReader {
+    pub fn new(bot: &'a Wrapper<'a, T, U>, user: &'a str, world: &'a World) -> BotResult<Box<Functionality + 'a>> {
         if !bot.config().is_owner(user) {
             Err(Propagated(format!("{}", user), format!("You must own the bot to do that!")))
         } else {
@@ -79,7 +81,7 @@ impl <'a> SaveAll<'a> {
     }
 }
 
-impl <'a> Functionality for SaveAll<'a> {
+impl<'a, T, U> Functionality for SaveAll<'a, T, U> where T: IrcWriter, U: IrcReader {
     fn do_func(&mut self) -> BotResult<()> {
         try!(as_io(self.world.save_all()));
         as_io(self.bot.send_privmsg(self.user, "The world has been saved."))
