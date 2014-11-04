@@ -42,7 +42,7 @@ impl World {
     pub fn get_user(&mut self, nickname: &str) -> BotResult<&mut Player> {
         let nick = String::from_str(nickname);
         if self.users.contains_key(&nick) {
-            Ok(self.users.get_mut(&nick))
+            Ok(&mut self.users[nick])
         } else {
             Err(NotFound(String::from_str("User not found.")))
         }
@@ -60,7 +60,7 @@ impl World {
     pub fn get_game(&mut self, chan: &str) -> BotResult<&mut Game> {
         let ch = String::from_str(chan);
         if self.games.contains_key(&ch) {
-            Ok(self.games.get_mut(&ch))
+            Ok(&mut self.games[ch])
         } else {
             Err(NotFound(String::from_str("Game not found.")))
         }
@@ -87,8 +87,8 @@ impl World {
             };
             if chan.is_some() {
                 let chan_str = String::from_str(chan.unwrap());
-                if self.monsters.contains_key(&chan_str) && i < self.monsters.get_mut(&chan_str).len() {
-                    Ok(self.monsters.get_mut(&chan_str).get_mut(i) as &mut Entity)
+                if self.monsters.contains_key(&chan_str) && i < self.monsters[chan_str].len() {
+                    Ok(&mut self.monsters[chan_str][i] as &mut Entity)
                 } else {
                     Err(NotFound(String::from_str("No such monster.")))
                 }
@@ -102,7 +102,7 @@ impl World {
         } else {
             let nick = String::from_str(identifier);
             if self.users.contains_key(&nick) {
-                Ok(self.users.get_mut(&nick) as &mut Entity)
+                Ok(&mut self.users[nick] as &mut Entity)
             } else {
                 Err(NotFound(String::from_str("User not found.")))
             }

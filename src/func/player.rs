@@ -6,7 +6,6 @@ use data::world::World;
 use func::Functionality;
 use func::utils::{incorrect_format, validate_from};
 use irc::data::kinds::{IrcReader, IrcWriter};
-use irc::server::Server;
 use irc::server::utils::Wrapper;
 
 pub struct Register<'a, T, U> where T: IrcWriter, U: IrcReader {

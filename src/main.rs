@@ -14,7 +14,7 @@ mod func;
 #[cfg(not(test))]
 fn main() {
     let mut world = World::new();
-    let mut server = IrcServer::new("config.json").unwrap();
+    let server = IrcServer::new("config.json").unwrap();
     for message in server.iter() {
         println!("{}", message.into_string());
         let mut args = Vec::new();
@@ -24,7 +24,8 @@ fn main() {
             args.push(suffix[])
         }
         let source = message.prefix.unwrap_or(String::new());
+        let mut token_store = Vec::new();
         func::process_world(&Wrapper::new(&server), source[], message.command[], args[],
-                            &mut world).unwrap();
+                            &mut token_store, &mut world).unwrap();
     }
 }

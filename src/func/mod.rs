@@ -83,9 +83,8 @@ impl<'a, T, U> Functionality for Help<'a, T, U> where T: IrcWriter, U: IrcReader
     }
 }
 
-fn tokenize(line: &str) -> BotResult<Vec<String>> {
+fn tokenize<'a>(line: &'a str, vec: &'a mut Vec<String>) -> BotResult<Vec<&'a str>> {
     /* FIXME: tokenizer removes multiple spaces in quoted tokens */
-    let mut ret = Vec::new();
     let mut flag = false;
     let mut s = String::new();
     for token in line.split_str(" ") {
@@ -96,33 +95,32 @@ fn tokenize(line: &str) -> BotResult<Vec<String>> {
         } else if flag {
             s.push_str(token);
             if token.ends_with("\"") {
-                ret.push(s[1..s.len() - 1].into_string());
+                vec.push(s[1..s.len() - 1].into_string());
                 s = String::new();
                 flag = false;
             } else {
                 s.push_str(" ");
             }
         } else {
-            ret.push(token.into_string());
+            vec.push(token.into_string());
         }
     }
     if s.len() != 0 {
         Err(InvalidInput("Could not tokenize malformed arguments.".into_string()))
     } else {
-        Ok(ret)
+        Ok(vec.iter().map(|s| s[]).collect())
     }
 }
 
-pub fn process_world<'a, T, U>(bot: &'a Wrapper<'a, T, U>, source: &'a str, command: &str, args: &[&str], world: &'a mut World) -> IoResult<()> where T: IrcWriter, U: IrcReader {
+pub fn process_world<'a, T, U>(bot: &'a Wrapper<'a, T, U>, source: &'a str, command: &str, args: &[&'a str], token_store: &'a mut Vec<String>, world: &'a mut World) -> IoResult<()> where T: IrcWriter, U: IrcReader {
     match (command, args) {
         ("PRIVMSG", [chan, msg]) => {
             let user = source.find('!').map_or("", |i| source[..i]);
-            let tokens_vals = match tokenize(msg) {
+            let tokens = match tokenize(msg, token_store) {
                 Err(InvalidInput(msg)) => return bot.send_privmsg(user, msg[]),
                 Err(_) => return bot.send_privmsg(user, "Something went seriously wrong."),
                 Ok(tokens) => tokens,
             };
-            let tokens: Vec<_> = tokens_vals.iter().map(|string| string[]).collect();
             let func = if !chan.starts_with("#") {
                 match tokens[0] {
                     "register" => Register::new(bot, user, tokens),
@@ -255,19 +253,21 @@ mod test {
                 args.push(suffix[])
             }
             let source = message.prefix.unwrap_or(String::new());
-            process_world(&Wrapper::new(&server), source[], message.command[], args[], &mut world).unwrap();
+            let mut token_store = Vec::new();
+            process_world(&Wrapper::new(&server), source[], message.command[], args[], &mut token_store, &mut world).unwrap();
         }
         Ok(String::from_utf8(server.conn().writer().get_ref().to_vec()).unwrap())
     }
 
     #[test]
     fn tokenize() {
-        assert_eq!(super::tokenize("a bb ccc"), Ok(vec!(format!("a"), format!("bb"), format!("ccc"))));
-        assert_eq!(super::tokenize("ab 3 ca"), Ok(vec!(format!("ab"), format!("3"), format!("ca"))));
-        assert_eq!(super::tokenize("\"a b c\" d"), Ok(vec!(format!("a b c"), format!("d"))));
-        assert_eq!(super::tokenize("e \"a b c\" d"), Ok(vec!(format!("e"), format!("a b c"), format!("d"))));
-        assert!(super::tokenize("\"a b c d").is_err());
-        assert!(super::tokenize("a \"b \"c d").is_err());
+        let mut store = Vec::new();
+        assert_eq!(super::tokenize("a bb ccc", &mut store), Ok(vec!("a", "bb", "ccc")));
+        assert_eq!(super::tokenize("ab 3 ca", &mut store), Ok(vec!("ab", "3", "ca")));
+        assert_eq!(super::tokenize("\"a b c\" d", &mut store), Ok(vec!("a b c", "d")));
+        assert_eq!(super::tokenize("e \"a b c\" d", &mut store), Ok(vec!("e", "a b c", "d")));
+        assert!(super::tokenize("\"a b c d", &mut store).is_err());
+        assert!(super::tokenize("a \"b \"c d", &mut store).is_err());
     }
 
     #[test]
