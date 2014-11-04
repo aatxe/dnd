@@ -217,7 +217,7 @@ mod test {
     use super::process_world;
     use std::collections::HashMap;
     use std::io::{MemReader, MemWriter};
-    use data::{BotResult, Propagated, as_io};
+    use data::{BotResult, Propagated};
     use data::world::World;
     use irc::conn::Connection;
     use irc::data::Config;
@@ -241,9 +241,7 @@ mod test {
                 map.insert("oper-pass".into_string(), "test".into_string());
                 map
             }
-        }, try!(as_io(
-            Connection::new(MemWriter::new(), MemReader::new(input.as_bytes().to_vec()))
-        )));
+        }, Connection::new(MemWriter::new(), MemReader::new(input.as_bytes().to_vec()))).unwrap();
         for message in server.iter() {
             println!("{}", message);
             let mut args = Vec::new();
@@ -263,10 +261,15 @@ mod test {
     fn tokenize() {
         let mut store = Vec::new();
         assert_eq!(super::tokenize("a bb ccc", &mut store), Ok(vec!("a", "bb", "ccc")));
+        store = Vec::new();
         assert_eq!(super::tokenize("ab 3 ca", &mut store), Ok(vec!("ab", "3", "ca")));
+        store = Vec::new();
         assert_eq!(super::tokenize("\"a b c\" d", &mut store), Ok(vec!("a b c", "d")));
+        store = Vec::new();
         assert_eq!(super::tokenize("e \"a b c\" d", &mut store), Ok(vec!("e", "a b c", "d")));
+        store = Vec::new();
         assert!(super::tokenize("\"a b c d", &mut store).is_err());
+        store = Vec::new();
         assert!(super::tokenize("a \"b \"c d", &mut store).is_err());
     }
 

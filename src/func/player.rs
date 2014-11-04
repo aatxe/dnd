@@ -351,7 +351,7 @@ mod test {
             }
         ).unwrap();
         let mut exp = String::from_str("PRIVMSG test :Login successful.\r\n");
-        exp.push_str("INVITE test :#test\r\n");
+        exp.push_str("INVITE test #test\r\n");
         assert_eq!(data, exp);
     }
 

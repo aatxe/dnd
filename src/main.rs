@@ -4,9 +4,9 @@ extern crate crypto;
 extern crate irc;
 extern crate serialize;
 
-use data::world::World;
-use irc::server::{IrcServer, Server};
-use irc::server::utils::Wrapper;
+#[cfg(not(test))] use data::world::World;
+#[cfg(not(test))] use irc::server::{IrcServer, Server};
+#[cfg(not(test))] use irc::server::utils::Wrapper;
 
 mod data;
 mod func;
