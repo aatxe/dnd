@@ -244,9 +244,7 @@ mod test {
         }, Connection::new(MemWriter::new(), MemReader::new(input.as_bytes().to_vec()))).unwrap();
         for message in server.iter() {
             println!("{}", message);
-            let mut args = Vec::new();
-            let msg_args: Vec<_> = message.args.iter().map(|s| s[]).collect();
-            args.push_all(msg_args[]);
+            let mut args: Vec<_> = message.args.iter().map(|s| s[]).collect();
             if let Some(ref suffix) = message.suffix {
                 args.push(suffix[])
             }
