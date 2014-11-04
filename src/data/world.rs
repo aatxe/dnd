@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::collections::hashmap::{Occupied, Vacant};
+use std::collections::hash_map::{Occupied, Vacant};
 use std::io::{InvalidInput, IoError, IoResult};
 use data::{BotResult, Entity, Io, NotFound, as_io};
 use data::game::Game;

@@ -32,7 +32,7 @@ impl<'a, T, U> Functionality for Create<'a, T, U> where T: IrcWriter, U: IrcRead
         }
         try!(as_io(self.bot.send_join(self.chan)));
         try!(as_io(self.bot.send_topic(self.chan, self.title[])));
-        try!(as_io(self.bot.send_mode(self.chan, "+i")));
+        try!(as_io(self.bot.send_mode(self.chan, "+i", "")));
         self.world.add_game(self.title[], self.user, self.chan);
         let s = format!("Campaign created named {}.", self.title);
         try!(as_io(self.bot.send_privmsg(self.user, s[])));
