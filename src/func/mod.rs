@@ -246,7 +246,7 @@ mod test {
                 map.insert("oper-pass".into_string(), "test".into_string());
                 map
             }
-        }, Connection::new(MemWriter::new(), MemReader::new(input.as_bytes().to_vec()))).unwrap();
+        }, Connection::new(MemWriter::new(), MemReader::new(input.as_bytes().to_vec())));
         for message in server.iter() {
             println!("{}", message);
             let mut args: Vec<_> = message.args.iter().map(|s| s[]).collect();
