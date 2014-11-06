@@ -161,6 +161,11 @@ pub fn process_world<'a, T, U>(bot: &'a Wrapper<'a, T, U>, source: &'a str, comm
                 try!(bot.send_privmsg(resp[], msg[]));
             }
         },
+        ("NOTICE", [_, suffix]) => {
+            if suffix.starts_with("***") {
+                try!(bot.identify());
+            }
+        }
         _ => (),
     }
     Ok(())
