@@ -7,7 +7,7 @@ use self::world::{Create, PrivateRoll, SaveAll};
 use std::io::IoResult;
 use data::{BotResult, InvalidInput, NotFound, Propagated, as_io};
 use data::world::World;
-use irc::data::kinds::{IrcReader, IrcWriter};
+use irc::data::kinds::IrcStream;
 use irc::server::Server;
 use irc::server::utils::Wrapper;
 
@@ -21,14 +21,14 @@ pub trait Functionality {
     fn format() -> String;
 }
 
-pub struct Help<'a, T, U> where T: IrcWriter, U: IrcReader {
-    bot: &'a Wrapper<'a, T, U>,
+pub struct Help<'a, T> where T: IrcStream {
+    bot: &'a Wrapper<'a, T>,
     resp: &'a str,
     cmd: Option<&'a str>,
 }
 
-impl<'a, T, U> Help<'a, T, U> where T: IrcWriter, U: IrcReader {
-    pub fn new(bot: &'a Wrapper<'a, T, U>, resp: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T> Help<'a, T> where T: IrcStream {
+    pub fn new(bot: &'a Wrapper<'a, T>, resp: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 1 && args.len() != 2 { return Err(utils::incorrect_format(resp, "help", "[command]")); }
         Ok(box Help { bot: bot, resp: resp,
                       cmd: if args.len() == 2 { Some(args[1]) } else { None }
@@ -36,7 +36,7 @@ impl<'a, T, U> Help<'a, T, U> where T: IrcWriter, U: IrcReader {
     }
 }
 
-impl<'a, T, U> Functionality for Help<'a, T, U> where T: IrcWriter, U: IrcReader {
+impl<'a, T> Functionality for Help<'a, T> where T: IrcStream {
     fn do_func(&mut self) -> BotResult<()> {
         if let Some(cmd) = self.cmd {
             // FIXME: Replace this when universal function call syntax is released.
@@ -112,7 +112,7 @@ fn tokenize<'a>(line: &'a str, vec: &'a mut Vec<String>) -> BotResult<Vec<&'a st
     }
 }
 
-pub fn process_world<'a, T, U>(bot: &'a Wrapper<'a, T, U>, source: &'a str, command: &str, args: &[&'a str], token_store: &'a mut Vec<String>, world: &'a mut World) -> IoResult<()> where T: IrcWriter, U: IrcReader {
+pub fn process_world<'a, T>(bot: &'a Wrapper<'a, T>, source: &'a str, command: &str, args: &[&'a str], token_store: &'a mut Vec<String>, world: &'a mut World) -> IoResult<()> where T: IrcStream {
     match (command, args) {
         ("PRIVMSG", [chan, msg]) => {
             let user = source.find('!').map_or("", |i| source[..i]);
@@ -224,7 +224,7 @@ mod test {
     use std::io::{MemReader, MemWriter};
     use data::{BotResult, Propagated};
     use data::world::World;
-    use irc::conn::Connection;
+    use irc::conn::{Connection, IoStream};
     use irc::data::Config;
     use irc::server::{IrcServer, Server};
     use irc::server::utils::Wrapper;
@@ -240,13 +240,14 @@ mod test {
             password: String::new(),
             server: "irc.fyrechat.net".into_string(),
             port: 6667,
+            use_ssl: false,
             channels: vec!["#test".into_string(), "#test2".into_string()],
             options: {
                 let mut map = HashMap::new();
                 map.insert("oper-pass".into_string(), "test".into_string());
                 map
             }
-        }, Connection::new(MemWriter::new(), MemReader::new(input.as_bytes().to_vec())));
+        }, Connection::new(IoStream::new(MemWriter::new(), MemReader::new(input.as_bytes().to_vec()))));
         for message in server.iter() {
             println!("{}", message);
             let mut args: Vec<_> = message.args.iter().map(|s| s[]).collect();
@@ -257,7 +258,7 @@ mod test {
             let mut token_store = Vec::new();
             process_world(&Wrapper::new(&server), source[], message.command[], args[], &mut token_store, &mut world).unwrap();
         }
-        Ok(String::from_utf8(server.conn().writer().get_ref().to_vec()).unwrap())
+        Ok(String::from_utf8(server.conn().stream().value()).unwrap())
     }
 
     #[test]
