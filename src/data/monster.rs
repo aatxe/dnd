@@ -1,7 +1,8 @@
 use std::rand::task_rng;
 use std::rand::distributions::{IndependentSample, Range};
-use data::{BotResult, Entity, InvalidInput, RollType};
-use data::{Basic, Strength, Dexterity, Constitution, Wisdom, Intellect, Charisma};
+use data::{BotResult, Entity, RollType};
+use data::BotError::InvalidInput;
+use data::RollType::{Basic, Strength, Dexterity, Constitution, Wisdom, Intellect, Charisma};
 use data::stats::Stats;
 use data::utils::Position;
 
@@ -70,7 +71,7 @@ impl Entity for Monster {
             self.position = pos;
             Ok(())
         } else {
-            Err(super::InvalidInput(
+            Err(InvalidInput(
                 format!("{} can move at most {} spaces in a turn.",
                         self.identifier(), self.stats().movement / 5)
             ))

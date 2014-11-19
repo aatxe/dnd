@@ -9,8 +9,9 @@ pub mod stats;
 pub mod world;
 
 pub mod utils {
-    use super::{BotResult, InvalidInput};
-    use std::num::{from_f32, pow};
+    use super::{BotResult};
+    use super::BotError::InvalidInput;
+    use std::num::{Float, from_f32, pow};
 
     #[deriving(Decodable, Encodable, Show, PartialEq, Clone)]
     pub struct Position(pub int, pub int);
@@ -80,11 +81,11 @@ pub enum BotError {
 impl Show for BotError {
     fn fmt(&self, fmt: &mut Formatter) -> Result<(), FormatError> {
         match self {
-            &InvalidInput(ref s) => s.fmt(fmt),
-            &Io(ref io_err) => io_err.fmt(fmt),
-            &NotFound(ref s) => s.fmt(fmt),
-            &PasswordIncorrect => "Password incorrect.".fmt(fmt),
-            &Propagated(ref s, ref v) => {
+            &BotError::InvalidInput(ref s) => s.fmt(fmt),
+            &BotError::Io(ref io_err) => io_err.fmt(fmt),
+            &BotError::NotFound(ref s) => s.fmt(fmt),
+            &BotError::PasswordIncorrect => "Password incorrect.".fmt(fmt),
+            &BotError::Propagated(ref s, ref v) => {
                 try!(s.fmt(fmt));
                 v.fmt(fmt)
             }
@@ -96,7 +97,7 @@ pub fn as_io<T>(res: IoResult<T>) -> BotResult<T> {
     if res.is_ok() {
         Ok(res.unwrap())
     } else {
-        Err(Io(res.err().unwrap()))
+        Err(BotError::Io(res.err().unwrap()))
     }
 }
 
@@ -126,18 +127,18 @@ pub enum RollType {
 impl RollType {
     pub fn to_roll_type(roll_type: &str) -> Option<RollType> {
         match roll_type.to_ascii_lower()[] {
-            "strength" => Some(Strength),
-            "str" => Some(Strength),
-            "dexterity" => Some(Dexterity),
-            "dex" => Some(Dexterity),
-            "constitution" => Some(Constitution),
-            "con" => Some(Constitution),
-            "wisdom" => Some(Wisdom),
-            "wis" => Some(Wisdom),
-            "intellect" => Some(Intellect),
-            "int" => Some(Intellect),
-            "charisma" => Some(Charisma),
-            "cha" => Some(Charisma),
+            "strength" => Some(RollType::Strength),
+            "str" => Some(RollType::Strength),
+            "dexterity" => Some(RollType::Dexterity),
+            "dex" => Some(RollType::Dexterity),
+            "constitution" => Some(RollType::Constitution),
+            "con" => Some(RollType::Constitution),
+            "wisdom" => Some(RollType::Wisdom),
+            "wis" => Some(RollType::Wisdom),
+            "intellect" => Some(RollType::Intellect),
+            "int" => Some(RollType::Intellect),
+            "charisma" => Some(RollType::Charisma),
+            "cha" => Some(RollType::Charisma),
             _ => None,
         }
     }

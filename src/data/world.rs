@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 use std::collections::hash_map::{Occupied, Vacant};
 use std::io::{InvalidInput, IoError, IoResult};
-use data::{BotResult, Entity, Io, NotFound, as_io};
+use data::{BotResult, Entity, as_io};
+use data::BotError::{Io, NotFound};
 use data::game::Game;
 use data::monster::Monster;
 use data::player::Player;

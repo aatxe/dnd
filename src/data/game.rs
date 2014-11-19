@@ -5,7 +5,8 @@ use std::rand::distributions::{IndependentSample, Range};
 use crypto::sbuf::StdHeapAllocator;
 use crypto::sha3::{hash, Sha3_512};
 use data::player::Player;
-use data::{BotResult, PasswordIncorrect, as_io};
+use data::{BotResult, as_io};
+use data::BotError::PasswordIncorrect;
 use serialize::hex::ToHex;
 
 pub struct Game {

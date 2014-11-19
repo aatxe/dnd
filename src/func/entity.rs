@@ -1,4 +1,6 @@
-use data::{Basic, BotResult, Entity, InvalidInput, Propagated, RollType, as_io};
+use data::{BotResult, Entity, RollType, as_io};
+use data::BotError::{InvalidInput, Propagated};
+use data::RollType::Basic;
 use data::stats::Stats;
 use data::utils::{Position, str_to_u8};
 use data::world::World;

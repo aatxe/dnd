@@ -1,4 +1,5 @@
-use data::{BotResult, Propagated, as_io};
+use data::{BotResult, as_io};
+use data::BotError::Propagated;
 use data::game::Game;
 use data::utils::join_from;
 use data::world::World;

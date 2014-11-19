@@ -3,7 +3,7 @@ use std::io::{FilePermission, InvalidInput, IoError, IoResult};
 use std::rand::task_rng;
 use std::rand::distributions::{IndependentSample, Range};
 use data::{BotResult, Entity, RollType, as_io};
-use data::{Basic, Strength, Dexterity, Constitution, Wisdom, Intellect, Charisma};
+use data::RollType::{Basic, Strength, Dexterity, Constitution, Wisdom, Intellect, Charisma};
 use data::game::Game;
 use data::stats::Stats;
 use data::utils::Position;
@@ -119,7 +119,7 @@ impl Entity for Player {
             self.position = pos;
             Ok(())
         } else {
-            Err(super::InvalidInput(
+            Err(super::BotError::InvalidInput(
                 format!("You can move at most {} spaces in a turn.", self.stats().movement / 5)
             ))
         }

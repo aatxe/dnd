@@ -5,7 +5,8 @@ use self::monster::{AddMonster, LookUpMonster};
 use self::player::{AddFeat, AddUpdate, Login, Logout, LookUpPlayer, Register, Save};
 use self::world::{Create, PrivateRoll, SaveAll};
 use std::io::IoResult;
-use data::{BotResult, InvalidInput, NotFound, Propagated, as_io};
+use data::{BotResult, as_io};
+use data::BotError::{InvalidInput, NotFound, Propagated};
 use data::world::World;
 use irc::data::kinds::IrcStream;
 use irc::server::Server;
@@ -172,7 +173,8 @@ pub fn process_world<'a, T>(bot: &'a Wrapper<'a, T>, source: &'a str, command: &
 }
 
 mod utils {
-    use data::{BotError, BotResult, Entity, Propagated};
+    use data::{BotError, BotResult, Entity};
+    use data::BotError::Propagated;
     use data::utils::str_to_u8;
     use data::world::World;
 

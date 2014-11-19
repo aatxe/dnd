@@ -1,5 +1,6 @@
 use std::ascii::AsciiExt;
-use data::{BotResult, Entity, Propagated, as_io};
+use data::{BotResult, Entity, as_io};
+use data::BotError::Propagated;
 use data::monster::Monster;
 use data::utils::str_to_u8;
 use data::world::World;
