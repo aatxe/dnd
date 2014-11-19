@@ -151,7 +151,8 @@ impl Entity for Player {
 #[cfg(test)]
 mod test {
     use super::Player;
-    use data::{Entity, Basic, Dexterity, Constitution};
+    use data::Entity;
+    use data::RollType::{Basic, Dexterity, Constitution};
     use data::game::Game;
     use data::stats::Stats;
     use data::utils::Position;

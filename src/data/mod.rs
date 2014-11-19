@@ -148,7 +148,7 @@ impl RollType {
 #[cfg(test)]
 mod test {
     use super::RollType;
-    use super::{Strength, Wisdom, Intellect};
+    use super::RollType::{Strength, Wisdom, Intellect};
     use super::utils;
     use super::utils::Position;
     use std::io::{InvalidInput, IoError, IoResult};

@@ -224,7 +224,8 @@ mod test {
     use super::process_world;
     use std::collections::HashMap;
     use std::io::{MemReader, MemWriter};
-    use data::{BotResult, Propagated};
+    use data::{BotResult};
+    use data::BotError::Propagated;
     use data::world::World;
     use irc::conn::{Connection, IoStream};
     use irc::data::Config;

@@ -104,7 +104,8 @@ impl Entity for Monster {
 #[cfg(test)]
 mod test {
     use super::Monster;
-    use data::{Entity, Basic, Dexterity, Constitution};
+    use data::Entity;
+    use data::RollType::{Basic, Dexterity, Constitution};
     use data::stats::Stats;
     use data::utils::Position;
 
