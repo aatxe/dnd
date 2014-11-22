@@ -1,5 +1,5 @@
 use std::ascii::AsciiExt;
-use std::fmt::{FormatError, Formatter, Show};
+use std::fmt::{Error, Formatter, Show};
 use std::io::{IoError, IoResult};
 
 pub mod game;
@@ -11,7 +11,7 @@ pub mod world;
 pub mod utils {
     use super::{BotResult};
     use super::BotError::InvalidInput;
-    use std::num::{Float, from_f32, pow};
+    use std::num::{Float, Int, from_f32};
 
     #[deriving(Decodable, Encodable, Show, PartialEq, Clone)]
     pub struct Position(pub int, pub int);
@@ -20,7 +20,7 @@ pub mod utils {
         pub fn distance_sq(&self, rhs: &Position) -> int {
             let Position(x1, y1) = *self;
             let Position(x2, y2) = *rhs;
-            pow(y2 - y1, 2) + pow(x2 - x1, 2)
+            (y2 - y1).pow(2) + (x2 - x1).pow(2)
         }
 
         // FIXME: distance doesn't work the way we'd want it to.
@@ -79,7 +79,7 @@ pub enum BotError {
 }
 
 impl Show for BotError {
-    fn fmt(&self, fmt: &mut Formatter) -> Result<(), FormatError> {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
         match self {
             &BotError::InvalidInput(ref s) => s.fmt(fmt),
             &BotError::Io(ref io_err) => io_err.fmt(fmt),

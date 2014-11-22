@@ -35,7 +35,7 @@ impl Game {
 
     pub fn password_hash(password: &str) -> IoResult<String> {
         let mut data = [0u8, ..64];
-        try!(hash::<StdHeapAllocator>(Sha3_512, password.as_bytes(), data));
+        try!(hash::<StdHeapAllocator>(Sha3_512, password.as_bytes(), &mut data));
         Ok(data.to_hex())
     }
 
