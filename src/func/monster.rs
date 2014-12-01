@@ -6,11 +6,11 @@ use data::utils::str_to_u8;
 use data::world::World;
 use func::Functionality;
 use func::utils::{get_target, incorrect_format, permissions_test, validate_from};
-use irc::data::kinds::IrcStream;
+use irc::data::kinds::{IrcReader, IrcWriter};
 use irc::server::utils::Wrapper;
 
-pub struct AddMonster<'a, T> where T: IrcStream {
-    bot: &'a Wrapper<'a, T>,
+pub struct AddMonster<'a, T: IrcReader, U: IrcWriter> {
+    bot: &'a Wrapper<'a, T, U>,
     user: &'a str,
     world: &'a mut World,
     chan: &'a str, name: &'a str,
@@ -19,8 +19,8 @@ pub struct AddMonster<'a, T> where T: IrcStream {
     ws: u8, it: u8, ch: u8,
 }
 
-impl<'a, T> AddMonster<'a, T> where T: IrcStream {
-    pub fn new(bot: &'a Wrapper<'a, T>, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T: IrcReader, U: IrcWriter> AddMonster<'a, T, U> {
+    pub fn new(bot: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if let Err(perm) = permissions_test(user, args[1], world) {
             return Err(perm);
         } else if args.len() != 11 {
@@ -41,7 +41,7 @@ impl<'a, T> AddMonster<'a, T> where T: IrcStream {
     }
 }
 
-impl<'a, T> Functionality for AddMonster<'a, T> where T: IrcStream {
+impl<'a, T: IrcReader, U: IrcWriter> Functionality for AddMonster<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
         let m = Monster::create(self.name, self.health, self.movement, self.st, self.dx, self.cn,
                                 self.ws, self.it, self.ch);
@@ -55,8 +55,8 @@ impl<'a, T> Functionality for AddMonster<'a, T> where T: IrcStream {
     }
 }
 
-pub struct LookUpMonster<'a, T> where T: IrcStream {
-    bot: &'a Wrapper<'a, T>,
+pub struct LookUpMonster<'a, T: IrcReader, U: IrcWriter> {
+    bot: &'a Wrapper<'a, T, U>,
     user: &'a str,
     world: &'a mut World,
     chan: &'a str,
@@ -64,8 +64,8 @@ pub struct LookUpMonster<'a, T> where T: IrcStream {
     stat_str: Option<&'a str>,
 }
 
-impl<'a, T> LookUpMonster<'a, T> where T: IrcStream {
-    pub fn new(bot: &'a Wrapper<'a, T>, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T: IrcReader, U: IrcWriter> LookUpMonster<'a, T, U> {
+    pub fn new(bot: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 && args.len() != 4 {
             return Err(incorrect_format(user, "mlookup", "channel target [stat]"));
         } else if let Err(perm) = permissions_test(user, args[1], world) {
@@ -88,7 +88,7 @@ impl<'a, T> LookUpMonster<'a, T> where T: IrcStream {
     }
 }
 
-impl<'a, T> Functionality for LookUpMonster<'a, T> where T: IrcStream {
+impl<'a, T: IrcReader, U: IrcWriter> Functionality for LookUpMonster<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
         let target = try!(get_target(self.target_str, self.user, self.user, self.chan, self.world));
         let temp = if target.has_temp_stats() {
