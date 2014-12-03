@@ -12,7 +12,7 @@ use irc::server::utils::Wrapper;
 pub struct Roll<'a, T: IrcReader, U: IrcWriter> {
     bot: &'a Wrapper<'a, T, U>,
     chan: &'a str,
-    target: &'a Entity + 'a,
+    target: &'a (Entity + 'a),
     stat_str: Option<&'a str>,
     stat: Option<RollType>,
 }
@@ -59,7 +59,7 @@ pub struct Damage<'a, T: IrcReader, U: IrcWriter> {
     bot: &'a Wrapper<'a, T, U>,
     chan: &'a str,
     target_str: &'a str,
-    target: &'a mut Entity + 'a,
+    target: &'a mut (Entity + 'a),
     value: u8,
 }
 
@@ -103,7 +103,7 @@ pub struct SetTempStats<'a, T: IrcReader, U: IrcWriter> {
     bot: &'a Wrapper<'a, T, U>,
     chan: &'a str,
     target_str: &'a str,
-    target: &'a mut Entity + 'a,
+    target: &'a mut (Entity + 'a),
     health: u8, movement: u8,
     st: u8, dx: u8, cn: u8,
     ws: u8, it: u8, ch: u8,
@@ -149,7 +149,7 @@ pub struct ClearTempStats<'a, T: IrcReader, U: IrcWriter> {
     bot: &'a Wrapper<'a, T, U>,
     chan: &'a str,
     target_str: &'a str,
-    target: &'a mut Entity + 'a,
+    target: &'a mut (Entity + 'a),
 }
 
 impl<'a, T: IrcReader, U: IrcWriter> ClearTempStats<'a, T, U> {
@@ -185,7 +185,7 @@ pub struct Move<'a, T: IrcReader, U: IrcWriter> {
     bot: &'a Wrapper<'a, T, U>,
     chan: &'a str,
     target_str: &'a str,
-    target: &'a mut Entity + 'a,
+    target: &'a mut (Entity + 'a),
     position: Position,
 }
 

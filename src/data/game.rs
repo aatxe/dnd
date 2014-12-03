@@ -3,7 +3,7 @@ use std::io::IoResult;
 use std::rand::task_rng;
 use std::rand::distributions::{IndependentSample, Range};
 use crypto::sbuf::StdHeapAllocator;
-use crypto::sha3::{hash, Sha3_512};
+use crypto::sha3::{hash, Sha3Mode};
 use data::player::Player;
 use data::{BotResult, as_io};
 use data::BotError::PasswordIncorrect;
@@ -35,7 +35,7 @@ impl Game {
 
     pub fn password_hash(password: &str) -> IoResult<String> {
         let mut data = [0u8, ..64];
-        try!(hash::<StdHeapAllocator>(Sha3_512, password.as_bytes(), &mut data));
+        try!(hash::<StdHeapAllocator>(Sha3Mode::Sha3_512, password.as_bytes(), &mut data));
         Ok(data.to_hex())
     }
 

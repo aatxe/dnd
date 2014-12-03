@@ -180,7 +180,7 @@ mod utils {
     use data::utils::str_to_u8;
     use data::world::World;
 
-    pub fn get_target<'a>(maybe: &str, fallback: &str, resp: &str, chan: &str, world: &'a mut World) -> BotResult<&'a mut Entity + 'a> {
+    pub fn get_target<'a>(maybe: &str, fallback: &str, resp: &str, chan: &str, world: &'a mut World) -> BotResult<&'a mut (Entity + 'a)> {
         let (res, err) = if maybe.starts_with("@") {
             if let Err(perm) = permissions_test(fallback, chan, world) { return Err(perm); }
             (world.get_entity(maybe, Some(chan)), format!("{} is not a valid monster.", maybe))
