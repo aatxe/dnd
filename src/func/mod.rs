@@ -224,7 +224,7 @@ mod utils {
 #[cfg(test)]
 mod test {
     use super::process_world;
-    use std::collections::HashMap;
+    use std::default::Default;
     use std::io::{MemReader, MemWriter};
     use data::{BotResult};
     use data::BotError::Propagated;
@@ -238,20 +238,9 @@ mod test {
         let mut world = World::new();
         try!(world_hook(&mut world));
         let server = IrcServer::from_connection(Config {
-            owners: vec!["test".into_string()],
-            nickname: "test".into_string(),
-            username: "test".into_string(),
-            realname: "test".into_string(),
-            password: String::new(),
-            server: "irc.fyrechat.net".into_string(),
-            port: 6667,
-            use_ssl: false,
-            channels: vec!["#test".into_string(), "#test2".into_string()],
-            options: {
-                let mut map = HashMap::new();
-                map.insert("oper-pass".into_string(), "test".into_string());
-                map
-            }
+            owners: Some(vec!["test".into_string()]),
+            nickname: Some("test".into_string()),  
+            .. Default::default()
         }, Connection::new(MemReader::new(input.as_bytes().to_vec()), MemWriter::new()));
         for message in server.iter() {
             println!("{}", message);
