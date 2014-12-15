@@ -2,11 +2,10 @@ use std::collections::HashMap;
 use std::io::IoResult;
 use std::rand::task_rng;
 use std::rand::distributions::{IndependentSample, Range};
-use crypto::sbuf::StdHeapAllocator;
-use crypto::sha3::{hash, Sha3Mode};
 use data::player::Player;
 use data::{BotResult, as_io};
 use data::BotError::PasswordIncorrect;
+use openssl::crypto::hash::{HashType, Hasher};
 use serialize::hex::ToHex;
 
 pub struct Game {
@@ -34,9 +33,9 @@ impl Game {
     }
 
     pub fn password_hash(password: &str) -> IoResult<String> {
-        let mut data = [0u8, ..64];
-        try!(hash::<StdHeapAllocator>(Sha3Mode::Sha3_512, password.as_bytes(), &mut data));
-        Ok(data.to_hex())
+        let mut hasher = Hasher::new(HashType::SHA512);
+        try!(hasher.write_str(password));
+        Ok(hasher.finalize().to_hex())
     }
 
     pub fn roll() -> u8 {
@@ -62,9 +61,9 @@ mod test {
 
     #[test]
     fn password_hash() {
-        let s = String::from_str("9ece086e9bac491fac5c1d1046ca11d737b92a2b2ebd93f005d7b710110c0a678288166e7fbe796883a4f2e9b3ca9f484f521d0ce464345cc1aec96779149c14");
+        let s = String::from_str("ee26b0dd4af7e749aa1a8ee3c10ae9923f618980772e473f8819a5d4940e0db27ac185f8a0e1d5f84f88bc887fd67b143732c304cc5fa9ad8e6f57f50028a8ff");
         let h = Game::password_hash("test").unwrap();
-        assert_eq!(s, h);
+        assert_eq!(h, s);
     }
 
     #[test]

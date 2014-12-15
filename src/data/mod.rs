@@ -13,7 +13,7 @@ pub mod utils {
     use super::BotError::InvalidInput;
     use std::num::{Float, Int, from_f32};
 
-    #[deriving(Decodable, Encodable, Show, PartialEq, Clone)]
+    #[deriving(Copy, Decodable, Encodable, Show, PartialEq, Clone)]
     pub struct Position(pub int, pub int);
 
     impl Position {
@@ -113,7 +113,7 @@ pub trait Entity {
     fn clear_temp_stats(&mut self);
 }
 
-#[deriving(Show, PartialEq)]
+#[deriving(Copy, Show, PartialEq)]
 pub enum RollType {
     Basic,
     Strength,

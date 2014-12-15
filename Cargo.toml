@@ -4,10 +4,7 @@ name = "dnd"
 version = "0.0.1"
 authors = ["Aaron Weiss <aaronweiss74@gmail.com>"]
 
-[dependencies.irc]
+[dependencies]
 
 irc = "*"
-
-[dependencies.crypto]
-
-git = "https://github.com/seb-m/crypto.rs.git"
+openssl = "*"

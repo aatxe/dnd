@@ -1,6 +1,6 @@
 use std::ascii::AsciiExt;
 
-#[deriving(Decodable, Encodable, Show, PartialEq, Clone)]
+#[deriving(Copy, Decodable, Encodable, Show, PartialEq, Clone)]
 pub struct Stats {
     pub health: u8,
     pub movement: u8,

@@ -2,30 +2,8 @@
 name = "dnd"
 version = "0.0.1"
 dependencies = [
- "crypto 0.0.1 (git+https://github.com/seb-m/crypto.rs.git)",
  "irc 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "common"
-version = "0.0.1"
-source = "git+https://github.com/seb-m/common.rs#4ee94a964449ee85163ad8222eecee86b3e845dc"
-
-[[package]]
-name = "crypto"
-version = "0.0.1"
-source = "git+https://github.com/seb-m/crypto.rs.git#50faec705f91274ccd501457d71efdb18cb20151"
-dependencies = [
- "common 0.0.1 (git+https://github.com/seb-m/common.rs)",
- "curve41417 0.0.1 (git+https://github.com/seb-m/curve41417.rs)",
-]
-
-[[package]]
-name = "curve41417"
-version = "0.0.1"
-source = "git+https://github.com/seb-m/curve41417.rs#bcfc657f4d2918bf851f5162737a931d77581734"
-dependencies = [
- "tars 0.0.1 (git+https://github.com/seb-m/tars)",
+ "openssl 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -34,7 +12,37 @@ version = "0.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
-name = "tars"
-version = "0.0.1"
-source = "git+https://github.com/seb-m/tars#47c3aa8990b5bd1ccc9ebdb8169bf533661461a8"
+name = "libressl-pnacl-sys"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "pnacl-build-helper 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "openssl"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "openssl-sys 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "openssl-sys"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "libressl-pnacl-sys 2.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pkg-config 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "pkg-config"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "pnacl-build-helper"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
