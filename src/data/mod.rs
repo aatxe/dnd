@@ -36,17 +36,17 @@ pub mod utils {
     }
 
     impl Add<Position, Position> for Position {
-        fn add(&self, rhs: &Position) -> Position {
-            let Position(x1, y1) = *self;
-            let Position(x2, y2) = *rhs;
+        fn add(self, rhs: Position) -> Position {
+            let Position(x1, y1) = self;
+            let Position(x2, y2) = rhs;
             Position(x1 + x2, y1 + y2)
         }
     }
 
     impl Sub<Position, Position> for Position {
-        fn sub(&self, rhs: &Position) -> Position {
-            let Position(x1, y1) = *self;
-            let Position(x2, y2) = *rhs;
+        fn sub(self, rhs: Position) -> Position {
+            let Position(x1, y1) = self;
+            let Position(x2, y2) = rhs;
             Position(x1 - x2, y1 - y2)
         }
     }
