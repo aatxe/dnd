@@ -298,7 +298,7 @@ mod test {
         let p = Player::create_test("test", "test", 20, 30, 12, 12, 8, 12, 12, 12);
         for _ in range(0i, 1000i) {
             let r = p.roll(Dexterity);
-            println!("{}", r)
+            println!("{}", r);
             assert!(r >= 1 && r <= 21);
         }
     }
@@ -308,7 +308,7 @@ mod test {
         let p = Player::create_test("test", "test", 20, 30, 12, 12, 8, 12, 12, 12);
         for _ in range(0i, 1000i) {
             let r = p.roll(Constitution);
-            println!("{}", r)
+            println!("{}", r);
             assert!(r >= 1 && r <= 19);
         }
     }

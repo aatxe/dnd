@@ -276,8 +276,8 @@ mod test {
         let res = super::utils::permissions_test("test", "#test", &mut World::new());
         assert!(res.is_err());
         if let Propagated(left, right) = res.unwrap_err() {
-            assert_eq!(left, format!("test"))
-            assert_eq!(right, format!("There is no game in #test."))
+            assert_eq!(left, format!("test"));
+            assert_eq!(right, format!("There is no game in #test."));
         } else {
             panic!("permissions_test(...) returned an unexpected error type.");
         }
@@ -290,8 +290,8 @@ mod test {
         let res = super::utils::permissions_test("test2", "#test", &mut world);
         assert!(res.is_err());
         if let Propagated(left, right) = res.unwrap_err() {
-            assert_eq!(left, format!("test2"))
-            assert_eq!(right, format!("You must be the DM to do that!"))
+            assert_eq!(left, format!("test2"));
+            assert_eq!(right, format!("You must be the DM to do that!"));
         } else {
             panic!("permissions_test(...) returned an unexpected error type.");
         }
@@ -308,8 +308,8 @@ mod test {
     fn incorrect_format() {
         let res = super::utils::incorrect_format("test", "a", "b c");
         if let Propagated(left, right) = res {
-            assert_eq!(left, format!("test"))
-            assert_eq!(right, format!("Incorrect format for a. Format is:\r\na b c"))
+            assert_eq!(left, format!("test"));
+            assert_eq!(right, format!("Incorrect format for a. Format is:\r\na b c"));
         } else {
             panic!("incorrect_format(...) returned an unexpected error type.");
         }

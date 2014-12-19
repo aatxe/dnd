@@ -231,7 +231,7 @@ mod test {
         let m = Monster::create("test", 20, 30, 12, 12, 8, 12, 12, 12);
         for _ in range(0i, 1000i) {
             let r = m.roll(Dexterity);
-            println!("{}", r)
+            println!("{}", r);
             assert!(r >= 1 && r <= 21);
         }
     }
@@ -241,7 +241,7 @@ mod test {
         let m = Monster::create("test", 20, 30, 12, 12, 8, 12, 12, 12);
         for _ in range(0i, 1000i) {
             let r = m.roll(Constitution);
-            println!("{}", r)
+            println!("{}", r);
             assert!(r >= 1 && r <= 19);
         }
     }
