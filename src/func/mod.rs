@@ -4,6 +4,7 @@ use self::entity::{ClearTempStats, Damage, Move, Roll, SetTempStats};
 use self::monster::{AddMonster, LookUpMonster};
 use self::player::{AddFeat, AddUpdate, Login, Logout, LookUpPlayer, Register, Save};
 use self::world::{Create, PrivateRoll, SaveAll};
+use std::borrow::ToOwned;
 use std::io::IoResult;
 use data::{BotResult, as_io};
 use data::BotError::{InvalidInput, NotFound, Propagated};
@@ -80,7 +81,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Help<'a, T, U> {
     }
 
     fn format() -> String {
-        "[command]".into_string()
+        "[command]".to_owned()
     }
 }
 
@@ -96,18 +97,18 @@ fn tokenize<'a>(line: &'a str, vec: &'a mut Vec<String>) -> BotResult<Vec<&'a st
         } else if flag {
             s.push_str(token);
             if token.ends_with("\"") {
-                vec.push(s[1..s.len() - 1].into_string());
+                vec.push(s[1..s.len() - 1].to_owned());
                 s = String::new();
                 flag = false;
             } else {
                 s.push_str(" ");
             }
         } else {
-            vec.push(token.into_string());
+            vec.push(token.to_owned());
         }
     }
     if s.len() != 0 {
-        Err(InvalidInput("Could not tokenize malformed arguments.".into_string()))
+        Err(InvalidInput("Could not tokenize malformed arguments.".to_owned()))
     } else {
         Ok(vec.iter().map(|s| s[]).collect())
     }
@@ -152,10 +153,10 @@ pub fn process_world<'a, T: IrcReader, U: IrcWriter>(bot: &'a Wrapper<'a, T, U>,
                         "damage" => Damage::new(bot, user, chan, tokens, world),
                         "move" => Move::new(bot, user, chan, tokens, world),
                         "help" => Help::new(bot, chan, tokens),
-                        _ => Err(NotFound(tokens[0].into_string()))
+                        _ => Err(NotFound(tokens[0].to_owned()))
                     }
                 } else {
-                    Err(NotFound(tokens[0].into_string()))
+                    Err(NotFound(tokens[0].to_owned()))
                 }
             };
             if let Err(Propagated(resp, msg)) = func {
@@ -224,6 +225,7 @@ mod utils {
 #[cfg(test)]
 mod test {
     use super::process_world;
+    use std::borrow::ToOwned;
     use std::default::Default;
     use std::io::{MemReader, MemWriter};
     use data::{BotResult};
@@ -238,11 +240,12 @@ mod test {
         let mut world = World::new();
         try!(world_hook(&mut world));
         let server = IrcServer::from_connection(Config {
-            owners: Some(vec!["test".into_string()]),
-            nickname: Some("test".into_string()),  
+            owners: Some(vec!["test".to_owned()]),
+            nickname: Some("test".to_owned()),  
             .. Default::default()
         }, Connection::new(MemReader::new(input.as_bytes().to_vec()), MemWriter::new()));
         for message in server.iter() {
+            let message = message.unwrap();
             println!("{}", message);
             let mut args: Vec<_> = message.args.iter().map(|s| s[]).collect();
             if let Some(ref suffix) = message.suffix {

@@ -1,3 +1,4 @@
+use std::borrow::ToOwned;
 use data::{BotResult, Entity, RollType, as_io};
 use data::BotError::{InvalidInput, Propagated};
 use data::RollType::Basic;
@@ -51,7 +52,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Roll<'a, T, U> {
     }
 
     fn format() -> String {
-        "[@monster] [stat]".into_string()
+        "[@monster] [stat]".to_owned()
     }
 }
 
@@ -71,7 +72,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Damage<'a, T, U> {
             chan: chan,
             target_str: args[1],
             target: try!(get_target(args[1], user, chan, chan, world)),
-            value: if let Some(n) = from_str(args[2]) {
+            value: if let Some(n) = args[2].parse() {
                 n
             } else {
                 return Err(Propagated(
@@ -95,7 +96,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Damage<'a, T, U> {
     }
 
     fn format() -> String {
-        "target value".into_string()
+        "target value".to_owned()
     }
 }
 
@@ -141,7 +142,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for SetTempStats<'a, T, U> {
     }
 
     fn format() -> String {
-        "target movement health str dex con wis int cha".into_string()
+        "target movement health str dex con wis int cha".to_owned()
     }
 }
 
@@ -177,7 +178,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for ClearTempStats<'a, T, U> 
     }
 
     fn format() -> String {
-        "target".into_string()
+        "target".to_owned()
     }
 }
 
@@ -191,8 +192,8 @@ pub struct Move<'a, T: IrcReader, U: IrcWriter> {
 
 impl<'a, T: IrcReader, U: IrcWriter> Move<'a, T, U> {
     fn to_pos(x: &str, y: &str) -> Option<Position> {
-        if let Some(m) = from_str(x) {
-            if let Some(n) = from_str(y) {
+        if let Some(m) = x.parse() {
+            if let Some(n) = y.parse() {
                 return Some(Position(m, n))
             }
         }
@@ -239,12 +240,13 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Move<'a, T, U> {
     }
 
     fn format() -> String {
-        "[@monster] x y".into_string()
+        "[@monster] x y".to_owned()
     }
 }
 
 #[cfg(test)]
 mod test {
+    use std::borrow::ToOwned;
     use data::Entity;
     use data::monster::Monster;
     use data::player::Player;
@@ -261,7 +263,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data[..27].into_string(), format!("PRIVMSG #test :Test rolled "));
+        assert_eq!(data[..27].to_owned(), format!("PRIVMSG #test :Test rolled "));
     }
 
     #[test]
@@ -274,7 +276,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data[..27].into_string(), format!("PRIVMSG #test :Test rolled "));
+        assert_eq!(data[..27].to_owned(), format!("PRIVMSG #test :Test rolled "));
     }
 
     #[test]

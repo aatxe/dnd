@@ -11,9 +11,10 @@ pub mod world;
 pub mod utils {
     use super::{BotResult};
     use super::BotError::InvalidInput;
+    use std::borrow::ToOwned;
     use std::num::{Float, Int, from_f32};
 
-    #[deriving(Copy, Decodable, Encodable, Show, PartialEq, Clone)]
+    #[deriving(Copy, RustcDecodable, RustcEncodable, Show, PartialEq, Clone)]
     pub struct Position(pub int, pub int);
 
     impl Position {
@@ -31,7 +32,7 @@ pub mod utils {
                     return Ok(x)
                 }
             }
-            Err(InvalidInput("Something went wrong calculating the distance.".into_string()))
+            Err(InvalidInput("Something went wrong calculating the distance.".to_owned()))
         }
     }
 
@@ -63,7 +64,7 @@ pub mod utils {
     }
 
     pub fn str_to_u8(s: &str) -> u8 {
-        from_str(s).unwrap_or(0)
+        s.parse().unwrap_or(0)
     }
 }
 

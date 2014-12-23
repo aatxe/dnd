@@ -1,3 +1,4 @@
+use std::borrow::ToOwned;
 use data::{BotResult, as_io};
 use data::BotError::Propagated;
 use data::game::Game;
@@ -41,7 +42,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Create<'a, T, U> {
     }
 
     fn format() -> String {
-        "channel campaign name".into_string()
+        "channel campaign name".to_owned()
     }
 }
 
@@ -62,7 +63,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for PrivateRoll<'a, T, U> {
     }
 
     fn format() -> String {
-        "".into_string()
+        "".to_owned()
     }
 }
 
@@ -89,12 +90,13 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for SaveAll<'a, T, U> {
     }
 
     fn format() -> String {
-        "".into_string()
+        "".to_owned()
     }
 }
 
 #[cfg(test)]
 mod test {
+    use std::borrow::ToOwned;
     use func::test::test_helper;
 
     #[test]
@@ -123,7 +125,7 @@ mod test {
     #[test]
     fn private_roll() {
         let data = test_helper(":test!test@test PRIVMSG test :roll\r\n", |_| { Ok(()) }).unwrap();
-        assert_eq!(data[..25].into_string(), format!("PRIVMSG test :You rolled "));
+        assert_eq!(data[..25].to_owned(), format!("PRIVMSG test :You rolled "));
     }
 
     #[test]

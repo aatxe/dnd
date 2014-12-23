@@ -1,7 +1,7 @@
 #![feature(slicing_syntax)]
 extern crate irc;
 extern crate openssl;
-extern crate serialize;
+extern crate "rustc-serialize" as rustc_serialize;
 
 #[cfg(not(test))] use data::world::World;
 #[cfg(not(test))] use irc::server::{IrcServer, Server};
@@ -15,6 +15,7 @@ fn main() {
     let mut world = World::new();
     let server = IrcServer::new("config.json").unwrap();
     for message in server.iter() {
+        let message = message.unwrap();
         println!("{}", message.into_string());
         let mut args: Vec<_> = message.args.iter().map(|s| s[]).collect();
         if let Some(ref suffix) = message.suffix {

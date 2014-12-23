@@ -1,5 +1,6 @@
+use std::borrow::ToOwned;
 use std::collections::HashMap;
-use std::collections::hash_map::{Occupied, Vacant};
+use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::io::{InvalidInput, IoError, IoResult};
 use data::{BotResult, Entity, as_io};
 use data::BotError::{Io, NotFound};
@@ -29,8 +30,8 @@ impl World {
     }
 
     pub fn add_user(&mut self, nickname: &str, chan: &str, player: Player) {
-        self.users.insert(nickname.into_string(), player);
-        self.user_channels.insert(nickname.into_string(), chan.into_string());
+        self.users.insert(nickname.to_owned(), player);
+        self.user_channels.insert(nickname.to_owned(), chan.to_owned());
     }
 
     pub fn remove_user(&mut self, nickname: &str) -> BotResult<&str> {
@@ -78,7 +79,7 @@ impl World {
 
     pub fn get_entity(&mut self, identifier: &str, chan: Option<&str>) -> BotResult<&mut Entity> {
         if identifier.starts_with("@") {
-            let i: uint = match from_str(identifier[1..]) {
+            let i: uint = match identifier[1..].parse() {
                 Some(n) => n,
                 None => return Err(Io(IoError {
                     kind: InvalidInput,

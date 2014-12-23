@@ -1,4 +1,5 @@
 use std::ascii::AsciiExt;
+use std::borrow::ToOwned;
 use data::{BotResult, Entity, as_io};
 use data::BotError::Propagated;
 use data::monster::Monster;
@@ -51,7 +52,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for AddMonster<'a, T, U> {
     }
 
     fn format() -> String {
-        "chan name health movement str dex con wis int cha".into_string()
+        "chan name health movement str dex con wis int cha".to_owned()
     }
 }
 
@@ -111,7 +112,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for LookUpMonster<'a, T, U> {
     }
 
     fn format() -> String {
-        "channel target [stat]".into_string()
+        "channel target [stat]".to_owned()
     }
 }
 

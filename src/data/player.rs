@@ -1,3 +1,4 @@
+use std::borrow::ToOwned;
 use std::io::fs::{File, mkdir_recursive};
 use std::io::{FilePermission, InvalidInput, IoError, IoResult};
 use std::rand::task_rng;
@@ -7,9 +8,9 @@ use data::RollType::{Basic, Strength, Dexterity, Constitution, Wisdom, Intellect
 use data::game::Game;
 use data::stats::Stats;
 use data::utils::Position;
-use serialize::json::{decode, encode};
+use rustc_serialize::json::{decode, encode};
 
-#[deriving(Decodable, Encodable, Show, PartialEq, Clone)]
+#[deriving(RustcDecodable, RustcEncodable, Show, PartialEq, Clone)]
 pub struct Player {
     pub username: String,
     pub password: String,
@@ -50,7 +51,7 @@ impl Player {
     }
 
     pub fn load(username: &str) -> IoResult<Player> {
-        let mut path = "users/".into_string();
+        let mut path = "users/".to_owned();
         path.push_str(username);
         path.push_str(".json");
         let mut file = try!(File::open(&Path::new(path[])));
@@ -63,7 +64,7 @@ impl Player {
     }
 
     pub fn save(&self) -> IoResult<()> {
-        let mut path = "users/".into_string();
+        let mut path = "users/".to_owned();
         try!(mkdir_recursive(&Path::new(path[]), FilePermission::all()));
         path.push_str(self.username[]);
         path.push_str(".json");

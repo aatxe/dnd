@@ -1,4 +1,5 @@
 use std::ascii::AsciiExt;
+use std::borrow::ToOwned;
 use data::{BotResult, Entity, as_io};
 use data::BotError::Propagated;
 use data::player::Player;
@@ -47,7 +48,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Register<'a, T, U> {
     }
 
     fn format() -> String {
-        "username password health movement str dex con wis int cha".into_string()
+        "username password health movement str dex con wis int cha".to_owned()
     }
 }
 
@@ -105,7 +106,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Login<'a, T, U> {
     }
 
     fn format() -> String {
-        "username password channel".into_string()
+        "username password channel".to_owned()
     }
 }
 
@@ -134,7 +135,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Logout<'a, T, U> {
     }
 
     fn format() -> String {
-        "".into_string()
+        "".to_owned()
     }
 }
 
@@ -164,7 +165,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for AddFeat<'a, T, U> {
     }
 
     fn format() -> String {
-        "name of feat".into_string()
+        "name of feat".to_owned()
     }
 }
 
@@ -198,7 +199,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Save<'a, T, U> {
     }
 
     fn format() -> String {
-        "".into_string()
+        "".to_owned()
     }
 }
 
@@ -260,7 +261,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for LookUpPlayer<'a, T, U> {
     }
 
     fn format() -> String {
-        "target [stat]".into_string()
+        "target [stat]".to_owned()
     }
 }
 
@@ -285,7 +286,7 @@ impl<'a, T: IrcReader, U: IrcWriter> AddUpdate<'a, T, U> {
             chan: chan,
             world: world,
             stat_str: args[1],
-            value: if let Some(n) = from_str(args[2]) {
+            value: if let Some(n) = args[2].parse() {
                 n
             } else {
                 return Err(Propagated(format!("{}", chan), format!("{} is not a valid positive integer.", args[2])));
@@ -317,7 +318,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for AddUpdate<'a, T, U> {
     }
 
     fn format() -> String {
-        "stat value".into_string()
+        "stat value".to_owned()
     }
 }
 

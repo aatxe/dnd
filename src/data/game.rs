@@ -6,7 +6,7 @@ use data::player::Player;
 use data::{BotResult, as_io};
 use data::BotError::PasswordIncorrect;
 use openssl::crypto::hash::{HashType, Hasher};
-use serialize::hex::ToHex;
+use rustc_serialize::hex::ToHex;
 
 pub struct Game {
     pub name: String,

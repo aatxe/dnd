@@ -8,3 +8,4 @@ authors = ["Aaron Weiss <aaronweiss74@gmail.com>"]
 
 irc = "*"
 openssl = "*"
+rustc-serialize = "*"
