@@ -127,7 +127,7 @@ pub enum RollType {
 
 impl RollType {
     pub fn to_roll_type(roll_type: &str) -> Option<RollType> {
-        match roll_type.to_ascii_lower()[] {
+        match roll_type.to_ascii_lowercase()[] {
             "strength" => Some(RollType::Strength),
             "str" => Some(RollType::Strength),
             "dexterity" => Some(RollType::Dexterity),
