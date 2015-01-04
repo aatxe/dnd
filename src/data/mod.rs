@@ -12,6 +12,7 @@ pub mod utils {
     use super::{BotResult};
     use super::BotError::InvalidInput;
     use std::borrow::ToOwned;
+    use std::ops::{Add, Sub};
     use std::num::{Float, Int, from_f32};
 
     #[deriving(Copy, RustcDecodable, RustcEncodable, Show, PartialEq, Clone)]
@@ -36,7 +37,8 @@ pub mod utils {
         }
     }
 
-    impl Add<Position, Position> for Position {
+    impl Add for Position {
+        type Output = Position;
         fn add(self, rhs: Position) -> Position {
             let Position(x1, y1) = self;
             let Position(x2, y2) = rhs;
@@ -44,7 +46,8 @@ pub mod utils {
         }
     }
 
-    impl Sub<Position, Position> for Position {
+    impl Sub for Position {
+        type Output = Position;
         fn sub(self, rhs: Position) -> Position {
             let Position(x1, y1) = self;
             let Position(x2, y2) = rhs;

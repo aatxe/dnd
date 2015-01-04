@@ -2,56 +2,129 @@
 name = "dnd"
 version = "0.0.1"
 dependencies = [
- "irc 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "openssl 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "rustc-serialize 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "irc 0.7.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "openssl 0.2.12 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rustc-serialize 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
-name = "irc"
-version = "0.7.0"
+name = "encoding"
+version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "rustc-serialize 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding-index-japanese 1.0.20141219 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding-index-korean 1.2.20141219 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding-index-simpchinese 1.0.20141219 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding-index-singlebyte 1.0.20141106 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding-index-tradchinese 1.0.20141106 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
-name = "libressl-pnacl-sys"
-version = "2.1.0"
+name = "encoding-index-japanese"
+version = "1.0.20141219"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "pnacl-build-helper 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding_index_tests 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
-name = "openssl"
-version = "0.2.9"
+name = "encoding-index-korean"
+version = "1.2.20141219"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "openssl-sys 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding_index_tests 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
-name = "openssl-sys"
-version = "0.2.9"
+name = "encoding-index-simpchinese"
+version = "1.0.20141219"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "libressl-pnacl-sys 2.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "pkg-config 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding_index_tests 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
-name = "pkg-config"
+name = "encoding-index-singlebyte"
+version = "1.0.20141106"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "encoding_index_tests 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "encoding-index-tradchinese"
+version = "1.0.20141106"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "encoding_index_tests 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "encoding_index_tests"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "gcc"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "irc"
+version = "0.7.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "encoding 0.2.14 (registry+https://github.com/rust-lang/crates.io-index)",
+ "openssl 0.2.12 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rustc-serialize 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "time 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "libressl-pnacl-sys"
+version = "2.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "pnacl-build-helper 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "openssl"
+version = "0.2.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "openssl-sys 0.2.12 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "openssl-sys"
+version = "0.2.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "libressl-pnacl-sys 2.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pkg-config 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "pkg-config"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "pnacl-build-helper"
-version = "1.0.0"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "rustc-serialize"
-version = "0.1.5"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "time"
+version = "0.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "gcc 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 

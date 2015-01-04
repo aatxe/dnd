@@ -1,7 +1,7 @@
 use std::borrow::ToOwned;
 use std::io::fs::{File, mkdir_recursive};
 use std::io::{FilePermission, InvalidInput, IoError, IoResult};
-use std::rand::task_rng;
+use std::rand::thread_rng;
 use std::rand::distributions::{IndependentSample, Range};
 use data::{BotResult, Entity, RollType, as_io};
 use data::RollType::{Basic, Strength, Dexterity, Constitution, Wisdom, Intellect, Charisma};
@@ -99,7 +99,7 @@ impl Entity for Player {
 
     fn roll(&self, roll_type: RollType) -> u8 {
         let d20 = Range::new(1i8, 21i8);
-        let mut rng = task_rng();
+        let mut rng = thread_rng();
         match match roll_type {
             Basic => d20.ind_sample(&mut rng),
             Strength => d20.ind_sample(&mut rng) + Stats::calc_bonus(self.stats.strength),

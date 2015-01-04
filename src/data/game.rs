@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::io::IoResult;
-use std::rand::task_rng;
+use std::rand::thread_rng;
 use std::rand::distributions::{IndependentSample, Range};
 use data::player::Player;
 use data::{BotResult, as_io};
@@ -40,7 +40,7 @@ impl Game {
 
     pub fn roll() -> u8 {
         let d20 = Range::new(1i8, 21i8);
-        let mut rng = task_rng();
+        let mut rng = thread_rng();
         match d20.ind_sample(&mut rng).to_u8() {
             Some(0) => 1,
             Some(n) => n,

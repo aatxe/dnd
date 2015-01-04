@@ -20,7 +20,7 @@ pub mod world;
 
 pub trait Functionality {
     fn do_func(&mut self) -> BotResult<()>;
-    fn format() -> String;
+    //fn format() -> String;
 }
 
 pub struct Help<'a, T: IrcReader, U: IrcWriter> {
