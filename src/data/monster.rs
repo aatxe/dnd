@@ -1,3 +1,4 @@
+use std::num::ToPrimitive;
 use std::rand::thread_rng;
 use std::rand::distributions::{IndependentSample, Range};
 use data::{BotResult, Entity, RollType};

@@ -13,7 +13,7 @@ pub mod utils {
     use super::BotError::InvalidInput;
     use std::borrow::ToOwned;
     use std::ops::{Add, Sub};
-    use std::num::{Float, Int, from_f32};
+    use std::num::{Float, Int, ToPrimitive, from_f32};
 
     #[deriving(Copy, RustcDecodable, RustcEncodable, Show, PartialEq, Clone)]
     pub struct Position(pub int, pub int);

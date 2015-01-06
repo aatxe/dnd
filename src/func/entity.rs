@@ -1,4 +1,3 @@
-use std::borrow::ToOwned;
 use data::{BotResult, Entity, RollType, as_io};
 use data::BotError::{InvalidInput, Propagated};
 use data::RollType::Basic;
@@ -50,10 +49,6 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Roll<'a, T, U> {
                         self.target.identifier(), self.target.roll(self.stat.unwrap()));
         as_io(self.bot.send_privmsg(self.chan, s[]))
     }
-
-    fn format() -> String {
-        "[@monster] [stat]".to_owned()
-    }
 }
 
 pub struct Damage<'a, T: IrcReader, U: IrcWriter> {
@@ -93,10 +88,6 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Damage<'a, T, U> {
             format!("{} ({}) has fallen unconscious.", self.target.identifier(), self.target_str)
         };
         as_io(self.bot.send_privmsg(self.chan, m[]))
-    }
-
-    fn format() -> String {
-        "target value".to_owned()
     }
 }
 
@@ -140,10 +131,6 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for SetTempStats<'a, T, U> {
                         self.target.identifier(), self.target_str, self.target.stats());
         as_io(self.bot.send_privmsg(self.chan, s[]))
     }
-
-    fn format() -> String {
-        "target movement health str dex con wis int cha".to_owned()
-    }
 }
 
 pub struct ClearTempStats<'a, T: IrcReader, U: IrcWriter> {
@@ -176,10 +163,6 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for ClearTempStats<'a, T, U> 
                         self.target.identifier(), self.target_str, self.target.stats());
         as_io(self.bot.send_privmsg(self.chan, s[]))
     }
-
-    fn format() -> String {
-        "target".to_owned()
-    }
 }
 
 pub struct Move<'a, T: IrcReader, U: IrcWriter> {
@@ -190,24 +173,24 @@ pub struct Move<'a, T: IrcReader, U: IrcWriter> {
     position: Position,
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Move<'a, T, U> {
-    fn to_pos(x: &str, y: &str) -> Option<Position> {
-        if let Some(m) = x.parse() {
-            if let Some(n) = y.parse() {
-                return Some(Position(m, n))
-            }
+fn to_pos(x: &str, y: &str) -> Option<Position> {
+    if let Some(m) = x.parse() {
+        if let Some(n) = y.parse() {
+            return Some(Position(m, n))
         }
-        None
     }
+    None
+}
 
+impl<'a, T: IrcReader, U: IrcWriter> Move<'a, T, U> {
     pub fn new(bot: &'a Wrapper<'a, T, U>, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 && args.len() != 4 {
             return Err(incorrect_format(chan, ".move", "[@monster] x y"));
         }
         let (target, position) = if args.len() == 4 {
-            (args[1], Move::to_pos(args[2], args[3]))
+            (args[1],to_pos(args[2], args[3]))
         } else {
-            (user, Move::to_pos(args[1], args[2]))
+            (user, to_pos(args[1], args[2]))
         };
         Ok(box Move {
             bot: bot,
@@ -237,10 +220,6 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Move<'a, T, U> {
                     self.target.identifier(), self.target_str, self.position)
         };
         as_io(self.bot.send_privmsg(self.chan, s[]))
-    }
-
-    fn format() -> String {
-        "[@monster] x y".to_owned()
     }
 }
 

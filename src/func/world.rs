@@ -1,4 +1,3 @@
-use std::borrow::ToOwned;
 use data::{BotResult, as_io};
 use data::BotError::Propagated;
 use data::game::Game;
@@ -40,10 +39,6 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Create<'a, T, U> {
         try!(as_io(self.bot.send_privmsg(self.user, s[])));
         as_io(self.bot.send_invite(self.user, self.chan))
     }
-
-    fn format() -> String {
-        "channel campaign name".to_owned()
-    }
 }
 
 pub struct PrivateRoll<'a, T: IrcReader, U: IrcWriter> {
@@ -60,10 +55,6 @@ impl<'a, T: IrcReader, U: IrcWriter> PrivateRoll<'a, T, U> {
 impl<'a, T: IrcReader, U: IrcWriter> Functionality for PrivateRoll<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
         as_io(self.bot.send_privmsg(self.user, format!("You rolled {}.", Game::roll())[]))
-    }
-
-    fn format() -> String {
-        "".to_owned()
     }
 }
 
@@ -87,10 +78,6 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for SaveAll<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
         try!(as_io(self.world.save_all()));
         as_io(self.bot.send_privmsg(self.user, "The world has been saved."))
-    }
-
-    fn format() -> String {
-        "".to_owned()
     }
 }
 

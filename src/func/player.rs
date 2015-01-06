@@ -1,5 +1,4 @@
 use std::ascii::AsciiExt;
-use std::borrow::ToOwned;
 use data::{BotResult, Entity, as_io};
 use data::BotError::Propagated;
 use data::player::Player;
@@ -45,10 +44,6 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Register<'a, T, U> {
                                     self.st, self.dx, self.cn, self.ws, self.it, self.ch));
         try!(as_io(p.save()));
         as_io(self.bot.send_privmsg(self.user, format!("Your account ({}) has been created.", self.username)[]))
-    }
-
-    fn format() -> String {
-        "username password health movement str dex con wis int cha".to_owned()
     }
 }
 
@@ -104,10 +99,6 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Login<'a, T, U> {
         self.world.add_user(self.user, self.chan, self.player.clone());
         Ok(())
     }
-
-    fn format() -> String {
-        "username password channel".to_owned()
-    }
 }
 
 pub struct Logout<'a, T: IrcReader, U: IrcWriter> {
@@ -132,10 +123,6 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Logout<'a, T, U> {
             try!(as_io(self.bot.send_privmsg(self.user, "You're not currently logged in.")));
         }
         Ok(())
-    }
-
-    fn format() -> String {
-        "".to_owned()
     }
 }
 
@@ -162,10 +149,6 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for AddFeat<'a, T, U> {
         } else {
             Err(Propagated(format!("{}", self.user), format!("You must be logged in to add a feat.")))
         }
-    }
-
-    fn format() -> String {
-        "name of feat".to_owned()
     }
 }
 
@@ -196,10 +179,6 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Save<'a, T, U> {
         } else {
             Err(Propagated(format!("{}", self.user), format!("You must be logged in to save.")))
         }
-    }
-
-    fn format() -> String {
-        "".to_owned()
     }
 }
 
@@ -259,10 +238,6 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for LookUpPlayer<'a, T, U> {
             Err(Propagated(format!("{}", self.resp), format!("{} is not a valid stat.", self.stat_str.unwrap())))
         }
     }
-
-    fn format() -> String {
-        "target [stat]".to_owned()
-    }
 }
 
 pub struct AddUpdate<'a, T: IrcReader, U: IrcWriter> {
@@ -315,10 +290,6 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for AddUpdate<'a, T, U> {
         } else {
             Err(Propagated(format!("{}", self.chan), format!("You're not logged in.")))
         }
-    }
-
-    fn format() -> String {
-        "stat value".to_owned()
     }
 }
 

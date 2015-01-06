@@ -1,5 +1,4 @@
 use std::ascii::AsciiExt;
-use std::borrow::ToOwned;
 use data::{BotResult, Entity, as_io};
 use data::BotError::Propagated;
 use data::monster::Monster;
@@ -49,10 +48,6 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for AddMonster<'a, T, U> {
         let s = format!("Monster ({}) has been created as @{}.",
                         self.name, self.world.add_monster(m, self.chan));
         as_io(self.bot.send_privmsg(self.user, s[]))
-    }
-
-    fn format() -> String {
-        "chan name health movement str dex con wis int cha".to_owned()
     }
 }
 
@@ -109,10 +104,6 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for LookUpMonster<'a, T, U> {
         } else {
             Err(Propagated(format!("{}", self.user), format!("{} is not a valid stat.", self.stat_str.unwrap())))
         }
-    }
-
-    fn format() -> String {
-        "channel target [stat]".to_owned()
     }
 }
 

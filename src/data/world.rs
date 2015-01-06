@@ -69,8 +69,9 @@ impl World {
     }
 
     pub fn add_monster(&mut self, monster: Monster, chan: &str) -> uint {
-        let result = match self.monsters.entry(String::from_str(chan)) {
-            Vacant(entry) => entry.set(Vec::new()),
+        let chan = String::from_str(chan);
+        let result = match self.monsters.entry(&chan) {
+            Vacant(entry) => entry.insert(Vec::new()),
             Occupied(entry) => entry.into_mut(),
         };
         result.push(monster);

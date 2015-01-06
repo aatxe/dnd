@@ -20,7 +20,6 @@ pub mod world;
 
 pub trait Functionality {
     fn do_func(&mut self) -> BotResult<()>;
-    //fn format() -> String;
 }
 
 pub struct Help<'a, T: IrcReader, U: IrcWriter> {
@@ -41,7 +40,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Help<'a, T, U> {
 impl<'a, T: IrcReader, U: IrcWriter> Functionality for Help<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
         if let Some(cmd) = self.cmd {
-            // FIXME: Replace this when universal function call syntax is released.
+            // FIXME: There has to be some way of improving this.
             let format: &str = if cmd.starts_with(".") {
                 match cmd[1..] {
                     "roll" => "[@monster] [stat]",
@@ -78,10 +77,6 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Help<'a, T, U> {
             s.push_str(format!("If you need additional help, use {}help [command].", if self.resp.starts_with("#") { "." } else { "" })[]);
             as_io(self.bot.send_privmsg(self.resp, s[]))
         }
-    }
-
-    fn format() -> String {
-        "[command]".to_owned()
     }
 }
 

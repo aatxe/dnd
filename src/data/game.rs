@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::io::IoResult;
+use std::num::ToPrimitive;
 use std::rand::thread_rng;
 use std::rand::distributions::{IndependentSample, Range};
 use data::player::Player;

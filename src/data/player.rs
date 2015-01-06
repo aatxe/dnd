@@ -1,6 +1,7 @@
 use std::borrow::ToOwned;
 use std::io::fs::{File, mkdir_recursive};
 use std::io::{FilePermission, InvalidInput, IoError, IoResult};
+use std::num::ToPrimitive;
 use std::rand::thread_rng;
 use std::rand::distributions::{IndependentSample, Range};
 use data::{BotResult, Entity, RollType, as_io};
