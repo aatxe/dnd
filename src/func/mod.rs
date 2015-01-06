@@ -231,7 +231,8 @@ mod test {
     use irc::server::{IrcServer, Server};
     use irc::server::utils::Wrapper;
 
-    pub fn test_helper(input: &str, world_hook: |&mut World| -> BotResult<()>) -> BotResult<String> {
+    pub fn test_helper<F>(input: &str, world_hook: F) -> BotResult<String> 
+        where F: FnOnce(&mut World) -> BotResult<()> {
         let mut world = World::new();
         try!(world_hook(&mut world));
         let server = IrcServer::from_connection(Config {

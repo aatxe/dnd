@@ -1,6 +1,6 @@
 use std::ascii::AsciiExt;
 
-#[deriving(Copy, RustcDecodable, RustcEncodable, Show, PartialEq, Clone)]
+#[derive(Copy, RustcDecodable, RustcEncodable, Show, PartialEq, Clone)]
 pub struct Stats {
     pub health: u8,
     pub movement: u8,
@@ -27,7 +27,7 @@ impl Stats {
         }
     }
 
-    fn stat_func(&mut self, stat: &str, f: |&mut u8| -> ()) {
+    fn stat_func<F>(&mut self, stat: &str, f: F) where F: FnOnce(&mut u8) -> () {
         match stat.to_ascii_lowercase()[] {
             "health" => f(&mut self.health),
             "hp" => f(&mut self.health),

@@ -7,7 +7,7 @@ use data::RollType::{Basic, Strength, Dexterity, Constitution, Wisdom, Intellect
 use data::stats::Stats;
 use data::utils::Position;
 
-#[deriving(Show, PartialEq, Clone)]
+#[derive(Show, PartialEq, Clone)]
 pub struct Monster {
     pub name: String,
     pub stats: Stats,

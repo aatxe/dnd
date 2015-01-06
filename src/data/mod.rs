@@ -15,7 +15,7 @@ pub mod utils {
     use std::ops::{Add, Sub};
     use std::num::{Float, Int, ToPrimitive, from_f32};
 
-    #[deriving(Copy, RustcDecodable, RustcEncodable, Show, PartialEq, Clone)]
+    #[derive(Copy, RustcDecodable, RustcEncodable, Show, PartialEq, Clone)]
     pub struct Position(pub int, pub int);
 
     impl Position {
@@ -73,7 +73,7 @@ pub mod utils {
 
 pub type BotResult<T> = Result<T, BotError>;
 
-#[deriving(PartialEq)]
+#[derive(PartialEq)]
 pub enum BotError {
     InvalidInput(String),
     Io(IoError),
@@ -117,7 +117,7 @@ pub trait Entity {
     fn clear_temp_stats(&mut self);
 }
 
-#[deriving(Copy, Show, PartialEq)]
+#[derive(Copy, Show, PartialEq)]
 pub enum RollType {
     Basic,
     Strength,
