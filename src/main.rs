@@ -1,4 +1,4 @@
-#![feature(associated_types, slicing_syntax)]
+#![feature(slicing_syntax)]
 extern crate irc;
 extern crate openssl;
 extern crate "rustc-serialize" as rustc_serialize;
