@@ -31,7 +31,7 @@ impl Monster {
 
 impl Entity for Monster {
     fn identifier(&self) -> &str {
-        self.name[]
+        &self.name[]
     }
 
     fn position(&self) -> &Position {
@@ -68,7 +68,7 @@ impl Entity for Monster {
     }
 
     fn do_move(&mut self, pos: Position) -> BotResult<()> {
-        if try!(self.position.distance(&pos)) <= self.stats().movement as int / 5 {
+        if try!(self.position.distance(&pos)) <= self.stats().movement as i32 / 5 {
             self.position = pos;
             Ok(())
         } else {
@@ -221,7 +221,7 @@ mod test {
     #[test]
     fn basic_roll() {
         let m = Monster::create("test", 20, 30, 12, 12, 8, 12, 12, 12);
-        for _ in range(0i, 1000i) {
+        for _ in range(0u16, 1000) {
             let r = m.roll(Basic);
             assert!(r >= 1 && r <= 20);
         }
@@ -230,7 +230,7 @@ mod test {
     #[test]
     fn positive_stat_roll() {
         let m = Monster::create("test", 20, 30, 12, 12, 8, 12, 12, 12);
-        for _ in range(0i, 1000i) {
+        for _ in range(0u16, 1000) {
             let r = m.roll(Dexterity);
             println!("{}", r);
             assert!(r >= 1 && r <= 21);
@@ -240,7 +240,7 @@ mod test {
     #[test]
     fn negative_stat_roll() {
         let m = Monster::create("test", 20, 30, 12, 12, 8, 12, 12, 12);
-        for _ in range(0i, 1000i) {
+        for _ in range(0u16, 1000) {
             let r = m.roll(Constitution);
             println!("{}", r);
             assert!(r >= 1 && r <= 19);

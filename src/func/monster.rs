@@ -47,7 +47,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for AddMonster<'a, T, U> {
                                 self.ws, self.it, self.ch);
         let s = format!("Monster ({}) has been created as @{}.",
                         self.name, self.world.add_monster(m, self.chan));
-        as_io(self.bot.send_privmsg(self.user, s[]))
+        as_io(self.bot.send_privmsg(self.user, &s[]))
     }
 }
 
@@ -93,14 +93,14 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for LookUpMonster<'a, T, U> {
             ""
         };
         if self.stat_str.is_none() {
-            let s = format!("{} ({}): {}{}", target.identifier(), self.target_str, temp, target.stats());
-            as_io(self.bot.send_privmsg(self.user, s[]))
+            let s = format!("{} ({}): {}{:?}", target.identifier(), self.target_str, temp, target.stats());
+            as_io(self.bot.send_privmsg(self.user, &s[]))
         } else if self.stat_str.unwrap().eq_ignore_ascii_case("pos") || self.stat_str.unwrap().eq_ignore_ascii_case("position") {
-            let s = format!("{} ({}): {}", target.identifier(), self.target_str, target.position());
-            as_io(self.bot.send_privmsg(self.user, s[]))
+            let s = format!("{} ({}): {:?}", target.identifier(), self.target_str, target.position());
+            as_io(self.bot.send_privmsg(self.user, &s[]))
         } else if let Some(x) = target.stats().get_stat(self.stat_str.unwrap()) {
             let s = format!("{} ({}): {}{} {}", target.identifier(), self.target_str, temp, x, self.stat_str.unwrap());
-            as_io(self.bot.send_privmsg(self.user, s[]))
+            as_io(self.bot.send_privmsg(self.user, &s[]))
         } else {
             Err(Propagated(format!("{}", self.user), format!("{} is not a valid stat.", self.stat_str.unwrap())))
         }
@@ -147,7 +147,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG test :Test (@0): Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }\r\n");
+        let exp = String::from_str("PRIVMSG test :Test (@0): Stats { health: 20u8, movement: 30u8, strength: 12u8, dexterity: 12u8, constitution: 12u8, wisdom: 12u8, intellect: 12u8, charisma: 12u8 }\r\n");
         assert_eq!(data, exp);
     }
 
@@ -198,7 +198,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG test :Test (@0): Temp. Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }\r\n");
+        let exp = String::from_str("PRIVMSG test :Test (@0): Temp. Stats { health: 20u8, movement: 30u8, strength: 12u8, dexterity: 12u8, constitution: 12u8, wisdom: 12u8, intellect: 12u8, charisma: 12u8 }\r\n");
         assert_eq!(data, exp);
     }
 
@@ -225,7 +225,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG test :Test (@0): Position(0, 0)\r\n");
+        let exp = String::from_str("PRIVMSG test :Test (@0): Position(0i32, 0i32)\r\n");
         assert_eq!(data, exp);
     }
 }

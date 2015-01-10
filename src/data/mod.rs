@@ -16,10 +16,10 @@ pub mod utils {
     use std::num::{Float, Int, ToPrimitive, from_f32};
 
     #[derive(Copy, RustcDecodable, RustcEncodable, Show, PartialEq, Clone)]
-    pub struct Position(pub int, pub int);
+    pub struct Position(pub i32, pub i32);
 
     impl Position {
-        pub fn distance_sq(&self, rhs: &Position) -> int {
+        pub fn distance_sq(&self, rhs: &Position) -> i32 {
             let Position(x1, y1) = *self;
             let Position(x2, y2) = *rhs;
             (y2 - y1).pow(2) + (x2 - x1).pow(2)
@@ -27,7 +27,7 @@ pub mod utils {
 
         // FIXME: distance doesn't work the way we'd want it to.
         // e.g. (0, 0).distance(5, 5) is 7, when we want it to be 5.
-        pub fn distance(&self, rhs: &Position) -> BotResult<int> {
+        pub fn distance(&self, rhs: &Position) -> BotResult<i32> {
             if let Some(n) = self.distance_sq(rhs).to_f32() {
                 if let Some(x) = from_f32(n.sqrt().floor()) {
                     return Ok(x)
@@ -55,7 +55,7 @@ pub mod utils {
         }
     }
 
-    pub fn join_from(words: Vec<&str>, pos: uint) -> String {
+    pub fn join_from(words: Vec<&str>, pos: usize) -> String {
         let mut res = String::new();
         for word in words[pos..].iter() {
             res.push_str(*word);
@@ -130,7 +130,7 @@ pub enum RollType {
 
 impl RollType {
     pub fn to_roll_type(roll_type: &str) -> Option<RollType> {
-        match roll_type.to_ascii_lowercase()[] {
+        match &roll_type.to_ascii_lowercase()[] {
             "strength" => Some(RollType::Strength),
             "str" => Some(RollType::Strength),
             "dexterity" => Some(RollType::Dexterity),
@@ -209,8 +209,8 @@ mod test {
 
     #[test]
     fn join_from() {
-        assert_eq!(utils::join_from(vec!["hi","there","friend"], 0)[], "hi there friend");
-        assert_eq!(utils::join_from(vec!["hi","their","friend"], 1)[], "their friend");
+        assert_eq!(&utils::join_from(vec!["hi","there","friend"], 0)[], "hi there friend");
+        assert_eq!(&utils::join_from(vec!["hi","their","friend"], 1)[], "their friend");
     }
 
     #[test]

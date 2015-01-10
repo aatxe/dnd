@@ -47,7 +47,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Roll<'a, T, U> {
         }
         let s = format!("{} rolled {}.",
                         self.target.identifier(), self.target.roll(self.stat.unwrap()));
-        as_io(self.bot.send_privmsg(self.chan, s[]))
+        as_io(self.bot.send_privmsg(self.chan, &s[]))
     }
 }
 
@@ -87,7 +87,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Damage<'a, T, U> {
         } else {
             format!("{} ({}) has fallen unconscious.", self.target.identifier(), self.target_str)
         };
-        as_io(self.bot.send_privmsg(self.chan, m[]))
+        as_io(self.bot.send_privmsg(self.chan, &m[]))
     }
 }
 
@@ -127,9 +127,9 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for SetTempStats<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
         self.target.set_temp_stats(Stats::new(self.health, self.movement, self.st, self.dx, self.cn,
                                               self.ws, self.it, self.ch));
-        let s = format!("{} ({}) now has temporary {}.",
+        let s = format!("{} ({}) now has temporary {:?}.",
                         self.target.identifier(), self.target_str, self.target.stats());
-        as_io(self.bot.send_privmsg(self.chan, s[]))
+        as_io(self.bot.send_privmsg(self.chan, &s[]))
     }
 }
 
@@ -159,9 +159,9 @@ impl<'a, T: IrcReader, U: IrcWriter> ClearTempStats<'a, T, U> {
 impl<'a, T: IrcReader, U: IrcWriter> Functionality for ClearTempStats<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
         self.target.clear_temp_stats();
-        let s = format!("{} ({}) has reverted to {}.",
+        let s = format!("{} ({}) has reverted to {:?}.",
                         self.target.identifier(), self.target_str, self.target.stats());
-        as_io(self.bot.send_privmsg(self.chan, s[]))
+        as_io(self.bot.send_privmsg(self.chan, &s[]))
     }
 }
 
@@ -216,10 +216,10 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Move<'a, T, U> {
         let s = if let Err(InvalidInput(msg)) = res {
             msg
         } else {
-            format!("{} ({}) moved to {}.",
+            format!("{} ({}) moved to {:?}.",
                     self.target.identifier(), self.target_str, self.position)
         };
-        as_io(self.bot.send_privmsg(self.chan, s[]))
+        as_io(self.bot.send_privmsg(self.chan, &s[]))
     }
 }
 
@@ -374,7 +374,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG #test :Test (@0) now has temporary Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }.\r\n");
+        let exp = String::from_str("PRIVMSG #test :Test (@0) now has temporary Stats { health: 20u8, movement: 30u8, strength: 12u8, dexterity: 12u8, constitution: 12u8, wisdom: 12u8, intellect: 12u8, charisma: 12u8 }.\r\n");
         assert_eq!(data, exp);
     }
 
@@ -415,7 +415,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG #test :Test (@0) has reverted to Stats { health: 14, movement: 30, strength: 12, dexterity: 10, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }.\r\n");
+        let exp = String::from_str("PRIVMSG #test :Test (@0) has reverted to Stats { health: 14u8, movement: 30u8, strength: 12u8, dexterity: 10u8, constitution: 12u8, wisdom: 12u8, intellect: 12u8, charisma: 12u8 }.\r\n");
         assert_eq!(data, exp);
     }
 
@@ -451,7 +451,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data, format!("PRIVMSG #test :Test (@0) moved to Position(6, 0).\r\n"));
+        assert_eq!(data, format!("PRIVMSG #test :Test (@0) moved to Position(6i32, 0i32).\r\n"));
     }
 
     #[test]
@@ -500,7 +500,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data, format!("PRIVMSG #test :test (test) moved to Position(6, 0).\r\n"));
+        assert_eq!(data, format!("PRIVMSG #test :test (test) moved to Position(6i32, 0i32).\r\n"));
     }
 
     #[test]

@@ -28,7 +28,7 @@ impl Stats {
     }
 
     fn stat_func<F>(&mut self, stat: &str, f: F) where F: FnOnce(&mut u8) -> () {
-        match stat.to_ascii_lowercase()[] {
+        match &stat.to_ascii_lowercase()[] {
             "health" => f(&mut self.health),
             "hp" => f(&mut self.health),
             "move" => f(&mut self.movement),
@@ -51,7 +51,7 @@ impl Stats {
 
     // This should be updated if there's a way to use stat_func(...) without making it mutable.
     pub fn get_stat(&self, stat: &str) -> Option<u8> {
-        match stat.to_ascii_lowercase()[] {
+        match &stat.to_ascii_lowercase()[] {
             "health" => Some(self.health),
             "hp" => Some(self.health),
             "move" => Some(self.movement),

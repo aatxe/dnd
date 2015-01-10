@@ -55,7 +55,7 @@ impl World {
     }
 
     pub fn add_game(&mut self, name: &str, dm_nick: &str, chan: &str) {
-        let game = Game::new(name[], dm_nick[]);
+        let game = Game::new(&name[], &dm_nick[]);
         self.games.insert(String::from_str(chan), game);
     }
 
@@ -68,9 +68,9 @@ impl World {
         }
     }
 
-    pub fn add_monster(&mut self, monster: Monster, chan: &str) -> uint {
+    pub fn add_monster(&mut self, monster: Monster, chan: &str) -> usize {
         let chan = String::from_str(chan);
-        let result = match self.monsters.entry(&chan) {
+        let result = match self.monsters.entry(chan) {
             Vacant(entry) => entry.insert(Vec::new()),
             Occupied(entry) => entry.into_mut(),
         };
@@ -80,7 +80,7 @@ impl World {
 
     pub fn get_entity(&mut self, identifier: &str, chan: Option<&str>) -> BotResult<&mut Entity> {
         if identifier.starts_with("@") {
-            let i: uint = match identifier[1..].parse() {
+            let i: usize = match identifier[1..].parse() {
                 Some(n) => n,
                 None => return Err(Io(IoError {
                     kind: InvalidInput,

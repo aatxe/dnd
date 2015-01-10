@@ -69,7 +69,7 @@ mod test {
 
     #[test]
     fn worldless_roll() {
-        for _ in range(0i, 1000i) {
+        for _ in range(0u16, 1000) {
             let r = Game::roll();
             assert!(r >= 1 && r <= 20);
         }

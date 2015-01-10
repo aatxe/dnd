@@ -32,11 +32,11 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Create<'a, T, U> {
             ));
         }
         try!(as_io(self.bot.send_join(self.chan)));
-        try!(as_io(self.bot.send_topic(self.chan, self.title[])));
+        try!(as_io(self.bot.send_topic(self.chan, &self.title[])));
         try!(as_io(self.bot.send_mode(self.chan, "+i", "")));
-        self.world.add_game(self.title[], self.user, self.chan);
+        self.world.add_game(&self.title[], self.user, self.chan);
         let s = format!("Campaign created named {}.", self.title);
-        try!(as_io(self.bot.send_privmsg(self.user, s[])));
+        try!(as_io(self.bot.send_privmsg(self.user, &s[])));
         as_io(self.bot.send_invite(self.user, self.chan))
     }
 }
@@ -54,7 +54,7 @@ impl<'a, T: IrcReader, U: IrcWriter> PrivateRoll<'a, T, U> {
 
 impl<'a, T: IrcReader, U: IrcWriter> Functionality for PrivateRoll<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
-        as_io(self.bot.send_privmsg(self.user, format!("You rolled {}.", Game::roll())[]))
+        as_io(self.bot.send_privmsg(self.user, &format!("You rolled {}.", Game::roll())[]))
     }
 }
 

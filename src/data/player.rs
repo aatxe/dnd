@@ -1,4 +1,5 @@
 use std::borrow::ToOwned;
+use std::error::Error;
 use std::io::fs::{File, mkdir_recursive};
 use std::io::{FilePermission, InvalidInput, IoError, IoResult};
 use std::num::ToPrimitive;
@@ -55,22 +56,22 @@ impl Player {
         let mut path = "users/".to_owned();
         path.push_str(username);
         path.push_str(".json");
-        let mut file = try!(File::open(&Path::new(path[])));
+        let mut file = try!(File::open(&Path::new(&path[])));
         let data = try!(file.read_to_string());
-        decode(data[]).map_err(|e| IoError {
+        decode(&data[]).map_err(|e| IoError {
             kind: InvalidInput,
             desc: "Decoder error",
-            detail: Some(e.to_string()),
+            detail: e.detail(),
         })
     }
 
     pub fn save(&self) -> IoResult<()> {
         let mut path = "users/".to_owned();
-        try!(mkdir_recursive(&Path::new(path[]), FilePermission::all()));
-        path.push_str(self.username[]);
+        try!(mkdir_recursive(&Path::new(&path[]), FilePermission::all()));
+        path.push_str(&self.username[]);
         path.push_str(".json");
-        let mut f = File::create(&Path::new(path[]));
-        f.write_str(encode(self)[])
+        let mut f = File::create(&Path::new(&path[]));
+        f.write_str(&encode(self)[])
     }
 
     pub fn add_feat(&mut self, feat: &str) {
@@ -80,7 +81,7 @@ impl Player {
 
 impl Entity for Player {
     fn identifier(&self) -> &str {
-        self.username[]
+        &self.username[]
     }
 
     fn position(&self) -> &Position {
@@ -117,7 +118,7 @@ impl Entity for Player {
     }
 
     fn do_move(&mut self, pos: Position) -> BotResult<()> {
-        if try!(self.position.distance(&pos)) <= self.stats().movement as int / 5 {
+        if try!(self.position.distance(&pos)) <= self.stats().movement as i32 / 5 {
             self.position = pos;
             Ok(())
         } else {
@@ -187,7 +188,7 @@ mod test {
         assert_eq!(p.feats.len(), 0);
         p.add_feat("Test Feat");
         assert_eq!(p.feats.len(), 1);
-        assert_eq!(p.feats[0][], "Test Feat");
+        assert_eq!(&p.feats[0][], "Test Feat");
     }
 
     #[test]
@@ -289,7 +290,7 @@ mod test {
     #[test]
     fn basic_roll() {
         let p = Player::create_test("test", "test", 20, 30, 12, 12, 8, 12, 12, 12);
-        for _ in range(0i, 1000i) {
+        for _ in range(0u16, 1000) {
             let r = p.roll(Basic);
             assert!(r >= 1 && r <= 20);
         }
@@ -298,7 +299,7 @@ mod test {
     #[test]
     fn positive_stat_roll() {
         let p = Player::create_test("test", "test", 20, 30, 12, 12, 8, 12, 12, 12);
-        for _ in range(0i, 1000i) {
+        for _ in range(0u16, 1000) {
             let r = p.roll(Dexterity);
             println!("{}", r);
             assert!(r >= 1 && r <= 21);
@@ -308,7 +309,7 @@ mod test {
     #[test]
     fn negative_stat_roll() {
         let p = Player::create_test("test", "test", 20, 30, 12, 12, 8, 12, 12, 12);
-        for _ in range(0i, 1000i) {
+        for _ in range(0u16, 1000) {
             let r = p.roll(Constitution);
             println!("{}", r);
             assert!(r >= 1 && r <= 19);
