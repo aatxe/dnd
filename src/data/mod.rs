@@ -88,7 +88,7 @@ impl Show for BotError {
             &BotError::InvalidInput(ref s) => s.fmt(fmt),
             &BotError::Io(ref io_err) => io_err.fmt(fmt),
             &BotError::NotFound(ref s) => s.fmt(fmt),
-            &BotError::PasswordIncorrect => "Password incorrect.".fmt(fmt),
+            &BotError::PasswordIncorrect => write!(fmt, "Password incorrect."),
             &BotError::Propagated(ref s, ref v) => {
                 try!(s.fmt(fmt));
                 v.fmt(fmt)
