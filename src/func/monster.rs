@@ -6,8 +6,8 @@ use data::utils::str_to_u8;
 use data::world::World;
 use func::Functionality;
 use func::utils::{get_target, incorrect_format, permissions_test, validate_from};
-use irc::data::kinds::{IrcReader, IrcWriter};
-use irc::server::utils::Wrapper;
+use irc::client::data::kinds::{IrcReader, IrcWriter};
+use irc::client::server::utils::Wrapper;
 
 pub struct AddMonster<'a, T: IrcReader, U: IrcWriter> {
     bot: &'a Wrapper<'a, T, U>,

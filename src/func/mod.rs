@@ -9,9 +9,9 @@ use std::io::IoResult;
 use data::{BotResult, as_io};
 use data::BotError::{InvalidInput, NotFound, Propagated};
 use data::world::World;
-use irc::data::kinds::{IrcReader, IrcWriter};
-use irc::server::Server;
-use irc::server::utils::Wrapper;
+use irc::client::data::kinds::{IrcReader, IrcWriter};
+use irc::client::server::Server;
+use irc::client::server::utils::Wrapper;
 
 pub mod entity;
 pub mod monster;
@@ -226,10 +226,10 @@ mod test {
     use data::{BotResult};
     use data::BotError::Propagated;
     use data::world::World;
-    use irc::conn::Connection;
-    use irc::data::Config;
-    use irc::server::{IrcServer, Server};
-    use irc::server::utils::Wrapper;
+    use irc::client::conn::Connection;
+    use irc::client::data::Config;
+    use irc::client::server::{IrcServer, Server};
+    use irc::client::server::utils::Wrapper;
 
     pub fn test_helper<F>(input: &str, world_hook: F) -> BotResult<String> 
         where F: FnOnce(&mut World) -> BotResult<()> {

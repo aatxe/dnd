@@ -6,8 +6,8 @@ use data::utils::{join_from, str_to_u8};
 use data::world::World;
 use func::Functionality;
 use func::utils::{incorrect_format, validate_from};
-use irc::data::kinds::{IrcReader, IrcWriter};
-use irc::server::utils::Wrapper;
+use irc::client::data::kinds::{IrcReader, IrcWriter};
+use irc::client::server::utils::Wrapper;
 
 pub struct Register<'a, T: IrcReader, U: IrcWriter> {
     bot: &'a Wrapper<'a, T, U>,

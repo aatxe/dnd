@@ -5,9 +5,9 @@ use data::utils::join_from;
 use data::world::World;
 use func::Functionality;
 use func::utils::incorrect_format;
-use irc::data::kinds::{IrcReader, IrcWriter};
-use irc::server::Server;
-use irc::server::utils::Wrapper;
+use irc::client::data::kinds::{IrcReader, IrcWriter};
+use irc::client::server::Server;
+use irc::client::server::utils::Wrapper;
 
 pub struct Create<'a, T: IrcReader, U: IrcWriter> {
     bot: &'a Wrapper<'a, T, U>,
