@@ -147,7 +147,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG test :Test (@0): Stats { health: 20u8, movement: 30u8, strength: 12u8, dexterity: 12u8, constitution: 12u8, wisdom: 12u8, intellect: 12u8, charisma: 12u8 }\r\n");
+        let exp = String::from_str("PRIVMSG test :Test (@0): Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }\r\n");
         assert_eq!(data, exp);
     }
 
@@ -198,7 +198,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG test :Test (@0): Temp. Stats { health: 20u8, movement: 30u8, strength: 12u8, dexterity: 12u8, constitution: 12u8, wisdom: 12u8, intellect: 12u8, charisma: 12u8 }\r\n");
+        let exp = String::from_str("PRIVMSG test :Test (@0): Temp. Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }\r\n");
         assert_eq!(data, exp);
     }
 
@@ -225,7 +225,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG test :Test (@0): Position(0i32, 0i32)\r\n");
+        let exp = String::from_str("PRIVMSG test :Test (@0): Position(0, 0)\r\n");
         assert_eq!(data, exp);
     }
 }

@@ -91,7 +91,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Login<'a, T, U> {
                 try!(as_io(self.bot.send_privmsg(self.user, try!(res))));
                 try!(as_io(self.bot.send_invite(self.user, self.chan)));
             } else {
-                return Err(Propagated(format!("{}", self.user), format!("{:?}", res.unwrap_err())))
+                return Err(Propagated(format!("{}", self.user), format!("{}", res.unwrap_err())))
             }
         } else {
             return Err(Propagated(format!("{}", self.user), format!("Game not found on {}.", self.chan)))
@@ -456,7 +456,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG test :test (test): Stats { health: 20u8, movement: 30u8, strength: 12u8, dexterity: 12u8, constitution: 12u8, wisdom: 12u8, intellect: 12u8, charisma: 12u8 } Feats []\r\n");
+        let exp = String::from_str("PRIVMSG test :test (test): Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 } Feats []\r\n");
         assert_eq!(data, exp);
     }
 
@@ -483,7 +483,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data, format!("PRIVMSG test :test (test): Position(0i32, 0i32)\r\n"));
+        assert_eq!(data, format!("PRIVMSG test :test (test): Position(0, 0)\r\n"));
     }
 
     #[test]
@@ -528,7 +528,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG #test :test (test): Stats { health: 20u8, movement: 30u8, strength: 12u8, dexterity: 12u8, constitution: 12u8, wisdom: 12u8, intellect: 12u8, charisma: 12u8 } Feats []\r\n");
+        let exp = String::from_str("PRIVMSG #test :test (test): Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 } Feats []\r\n");
         assert_eq!(data, exp);
     }
 
@@ -555,7 +555,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data, format!("PRIVMSG #test :test (test): Position(0i32, 0i32)\r\n"));
+        assert_eq!(data, format!("PRIVMSG #test :test (test): Position(0, 0)\r\n"));
     }
 
     #[test]

@@ -1,5 +1,5 @@
 use std::ascii::AsciiExt;
-use std::fmt::{Error, Formatter, Show};
+use std::fmt::{Display, Error, Formatter};
 use std::io::{IoError, IoResult};
 
 pub mod game;
@@ -82,17 +82,14 @@ pub enum BotError {
     Propagated(String, String),
 }
 
-impl Show for BotError {
+impl Display for BotError {
     fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
         match self {
-            &BotError::InvalidInput(ref s) => s.fmt(fmt),
-            &BotError::Io(ref io_err) => io_err.fmt(fmt),
-            &BotError::NotFound(ref s) => s.fmt(fmt),
+            &BotError::InvalidInput(ref s) => write!(fmt, "{}", s),
+            &BotError::Io(ref io_err) => write!(fmt, "{:?}", io_err),
+            &BotError::NotFound(ref s) => write!(fmt, "{}", s),
             &BotError::PasswordIncorrect => write!(fmt, "Password incorrect."),
-            &BotError::Propagated(ref s, ref v) => {
-                try!(s.fmt(fmt));
-                v.fmt(fmt)
-            }
+            &BotError::Propagated(ref s, ref v) => write!(fmt, "{}\r\n{}", s, v),
         }
     }
 }
@@ -187,9 +184,9 @@ mod test {
 
     #[test]
     fn distance() {
-        assert_eq!(Position(0, 0).distance(&Position(5, 4)), Ok(6));
-        assert_eq!(Position(0, 0).distance(&Position(6, 0)), Ok(6));
-        assert_eq!(Position(0, 0).distance(&Position(0, 6)), Ok(6));
+        assert_eq!(Position(0, 0).distance(&Position(5, 4)).unwrap(), 6);
+        assert_eq!(Position(0, 0).distance(&Position(6, 0)).unwrap(), 6);
+        assert_eq!(Position(0, 0).distance(&Position(0, 6)).unwrap(), 6);
     }
 
     #[test]

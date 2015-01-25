@@ -374,7 +374,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG #test :Test (@0) now has temporary Stats { health: 20u8, movement: 30u8, strength: 12u8, dexterity: 12u8, constitution: 12u8, wisdom: 12u8, intellect: 12u8, charisma: 12u8 }.\r\n");
+        let exp = String::from_str("PRIVMSG #test :Test (@0) now has temporary Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }.\r\n");
         assert_eq!(data, exp);
     }
 
@@ -415,7 +415,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG #test :Test (@0) has reverted to Stats { health: 14u8, movement: 30u8, strength: 12u8, dexterity: 10u8, constitution: 12u8, wisdom: 12u8, intellect: 12u8, charisma: 12u8 }.\r\n");
+        let exp = String::from_str("PRIVMSG #test :Test (@0) has reverted to Stats { health: 14, movement: 30, strength: 12, dexterity: 10, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }.\r\n");
         assert_eq!(data, exp);
     }
 
@@ -451,7 +451,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data, format!("PRIVMSG #test :Test (@0) moved to Position(6i32, 0i32).\r\n"));
+        assert_eq!(data, format!("PRIVMSG #test :Test (@0) moved to Position(6, 0).\r\n"));
     }
 
     #[test]
@@ -500,7 +500,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        assert_eq!(data, format!("PRIVMSG #test :test (test) moved to Position(6i32, 0i32).\r\n"));
+        assert_eq!(data, format!("PRIVMSG #test :test (test) moved to Position(6, 0).\r\n"));
     }
 
     #[test]

@@ -257,13 +257,13 @@ mod test {
     #[test]
     fn tokenize() {
         let mut store = Vec::new();
-        assert_eq!(super::tokenize("a bb ccc", &mut store), Ok(vec!("a", "bb", "ccc")));
+        assert_eq!(super::tokenize("a bb ccc", &mut store).unwrap(), vec!("a", "bb", "ccc"));
         store = Vec::new();
-        assert_eq!(super::tokenize("ab 3 ca", &mut store), Ok(vec!("ab", "3", "ca")));
+        assert_eq!(super::tokenize("ab 3 ca", &mut store).unwrap(), vec!("ab", "3", "ca"));
         store = Vec::new();
-        assert_eq!(super::tokenize("\"a b c\" d", &mut store), Ok(vec!("a b c", "d")));
+        assert_eq!(super::tokenize("\"a b c\" d", &mut store).unwrap(), vec!("a b c", "d"));
         store = Vec::new();
-        assert_eq!(super::tokenize("e \"a b c\" d", &mut store), Ok(vec!("e", "a b c", "d")));
+        assert_eq!(super::tokenize("e \"a b c\" d", &mut store).unwrap(), vec!("e", "a b c", "d"));
         store = Vec::new();
         assert!(super::tokenize("\"a b c d", &mut store).is_err());
         store = Vec::new();
@@ -274,7 +274,7 @@ mod test {
     fn permissions_test_no_game() {
         let res = super::utils::permissions_test("test", "#test", &mut World::new());
         assert!(res.is_err());
-        if let Propagated(left, right) = res.unwrap_err() {
+        if let Err(Propagated(left, right)) = res {
             assert_eq!(left, format!("test"));
             assert_eq!(right, format!("There is no game in #test."));
         } else {
@@ -288,7 +288,7 @@ mod test {
         world.add_game("Test", "test", "#test");
         let res = super::utils::permissions_test("test2", "#test", &mut world);
         assert!(res.is_err());
-        if let Propagated(left, right) = res.unwrap_err() {
+        if let Err(Propagated(left, right)) = res {
             assert_eq!(left, format!("test2"));
             assert_eq!(right, format!("You must be the DM to do that!"));
         } else {

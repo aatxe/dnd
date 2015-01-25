@@ -60,8 +60,8 @@ impl Player {
         let data = try!(file.read_to_string());
         decode(&data[]).map_err(|e| IoError {
             kind: InvalidInput,
-            desc: "Decoder error",
-            detail: e.detail(),
+            desc: "Failde to decode player data.",
+            detail: Some(e.description().to_owned()),
         })
     }
 
@@ -71,7 +71,11 @@ impl Player {
         path.push_str(&self.username[]);
         path.push_str(".json");
         let mut f = File::create(&Path::new(&path[]));
-        f.write_str(&encode(self)[])
+        f.write_str(&try!(encode(self).map_err(|e| IoError {
+            kind: InvalidInput,
+            desc: "Failed to encode player data.",
+            detail: Some(e.description().to_owned()),
+        }))[])
     }
 
     pub fn add_feat(&mut self, feat: &str) {
