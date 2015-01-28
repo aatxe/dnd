@@ -5,7 +5,7 @@ use self::monster::{AddMonster, LookUpMonster};
 use self::player::{AddFeat, AddUpdate, Login, Logout, LookUpPlayer, Register, Save};
 use self::world::{Create, PrivateRoll, SaveAll};
 use std::borrow::ToOwned;
-use std::io::IoResult;
+use std::old_io::IoResult;
 use data::{BotResult, as_io};
 use data::BotError::{InvalidInput, NotFound, Propagated};
 use data::world::World;
@@ -222,7 +222,7 @@ mod test {
     use super::process_world;
     use std::borrow::ToOwned;
     use std::default::Default;
-    use std::io::{MemReader, MemWriter};
+    use std::old_io::{MemReader, MemWriter};
     use data::{BotResult};
     use data::BotError::Propagated;
     use data::world::World;

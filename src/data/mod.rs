@@ -1,6 +1,6 @@
 use std::ascii::AsciiExt;
 use std::fmt::{Display, Error, Formatter};
-use std::io::{IoError, IoResult};
+use std::old_io::{IoError, IoResult};
 
 pub mod game;
 pub mod monster;
@@ -73,7 +73,7 @@ pub mod utils {
 
 pub type BotResult<T> = Result<T, BotError>;
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum BotError {
     InvalidInput(String),
     Io(IoError),
@@ -152,7 +152,7 @@ mod test {
     use super::RollType::{Strength, Wisdom, Intellect};
     use super::utils;
     use super::utils::Position;
-    use std::io::{InvalidInput, IoError, IoResult};
+    use std::old_io::{InvalidInput, IoError, IoResult};
 
     #[test]
     fn new_position() {

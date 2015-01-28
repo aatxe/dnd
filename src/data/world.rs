@@ -1,7 +1,7 @@
 use std::borrow::ToOwned;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
-use std::io::{InvalidInput, IoError, IoResult};
+use std::old_io::{InvalidInput, IoError, IoResult};
 use data::{BotResult, Entity, as_io};
 use data::BotError::{Io, NotFound};
 use data::game::Game;
