@@ -67,7 +67,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Damage<'a, T, U> {
             chan: chan,
             target_str: args[1],
             target: try!(get_target(args[1], user, chan, chan, world)),
-            value: if let Some(n) = args[2].parse() {
+            value: if let Ok(n) = args[2].parse() {
                 n
             } else {
                 return Err(Propagated(
@@ -174,8 +174,8 @@ pub struct Move<'a, T: IrcReader, U: IrcWriter> {
 }
 
 fn to_pos(x: &str, y: &str) -> Option<Position> {
-    if let Some(m) = x.parse() {
-        if let Some(n) = y.parse() {
+    if let Ok(m) = x.parse() {
+        if let Ok(n) = y.parse() {
             return Some(Position(m, n))
         }
     }

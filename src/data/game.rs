@@ -6,7 +6,7 @@ use std::rand::distributions::{IndependentSample, Range};
 use data::player::Player;
 use data::{BotResult, as_io};
 use data::BotError::PasswordIncorrect;
-use openssl::crypto::hash::{HashType, Hasher};
+use openssl::crypto::hash::{Type, Hasher};
 use rustc_serialize::hex::ToHex;
 
 pub struct Game {
@@ -34,9 +34,9 @@ impl Game {
     }
 
     pub fn password_hash(password: &str) -> IoResult<String> {
-        let mut hasher = Hasher::new(HashType::SHA512);
+        let mut hasher = Hasher::new(Type::SHA512);
         try!(hasher.write_str(password));
-        Ok(hasher.finalize().to_hex())
+        Ok(hasher.finish().to_hex())
     }
 
     pub fn roll() -> u8 {

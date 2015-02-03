@@ -15,7 +15,7 @@ pub mod utils {
     use std::ops::{Add, Sub};
     use std::num::{Float, Int, ToPrimitive, from_f32};
 
-    #[derive(Copy, RustcDecodable, RustcEncodable, Show, PartialEq, Clone)]
+    #[derive(Copy, RustcDecodable, RustcEncodable, Debug, PartialEq, Clone)]
     pub struct Position(pub i32, pub i32);
 
     impl Position {
@@ -114,7 +114,7 @@ pub trait Entity {
     fn clear_temp_stats(&mut self);
 }
 
-#[derive(Copy, Show, PartialEq)]
+#[derive(Copy, Debug, PartialEq)]
 pub enum RollType {
     Basic,
     Strength,

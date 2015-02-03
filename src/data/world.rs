@@ -81,11 +81,11 @@ impl World {
     pub fn get_entity(&mut self, identifier: &str, chan: Option<&str>) -> BotResult<&mut Entity> {
         if identifier.starts_with("@") {
             let i: usize = match identifier[1..].parse() {
-                Some(n) => n,
-                None => return Err(Io(IoError {
+                Ok(n) => n,
+                Err(m) => return Err(Io(IoError {
                     kind: InvalidInput,
                     desc: "Non-integer identifier.",
-                    detail: None,
+                    detail: Some(format!("{}", m)),
                 })),
             };
             if chan.is_some() {

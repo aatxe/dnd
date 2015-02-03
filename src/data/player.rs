@@ -12,7 +12,7 @@ use data::stats::Stats;
 use data::utils::Position;
 use rustc_serialize::json::{decode, encode};
 
-#[derive(RustcDecodable, RustcEncodable, Show, PartialEq, Clone)]
+#[derive(RustcDecodable, RustcEncodable, Debug, PartialEq, Clone)]
 pub struct Player {
     pub username: String,
     pub password: String,

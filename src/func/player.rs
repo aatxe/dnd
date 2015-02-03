@@ -261,7 +261,7 @@ impl<'a, T: IrcReader, U: IrcWriter> AddUpdate<'a, T, U> {
             chan: chan,
             world: world,
             stat_str: args[1],
-            value: if let Some(n) = args[2].parse() {
+            value: if let Ok(n) = args[2].parse() {
                 n
             } else {
                 return Err(Propagated(format!("{}", chan), format!("{} is not a valid positive integer.", args[2])));
