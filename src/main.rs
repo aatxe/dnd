@@ -1,6 +1,7 @@
-#![feature(box_syntax, collections, core, io, rand, path, slicing_syntax, std_misc)]
+#![feature(box_syntax, collections, core, io, path, slicing_syntax, std_misc)]
 extern crate irc;
 extern crate openssl;
+extern crate rand;
 extern crate "rustc-serialize" as rustc_serialize;
 
 #[cfg(not(test))] use data::world::World;

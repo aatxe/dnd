@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 use std::old_io::IoResult;
 use std::num::ToPrimitive;
-use std::rand::thread_rng;
-use std::rand::distributions::{IndependentSample, Range};
 use data::player::Player;
 use data::{BotResult, as_io};
 use data::BotError::PasswordIncorrect;
 use openssl::crypto::hash::{Type, Hasher};
+use rand::thread_rng;
+use rand::distributions::{IndependentSample, Range};
 use rustc_serialize::hex::ToHex;
 
 pub struct Game {

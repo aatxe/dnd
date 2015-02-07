@@ -1,11 +1,11 @@
 use std::num::ToPrimitive;
-use std::rand::thread_rng;
-use std::rand::distributions::{IndependentSample, Range};
 use data::{BotResult, Entity, RollType};
 use data::BotError::InvalidInput;
 use data::RollType::{Basic, Strength, Dexterity, Constitution, Wisdom, Intellect, Charisma};
 use data::stats::Stats;
 use data::utils::Position;
+use rand::thread_rng;
+use rand::distributions::{IndependentSample, Range};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Monster {

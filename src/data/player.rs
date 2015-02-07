@@ -3,13 +3,13 @@ use std::error::Error;
 use std::old_io::fs::{File, mkdir_recursive};
 use std::old_io::{FilePermission, InvalidInput, IoError, IoResult};
 use std::num::ToPrimitive;
-use std::rand::thread_rng;
-use std::rand::distributions::{IndependentSample, Range};
 use data::{BotResult, Entity, RollType, as_io};
 use data::RollType::{Basic, Strength, Dexterity, Constitution, Wisdom, Intellect, Charisma};
 use data::game::Game;
 use data::stats::Stats;
 use data::utils::Position;
+use rand::thread_rng;
+use rand::distributions::{IndependentSample, Range};
 use rustc_serialize::json::{decode, encode};
 
 #[derive(RustcDecodable, RustcEncodable, Debug, PartialEq, Clone)]
