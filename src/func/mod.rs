@@ -251,7 +251,8 @@ mod test {
             let mut token_store = Vec::new();
             process_world(&Wrapper::new(&server), &source[], &message.command[], &args[], &mut token_store, &mut world).unwrap();
         }
-        Ok(String::from_utf8(server.conn().writer().get_ref().to_vec()).unwrap())
+        let vec = server.conn().writer().get_ref().to_vec();
+        Ok(String::from_utf8(vec).unwrap())
     }
 
     #[test]
