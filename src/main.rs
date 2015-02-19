@@ -1,4 +1,4 @@
-#![feature(box_syntax, collections, core, io, path, slicing_syntax, std_misc)]
+#![feature(box_syntax, collections, core, io, path, std_misc)]
 extern crate irc;
 extern crate openssl;
 extern crate rand;
