@@ -31,7 +31,7 @@ impl Monster {
 
 impl Entity for Monster {
     fn identifier(&self) -> &str {
-        &self.name[]
+        &self.name
     }
 
     fn position(&self) -> &Position {

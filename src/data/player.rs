@@ -56,9 +56,9 @@ impl Player {
         let mut path = "users/".to_owned();
         path.push_str(username);
         path.push_str(".json");
-        let mut file = try!(File::open(&Path::new(&path[])));
+        let mut file = try!(File::open(&Path::new(&path)));
         let data = try!(file.read_to_string());
-        decode(&data[]).map_err(|e| IoError {
+        decode(&data).map_err(|e| IoError {
             kind: InvalidInput,
             desc: "Failde to decode player data.",
             detail: Some(e.description().to_owned()),
@@ -67,15 +67,15 @@ impl Player {
 
     pub fn save(&self) -> IoResult<()> {
         let mut path = "users/".to_owned();
-        try!(mkdir_recursive(&Path::new(&path[]), FilePermission::all()));
-        path.push_str(&self.username[]);
+        try!(mkdir_recursive(&Path::new(&path), FilePermission::all()));
+        path.push_str(&self.username);
         path.push_str(".json");
-        let mut f = File::create(&Path::new(&path[]));
+        let mut f = File::create(&Path::new(&path));
         f.write_str(&try!(encode(self).map_err(|e| IoError {
             kind: InvalidInput,
             desc: "Failed to encode player data.",
             detail: Some(e.description().to_owned()),
-        }))[])
+        }))[..])
     }
 
     pub fn add_feat(&mut self, feat: &str) {
@@ -85,7 +85,7 @@ impl Player {
 
 impl Entity for Player {
     fn identifier(&self) -> &str {
-        &self.username[]
+        &self.username
     }
 
     fn position(&self) -> &Position {
@@ -192,7 +192,7 @@ mod test {
         assert_eq!(p.feats.len(), 0);
         p.add_feat("Test Feat");
         assert_eq!(p.feats.len(), 1);
-        assert_eq!(&p.feats[0][], "Test Feat");
+        assert_eq!(&p.feats[0][..], "Test Feat");
     }
 
     #[test]

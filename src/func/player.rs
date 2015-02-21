@@ -43,7 +43,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Register<'a, T, U> {
         let p = try!(Player::create(self.username, self.password, self.health, self.movement,
                                     self.st, self.dx, self.cn, self.ws, self.it, self.ch));
         try!(as_io(p.save()));
-        as_io(self.bot.send_privmsg(self.user, &format!("Your account ({}) has been created.", self.username)[]))
+        as_io(self.bot.send_privmsg(self.user, &format!("Your account ({}) has been created.", self.username)))
     }
 }
 
@@ -143,8 +143,8 @@ impl<'a, T: IrcReader, U: IrcWriter> AddFeat<'a, T, U> {
 impl<'a, T: IrcReader, U: IrcWriter> Functionality for AddFeat<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
         if let Ok(player) = self.world.get_user(self.user) {
-            player.add_feat(&self.feat_name[]);
-            try!(as_io(self.bot.send_privmsg(self.user, &format!("Added {} feat.", self.feat_name)[])));
+            player.add_feat(&self.feat_name);
+            try!(as_io(self.bot.send_privmsg(self.user, &format!("Added {} feat.", self.feat_name))));
             Ok(())
         } else {
             Err(Propagated(format!("{}", self.user), format!("You must be logged in to add a feat.")))
@@ -169,10 +169,10 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Save<'a, T, U> {
         if let Ok(player) = self.world.get_user(self.user) {
             match player.save() {
                 Ok(_) => try!(as_io(
-                    self.bot.send_privmsg(self.user, &format!("Saved {}.", player.username)[])
+                    self.bot.send_privmsg(self.user, &format!("Saved {}.", player.username))
                 )),
                 Err(_) => try!(as_io(
-                    self.bot.send_privmsg(self.user, &format!("Failed to save {}.", player.username)[])
+                    self.bot.send_privmsg(self.user, &format!("Failed to save {}.", player.username))
                 )),
             }
             Ok(())
@@ -198,7 +198,7 @@ impl<'a, T: IrcReader, U: IrcWriter> LookUpPlayer<'a, T, U> {
             } else {
                 ""
             };
-            return Err(incorrect_format(resp, &format!("{}lookup", dot)[], "target [stat]"));
+            return Err(incorrect_format(resp, &format!("{}lookup", dot), "target [stat]"));
         }
         Ok(box LookUpPlayer {
             bot: bot,
@@ -224,16 +224,16 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for LookUpPlayer<'a, T, U> {
         let temp = if p.has_temp_stats() { "Temp. " } else { "" };
         if self.stat_str.is_none() {
             let s = format!("{} ({}): {}{:?} Feats {:?}", p.username, self.target_str, temp, p.stats(), p.feats);
-            as_io(self.bot.send_privmsg(self.resp, &s[]))
+            as_io(self.bot.send_privmsg(self.resp, &s))
         } else if self.stat_str.unwrap().eq_ignore_ascii_case("feats") || self.stat_str.unwrap().eq_ignore_ascii_case("feat") {
             let s = format!("{} ({}): {:?}", p.username, self.target_str, p.feats);
-            as_io(self.bot.send_privmsg(self.resp, &s[]))
+            as_io(self.bot.send_privmsg(self.resp, &s))
         } else if self.stat_str.unwrap().eq_ignore_ascii_case("pos") || self.stat_str.unwrap().eq_ignore_ascii_case("position") {
             let s = format!("{} ({}): {:?}", p.username, self.target_str, p.position());
-            as_io(self.bot.send_privmsg(self.resp, &s[]))
+            as_io(self.bot.send_privmsg(self.resp, &s))
         } else if let Some(x) = p.stats().get_stat(self.stat_str.unwrap()) {
             let s = format!("{} ({}): {}{} {}", p.identifier(), self.target_str, temp, x, self.stat_str.unwrap());
-            as_io(self.bot.send_privmsg(self.resp, &s[]))
+            as_io(self.bot.send_privmsg(self.resp, &s))
         } else {
             Err(Propagated(format!("{}", self.resp), format!("{} is not a valid stat.", self.stat_str.unwrap())))
         }
@@ -277,13 +277,13 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for AddUpdate<'a, T, U> {
             if self.update {
                 p.stats.update_stat(self.stat_str, self.value);
                 try!(as_io(
-                    self.bot.send_privmsg(self.chan, &format!("{} ({}) now has {} {}.", p.username, self.user, self.value, self.stat_str)[])
+                    self.bot.send_privmsg(self.chan, &format!("{} ({}) now has {} {}.", p.username, self.user, self.value, self.stat_str))
                 ));
             } else {
                 p.stats.increase_stat(self.stat_str, self.value);
                 let k = if let Some(i) = p.stats.get_stat(self.stat_str) { i } else { 0 };
                 try!(as_io(
-                    self.bot.send_privmsg(self.chan, &format!("{} ({}) now has {} {}.", p.username, self.user, k, self.stat_str)[])
+                    self.bot.send_privmsg(self.chan, &format!("{} ({}) now has {} {}.", p.username, self.user, k, self.stat_str))
                 ));
             }
             Ok(())

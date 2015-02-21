@@ -1,4 +1,4 @@
-#![feature(box_syntax, collections, core, io, path, std_misc)]
+#![feature(box_syntax, collections, core, old_io, old_path, std_misc)]
 extern crate irc;
 extern crate openssl;
 extern crate rand;
@@ -18,13 +18,13 @@ fn main() {
     for message in server.iter() {
         let message = message.unwrap();
         println!("{}", message.into_string());
-        let mut args: Vec<_> = message.args.iter().map(|s| &s[]).collect();
+        let mut args: Vec<_> = message.args.iter().map(|s| &s[..]).collect();
         if let Some(ref suffix) = message.suffix {
-            args.push(&suffix[])
+            args.push(&suffix)
         }
         let source = message.prefix.unwrap_or(String::new());
         let mut token_store = Vec::new();
-        func::process_world(&Wrapper::new(&server), &source[], &message.command[], &args[],
+        func::process_world(&Wrapper::new(&server), &source, &message.command, &args,
                             &mut token_store, &mut world).unwrap();
     }
 }

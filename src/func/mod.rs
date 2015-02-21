@@ -69,13 +69,13 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Help<'a, T, U> {
                     _ => return Err(Propagated(format!("{}", self.resp), format!("{} is not a valid command.", self.cmd.unwrap())))
                 }
             };
-            as_io(self.bot.send_privmsg(self.resp, &format!("Format: {} {}", self.cmd.unwrap(), format)[]))
+            as_io(self.bot.send_privmsg(self.resp, &format!("Format: {} {}", self.cmd.unwrap(), format)))
         } else {
             let mut s = String::from_str("List of Commands:\r\n");
             s.push_str("Channel commands: .roll .lookup .update .increase .temp .cleartemp .damage .move\r\n");
             s.push_str("Query commands: register login create logout addfeat roll saveall save lookup mlookup addmonster\r\n");
-            s.push_str(&format!("If you need additional help, use {}help [command].", if self.resp.starts_with("#") { "." } else { "" })[]);
-            as_io(self.bot.send_privmsg(self.resp, &s[]))
+            s.push_str(&format!("If you need additional help, use {}help [command].", if self.resp.starts_with("#") { "." } else { "" }));
+            as_io(self.bot.send_privmsg(self.resp, &s))
         }
     }
 }
@@ -105,7 +105,7 @@ fn tokenize<'a>(line: &'a str, vec: &'a mut Vec<String>) -> BotResult<Vec<&'a st
     if s.len() != 0 {
         Err(InvalidInput("Could not tokenize malformed arguments.".to_owned()))
     } else {
-        Ok(vec.iter().map(|s| &s[]).collect())
+        Ok(vec.iter().map(|s| &s[..]).collect())
     }
 }
 
@@ -116,7 +116,7 @@ pub fn process_world<'a, T: IrcReader, U: IrcWriter>(bot: &'a Wrapper<'a, T, U>,
         ("PRIVMSG", [chan, msg]) => {
             let user = source.find('!').map_or("", |i| &source[..i]);
             let tokens = match tokenize(msg, token_store) {
-                Err(InvalidInput(msg)) => return bot.send_privmsg(user, &msg[]),
+                Err(InvalidInput(msg)) => return bot.send_privmsg(user, &msg),
                 Err(_) => return bot.send_privmsg(user, "Something went seriously wrong."),
                 Ok(tokens) => tokens,
             };
@@ -155,9 +155,9 @@ pub fn process_world<'a, T: IrcReader, U: IrcWriter>(bot: &'a Wrapper<'a, T, U>,
                 }
             };
             if let Err(Propagated(resp, msg)) = func {
-                try!(bot.send_privmsg(&resp[], &msg[]));
+                try!(bot.send_privmsg(&resp, &msg));
             } else if let Err(Propagated(resp, msg)) = func.and_then(|mut f| f.do_func()) {
-                try!(bot.send_privmsg(&resp[], &msg[]));
+                try!(bot.send_privmsg(&resp, &msg));
             }
         },
         ("NOTICE", [_, suffix]) => {
@@ -243,13 +243,13 @@ mod test {
         for message in server.iter() {
             let message = message.unwrap();
             println!("{:?}", message);
-            let mut args: Vec<_> = message.args.iter().map(|s| &s[]).collect();
+            let mut args: Vec<_> = message.args.iter().map(|s| &s[..]).collect();
             if let Some(ref suffix) = message.suffix {
-                args.push(&suffix[])
+                args.push(&suffix)
             }
             let source = message.prefix.unwrap_or(String::new());
             let mut token_store = Vec::new();
-            process_world(&Wrapper::new(&server), &source[], &message.command[], &args[], &mut token_store, &mut world).unwrap();
+            process_world(&Wrapper::new(&server), &source, &message.command, &args, &mut token_store, &mut world).unwrap();
         }
         let vec = server.conn().writer().get_ref().to_vec();
         Ok(String::from_utf8(vec).unwrap())

@@ -47,7 +47,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Roll<'a, T, U> {
         }
         let s = format!("{} rolled {}.",
                         self.target.identifier(), self.target.roll(self.stat.unwrap()));
-        as_io(self.bot.send_privmsg(self.chan, &s[]))
+        as_io(self.bot.send_privmsg(self.chan, &s))
     }
 }
 
@@ -87,7 +87,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Damage<'a, T, U> {
         } else {
             format!("{} ({}) has fallen unconscious.", self.target.identifier(), self.target_str)
         };
-        as_io(self.bot.send_privmsg(self.chan, &m[]))
+        as_io(self.bot.send_privmsg(self.chan, &m))
     }
 }
 
@@ -129,7 +129,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for SetTempStats<'a, T, U> {
                                               self.ws, self.it, self.ch));
         let s = format!("{} ({}) now has temporary {:?}.",
                         self.target.identifier(), self.target_str, self.target.stats());
-        as_io(self.bot.send_privmsg(self.chan, &s[]))
+        as_io(self.bot.send_privmsg(self.chan, &s))
     }
 }
 
@@ -161,7 +161,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for ClearTempStats<'a, T, U> 
         self.target.clear_temp_stats();
         let s = format!("{} ({}) has reverted to {:?}.",
                         self.target.identifier(), self.target_str, self.target.stats());
-        as_io(self.bot.send_privmsg(self.chan, &s[]))
+        as_io(self.bot.send_privmsg(self.chan, &s))
     }
 }
 
@@ -219,7 +219,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Move<'a, T, U> {
             format!("{} ({}) moved to {:?}.",
                     self.target.identifier(), self.target_str, self.position)
         };
-        as_io(self.bot.send_privmsg(self.chan, &s[]))
+        as_io(self.bot.send_privmsg(self.chan, &s))
     }
 }
 

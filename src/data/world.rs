@@ -55,7 +55,7 @@ impl World {
     }
 
     pub fn add_game(&mut self, name: &str, dm_nick: &str, chan: &str) {
-        let game = Game::new(&name[], &dm_nick[]);
+        let game = Game::new(&name, &dm_nick);
         self.games.insert(String::from_str(chan), game);
     }
 

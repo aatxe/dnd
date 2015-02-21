@@ -47,7 +47,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for AddMonster<'a, T, U> {
                                 self.ws, self.it, self.ch);
         let s = format!("Monster ({}) has been created as @{}.",
                         self.name, self.world.add_monster(m, self.chan));
-        as_io(self.bot.send_privmsg(self.user, &s[]))
+        as_io(self.bot.send_privmsg(self.user, &s))
     }
 }
 
@@ -94,13 +94,13 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for LookUpMonster<'a, T, U> {
         };
         if self.stat_str.is_none() {
             let s = format!("{} ({}): {}{:?}", target.identifier(), self.target_str, temp, target.stats());
-            as_io(self.bot.send_privmsg(self.user, &s[]))
+            as_io(self.bot.send_privmsg(self.user, &s))
         } else if self.stat_str.unwrap().eq_ignore_ascii_case("pos") || self.stat_str.unwrap().eq_ignore_ascii_case("position") {
             let s = format!("{} ({}): {:?}", target.identifier(), self.target_str, target.position());
-            as_io(self.bot.send_privmsg(self.user, &s[]))
+            as_io(self.bot.send_privmsg(self.user, &s))
         } else if let Some(x) = target.stats().get_stat(self.stat_str.unwrap()) {
             let s = format!("{} ({}): {}{} {}", target.identifier(), self.target_str, temp, x, self.stat_str.unwrap());
-            as_io(self.bot.send_privmsg(self.user, &s[]))
+            as_io(self.bot.send_privmsg(self.user, &s))
         } else {
             Err(Propagated(format!("{}", self.user), format!("{} is not a valid stat.", self.stat_str.unwrap())))
         }

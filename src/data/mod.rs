@@ -127,7 +127,7 @@ pub enum RollType {
 
 impl RollType {
     pub fn to_roll_type(roll_type: &str) -> Option<RollType> {
-        match &roll_type.to_ascii_lowercase()[] {
+        match &roll_type.to_ascii_lowercase()[..] {
             "strength" => Some(RollType::Strength),
             "str" => Some(RollType::Strength),
             "dexterity" => Some(RollType::Dexterity),
@@ -206,8 +206,8 @@ mod test {
 
     #[test]
     fn join_from() {
-        assert_eq!(&utils::join_from(vec!["hi","there","friend"], 0)[], "hi there friend");
-        assert_eq!(&utils::join_from(vec!["hi","their","friend"], 1)[], "their friend");
+        assert_eq!(&utils::join_from(vec!["hi","there","friend"], 0)[..], "hi there friend");
+        assert_eq!(&utils::join_from(vec!["hi","their","friend"], 1)[..], "their friend");
     }
 
     #[test]
