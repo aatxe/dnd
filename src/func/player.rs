@@ -6,11 +6,10 @@ use data::utils::{join_from, str_to_u8};
 use data::world::World;
 use func::Functionality;
 use func::utils::{incorrect_format, validate_from};
-use irc::client::data::kinds::{IrcReader, IrcWriter};
-use irc::client::server::utils::Wrapper;
+use irc::client::prelude::*;
 
-pub struct Register<'a, T: IrcReader, U: IrcWriter> {
-    bot: &'a Wrapper<'a, T, U>,
+pub struct Register<'a, T: IrcRead, U: IrcWrite> {
+    bot: &'a ServerExt<'a, T, U>,
     user: &'a str,
     username: &'a str, password: &'a str,
     health: u8, movement: u8,
@@ -18,8 +17,8 @@ pub struct Register<'a, T: IrcReader, U: IrcWriter> {
     ws: u8, it: u8, ch: u8,
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Register<'a, T, U> {
-    pub fn new(bot: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T: IrcRead, U: IrcWrite> Register<'a, T, U> {
+    pub fn new(bot: &'a ServerExt<'a, T, U>, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 11 {
             return Err(incorrect_format(user, "register",
                                         "username password health movement str dex con wis int cha")
@@ -38,7 +37,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Register<'a, T, U> {
     }
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Functionality for Register<'a, T, U> {
+impl<'a, T: IrcRead, U: IrcWrite> Functionality for Register<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
         let p = try!(Player::create(self.username, self.password, self.health, self.movement,
                                     self.st, self.dx, self.cn, self.ws, self.it, self.ch));
@@ -47,16 +46,16 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Register<'a, T, U> {
     }
 }
 
-pub struct Login<'a, T: IrcReader, U: IrcWriter> {
-    bot: &'a Wrapper<'a, T, U>,
+pub struct Login<'a, T: IrcRead, U: IrcWrite> {
+    bot: &'a ServerExt<'a, T, U>,
     user: &'a str,
     world: &'a mut World,
     chan: &'a str,
     player: Player, password: &'a str,
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Login<'a, T, U> {
-    pub fn new(bot: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T: IrcRead, U: IrcWrite> Login<'a, T, U> {
+    pub fn new(bot: &'a ServerExt<'a, T, U>, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
             return Err(incorrect_format(user, "login", "username password channel"));
         } else if world.is_user_logged_in(user) {
@@ -83,7 +82,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Login<'a, T, U> {
     }
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Functionality for Login<'a, T, U> {
+impl<'a, T: IrcRead, U: IrcWrite> Functionality for Login<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
         if let Some(game) = self.world.games.get_mut(&String::from_str(self.chan)) {
             let res = game.login(self.player.clone(), self.user, self.password);
@@ -101,19 +100,19 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Login<'a, T, U> {
     }
 }
 
-pub struct Logout<'a, T: IrcReader, U: IrcWriter> {
-    bot: &'a Wrapper<'a, T, U>,
+pub struct Logout<'a, T: IrcRead, U: IrcWrite> {
+    bot: &'a ServerExt<'a, T, U>,
     user: &'a str,
     world: &'a mut World,
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Logout<'a, T, U> {
-    pub fn new(bot: &'a Wrapper<'a, T, U>, user: &'a str, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T: IrcRead, U: IrcWrite> Logout<'a, T, U> {
+    pub fn new(bot: &'a ServerExt<'a, T, U>, user: &'a str, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         Ok(box Logout { bot: bot, user: user, world: world } as Box<Functionality>)
     }
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Functionality for Logout<'a, T, U> {
+impl<'a, T: IrcRead, U: IrcWrite> Functionality for Logout<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
         if self.world.is_user_logged_in(self.user) {
             let chan = try!(self.world.remove_user(self.user));
@@ -126,21 +125,21 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Logout<'a, T, U> {
     }
 }
 
-pub struct AddFeat<'a, T: IrcReader, U: IrcWriter> {
-    bot: &'a Wrapper<'a, T, U>,
+pub struct AddFeat<'a, T: IrcRead, U: IrcWrite> {
+    bot: &'a ServerExt<'a, T, U>,
     user: &'a str,
     world: &'a mut World,
     feat_name: String,
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> AddFeat<'a, T, U> {
-    pub fn new(bot: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T: IrcRead, U: IrcWrite> AddFeat<'a, T, U> {
+    pub fn new(bot: &'a ServerExt<'a, T, U>, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if args.len() < 2 { return Err(incorrect_format(user, "addfeat", "name of feat")); }
         Ok(box AddFeat { bot: bot, user: user, world: world, feat_name: join_from(args, 1) } as Box<Functionality>)
     }
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Functionality for AddFeat<'a, T, U> {
+impl<'a, T: IrcRead, U: IrcWrite> Functionality for AddFeat<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
         if let Ok(player) = self.world.get_user(self.user) {
             player.add_feat(&self.feat_name);
@@ -152,19 +151,19 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for AddFeat<'a, T, U> {
     }
 }
 
-pub struct Save<'a, T: IrcReader, U: IrcWriter> {
-    bot: &'a Wrapper<'a, T, U>,
+pub struct Save<'a, T: IrcRead, U: IrcWrite> {
+    bot: &'a ServerExt<'a, T, U>,
     user: &'a str,
     world: &'a mut World,
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Save<'a, T, U> {
-    pub fn new(bot: &'a Wrapper<'a, T, U>, user: &'a str, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T: IrcRead, U: IrcWrite> Save<'a, T, U> {
+    pub fn new(bot: &'a ServerExt<'a, T, U>, user: &'a str, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         Ok(box Save { bot: bot, user: user, world: world } as Box<Functionality>)
     }
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Functionality for Save<'a, T, U> {
+impl<'a, T: IrcRead, U: IrcWrite> Functionality for Save<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
         if let Ok(player) = self.world.get_user(self.user) {
             match player.save() {
@@ -182,16 +181,16 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Save<'a, T, U> {
     }
 }
 
-pub struct LookUpPlayer<'a, T: IrcReader, U: IrcWriter> {
-    bot: &'a Wrapper<'a, T, U>,
+pub struct LookUpPlayer<'a, T: IrcRead, U: IrcWrite> {
+    bot: &'a ServerExt<'a, T, U>,
     resp: &'a str,
     world: &'a mut World,
     target_str: &'a str,
     stat_str: Option<&'a str>,
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> LookUpPlayer<'a, T, U> {
-    pub fn new(bot: &'a Wrapper<'a, T, U>, resp: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T: IrcRead, U: IrcWrite> LookUpPlayer<'a, T, U> {
+    pub fn new(bot: &'a ServerExt<'a, T, U>, resp: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 2 && args.len() != 3 {
             let dot = if resp.starts_with("#") {
                 "."
@@ -214,7 +213,7 @@ impl<'a, T: IrcReader, U: IrcWriter> LookUpPlayer<'a, T, U> {
     }
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Functionality for LookUpPlayer<'a, T, U> {
+impl<'a, T: IrcRead, U: IrcWrite> Functionality for LookUpPlayer<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
         let res = self.world.get_user(self.target_str);
         if res.is_err() {
@@ -240,8 +239,8 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for LookUpPlayer<'a, T, U> {
     }
 }
 
-pub struct AddUpdate<'a, T: IrcReader, U: IrcWriter> {
-    bot: &'a Wrapper<'a, T, U>,
+pub struct AddUpdate<'a, T: IrcRead, U: IrcWrite> {
+    bot: &'a ServerExt<'a, T, U>,
     user: &'a str,
     chan: &'a str,
     world: &'a mut World,
@@ -250,8 +249,8 @@ pub struct AddUpdate<'a, T: IrcReader, U: IrcWriter> {
     update: bool,
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> AddUpdate<'a, T, U> {
-    pub fn new(bot: &'a Wrapper<'a, T, U>, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World, update: bool) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T: IrcRead, U: IrcWrite> AddUpdate<'a, T, U> {
+    pub fn new(bot: &'a ServerExt<'a, T, U>, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World, update: bool) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 {
             return Err(incorrect_format(chan, if update { ".update" } else { ".increase" }, "stat value"));
         }
@@ -271,7 +270,7 @@ impl<'a, T: IrcReader, U: IrcWriter> AddUpdate<'a, T, U> {
     }
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Functionality for AddUpdate<'a, T, U> {
+impl<'a, T: IrcRead, U: IrcWrite> Functionality for AddUpdate<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
         if let Ok(p) = self.world.get_user(self.user) {
             if self.update {

@@ -6,19 +6,18 @@ use data::utils::{Position, str_to_u8};
 use data::world::World;
 use func::Functionality;
 use func::utils::{get_target, incorrect_format, permissions_test, validate_from};
-use irc::client::data::kinds::{IrcReader, IrcWriter};
-use irc::client::server::utils::Wrapper;
+use irc::client::prelude::*;
 
-pub struct Roll<'a, T: IrcReader, U: IrcWriter> {
-    bot: &'a Wrapper<'a, T, U>,
+pub struct Roll<'a, T: IrcRead, U: IrcWrite> {
+    bot: &'a ServerExt<'a, T, U>,
     chan: &'a str,
     target: &'a (Entity + 'a),
     stat_str: Option<&'a str>,
     stat: Option<RollType>,
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Roll<'a, T, U> {
-    pub fn new(bot: &'a Wrapper<'a, T, U>, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T: IrcRead, U: IrcWrite> Roll<'a, T, U> {
+    pub fn new(bot: &'a ServerExt<'a, T, U>, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if args.len() > 3 { return Err(incorrect_format(chan, ".roll", "[@monster] [stat]")); }
         let (stat_str, stat) = if args.len() == 3 && args[1].starts_with("@") {
             (Some(args[2]), RollType::to_roll_type(args[2]))
@@ -37,7 +36,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Roll<'a, T, U> {
     }
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Functionality for Roll<'a, T, U> {
+impl<'a, T: IrcRead, U: IrcWrite> Functionality for Roll<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
         if self.stat.is_none() {
             return Err(Propagated(
@@ -51,16 +50,16 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Roll<'a, T, U> {
     }
 }
 
-pub struct Damage<'a, T: IrcReader, U: IrcWriter> {
-    bot: &'a Wrapper<'a, T, U>,
+pub struct Damage<'a, T: IrcRead, U: IrcWrite> {
+    bot: &'a ServerExt<'a, T, U>,
     chan: &'a str,
     target_str: &'a str,
     target: &'a mut (Entity + 'a),
     value: u8,
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Damage<'a, T, U> {
-    pub fn new(bot: &'a Wrapper<'a, T, U>, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T: IrcRead, U: IrcWrite> Damage<'a, T, U> {
+    pub fn new(bot: &'a ServerExt<'a, T, U>, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 { return Err(incorrect_format(chan, ".damage", "target value")); }
         Ok(box Damage {
             bot: bot,
@@ -79,7 +78,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Damage<'a, T, U> {
     }
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Functionality for Damage<'a, T, U> {
+impl<'a, T: IrcRead, U: IrcWrite> Functionality for Damage<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
         let m = if self.target.damage(self.value) {
             format!("{} ({}) took {} damage and has {} health remaining.", self.target.identifier(),
@@ -91,8 +90,8 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Damage<'a, T, U> {
     }
 }
 
-pub struct SetTempStats<'a, T: IrcReader, U: IrcWriter> {
-    bot: &'a Wrapper<'a, T, U>,
+pub struct SetTempStats<'a, T: IrcRead, U: IrcWrite> {
+    bot: &'a ServerExt<'a, T, U>,
     chan: &'a str,
     target_str: &'a str,
     target: &'a mut (Entity + 'a),
@@ -101,8 +100,8 @@ pub struct SetTempStats<'a, T: IrcReader, U: IrcWriter> {
     ws: u8, it: u8, ch: u8,
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> SetTempStats<'a, T, U> {
-    pub fn new(bot: &'a Wrapper<'a, T, U>, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T: IrcRead, U: IrcWrite> SetTempStats<'a, T, U> {
+    pub fn new(bot: &'a ServerExt<'a, T, U>, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if let Err(perm) = permissions_test(user, chan, world) {
             return Err(perm);
         } else if args.len() != 10 {
@@ -123,7 +122,7 @@ impl<'a, T: IrcReader, U: IrcWriter> SetTempStats<'a, T, U> {
     }
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Functionality for SetTempStats<'a, T, U> {
+impl<'a, T: IrcRead, U: IrcWrite> Functionality for SetTempStats<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
         self.target.set_temp_stats(Stats::new(self.health, self.movement, self.st, self.dx, self.cn,
                                               self.ws, self.it, self.ch));
@@ -133,15 +132,15 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for SetTempStats<'a, T, U> {
     }
 }
 
-pub struct ClearTempStats<'a, T: IrcReader, U: IrcWriter> {
-    bot: &'a Wrapper<'a, T, U>,
+pub struct ClearTempStats<'a, T: IrcRead, U: IrcWrite> {
+    bot: &'a ServerExt<'a, T, U>,
     chan: &'a str,
     target_str: &'a str,
     target: &'a mut (Entity + 'a),
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> ClearTempStats<'a, T, U> {
-    pub fn new(bot: &'a Wrapper<'a, T, U>, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T: IrcRead, U: IrcWrite> ClearTempStats<'a, T, U> {
+    pub fn new(bot: &'a ServerExt<'a, T, U>, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if let Err(perm) = permissions_test(user, chan, world) {
             return Err(perm);
         } else if args.len() != 2 {
@@ -156,7 +155,7 @@ impl<'a, T: IrcReader, U: IrcWriter> ClearTempStats<'a, T, U> {
     }
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Functionality for ClearTempStats<'a, T, U> {
+impl<'a, T: IrcRead, U: IrcWrite> Functionality for ClearTempStats<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
         self.target.clear_temp_stats();
         let s = format!("{} ({}) has reverted to {:?}.",
@@ -165,8 +164,8 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for ClearTempStats<'a, T, U> 
     }
 }
 
-pub struct Move<'a, T: IrcReader, U: IrcWriter> {
-    bot: &'a Wrapper<'a, T, U>,
+pub struct Move<'a, T: IrcRead, U: IrcWrite> {
+    bot: &'a ServerExt<'a, T, U>,
     chan: &'a str,
     target_str: &'a str,
     target: &'a mut (Entity + 'a),
@@ -182,8 +181,8 @@ fn to_pos(x: &str, y: &str) -> Option<Position> {
     None
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Move<'a, T, U> {
-    pub fn new(bot: &'a Wrapper<'a, T, U>, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T: IrcRead, U: IrcWrite> Move<'a, T, U> {
+    pub fn new(bot: &'a ServerExt<'a, T, U>, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 && args.len() != 4 {
             return Err(incorrect_format(chan, ".move", "[@monster] x y"));
         }
@@ -210,7 +209,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Move<'a, T, U> {
     }
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Functionality for Move<'a, T, U> {
+impl<'a, T: IrcRead, U: IrcWrite> Functionality for Move<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
         let res = self.target.do_move(self.position);
         let s = if let Err(InvalidInput(msg)) = res {

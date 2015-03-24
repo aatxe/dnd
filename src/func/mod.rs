@@ -1,5 +1,3 @@
-extern crate irc;
-
 use self::entity::{ClearTempStats, Damage, Move, Roll, SetTempStats};
 use self::monster::{AddMonster, LookUpMonster};
 use self::player::{AddFeat, AddUpdate, Login, Logout, LookUpPlayer, Register, Save};
@@ -9,9 +7,7 @@ use std::old_io::IoResult;
 use data::{BotResult, as_io};
 use data::BotError::{InvalidInput, NotFound, Propagated};
 use data::world::World;
-use irc::client::data::kinds::{IrcReader, IrcWriter};
-use irc::client::server::Server;
-use irc::client::server::utils::Wrapper;
+use irc::client::prelude::*;
 
 pub mod entity;
 pub mod monster;
@@ -22,14 +18,14 @@ pub trait Functionality {
     fn do_func(&mut self) -> BotResult<()>;
 }
 
-pub struct Help<'a, T: IrcReader, U: IrcWriter> {
-    bot: &'a Wrapper<'a, T, U>,
+pub struct Help<'a, T: IrcRead, U: IrcWrite> {
+    bot: &'a ServerExt<'a, T, U>,
     resp: &'a str,
     cmd: Option<&'a str>,
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Help<'a, T, U> {
-    pub fn new(bot: &'a Wrapper<'a, T, U>, resp: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T: IrcRead, U: IrcWrite> Help<'a, T, U> {
+    pub fn new(bot: &'a ServerExt<'a, T, U>, resp: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 1 && args.len() != 2 { return Err(utils::incorrect_format(resp, "help", "[command]")); }
         Ok(box Help { bot: bot, resp: resp,
                       cmd: if args.len() == 2 { Some(args[1]) } else { None }
@@ -37,7 +33,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Help<'a, T, U> {
     }
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Functionality for Help<'a, T, U> {
+impl<'a, T: IrcRead, U: IrcWrite> Functionality for Help<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
         if let Some(cmd) = self.cmd {
             // FIXME: There has to be some way of improving this.
@@ -109,7 +105,7 @@ fn tokenize<'a>(line: &'a str, vec: &'a mut Vec<String>) -> BotResult<Vec<&'a st
     }
 }
 
-pub fn process_world<'a, T: IrcReader, U: IrcWriter>(bot: &'a Wrapper<'a, T, U>, source: &'a str, 
+pub fn process_world<'a, T: IrcRead, U: IrcWrite>(bot: &'a ServerExt<'a, T, U>, source: &'a str, 
     command: &str, args: &[&'a str], token_store: &'a mut Vec<String>, world: &'a mut World) 
     -> IoResult<()> {
     match (command, args) {
@@ -229,7 +225,7 @@ mod test {
     use irc::client::conn::Connection;
     use irc::client::data::Config;
     use irc::client::server::{IrcServer, Server};
-    use irc::client::server::utils::Wrapper;
+    use irc::client::server::utils::ServerExt;
 
     pub fn test_helper<F>(input: &str, world_hook: F) -> BotResult<String> 
         where F: FnOnce(&mut World) -> BotResult<()> {
@@ -249,7 +245,7 @@ mod test {
             }
             let source = message.prefix.unwrap_or(String::new());
             let mut token_store = Vec::new();
-            process_world(&Wrapper::new(&server), &source, &message.command, &args, &mut token_store, &mut world).unwrap();
+            process_world(&server, &source, &message.command, &args, &mut token_store, &mut world).unwrap();
         }
         let vec = server.conn().writer().get_ref().to_vec();
         Ok(String::from_utf8(vec).unwrap())

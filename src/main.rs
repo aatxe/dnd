@@ -5,8 +5,7 @@ extern crate rand;
 extern crate "rustc-serialize" as rustc_serialize;
 
 #[cfg(not(test))] use data::world::World;
-#[cfg(not(test))] use irc::client::server::{IrcServer, Server};
-#[cfg(not(test))] use irc::client::server::utils::Wrapper;
+#[cfg(not(test))] use irc::client::prelude::*;
 
 mod data;
 mod func;
@@ -24,7 +23,7 @@ fn main() {
         }
         let source = message.prefix.unwrap_or(String::new());
         let mut token_store = Vec::new();
-        func::process_world(&Wrapper::new(&server), &source, &message.command, &args,
+        func::process_world(&server, &source, &message.command, &args,
                             &mut token_store, &mut world).unwrap();
     }
 }
