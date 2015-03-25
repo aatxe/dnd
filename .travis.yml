@@ -4,7 +4,6 @@ script:
   - ./mktestconfig.sh
   - cargo build --verbose
   - cargo test --verbose
-  - cargo doc --verbose
 notifications:
   irc:
     channels:
