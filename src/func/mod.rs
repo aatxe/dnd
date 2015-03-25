@@ -3,11 +3,11 @@ use self::monster::{AddMonster, LookUpMonster};
 use self::player::{AddFeat, AddUpdate, Login, Logout, LookUpPlayer, Register, Save};
 use self::world::{Create, PrivateRoll, SaveAll};
 use std::borrow::ToOwned;
-use std::old_io::IoResult;
+use std::io::Result;
 use data::{BotResult, as_io};
 use data::BotError::{InvalidInput, NotFound, Propagated};
 use data::world::World;
-use irc::client::prelude::*;
+use irc::client::prelude::{Server, ServerExt, IrcRead, IrcWrite};
 
 pub mod entity;
 pub mod monster;
@@ -80,7 +80,7 @@ fn tokenize<'a>(line: &'a str, vec: &'a mut Vec<String>) -> BotResult<Vec<&'a st
     /* FIXME: tokenizer removes multiple spaces in quoted tokens */
     let mut flag = false;
     let mut s = String::new();
-    for token in line.split_str(" ") {
+    for token in line.split(" ") {
         if token.starts_with("\"") {
             s.push_str(token);
             s.push_str(" ");
@@ -107,7 +107,7 @@ fn tokenize<'a>(line: &'a str, vec: &'a mut Vec<String>) -> BotResult<Vec<&'a st
 
 pub fn process_world<'a, T: IrcRead, U: IrcWrite>(bot: &'a ServerExt<'a, T, U>, source: &'a str, 
     command: &str, args: &[&'a str], token_store: &'a mut Vec<String>, world: &'a mut World) 
-    -> IoResult<()> {
+    -> Result<()> {
     match (command, args) {
         ("PRIVMSG", [chan, msg]) => {
             let user = source.find('!').map_or("", |i| &source[..i]);

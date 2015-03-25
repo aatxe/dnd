@@ -1,6 +1,8 @@
 use std::ascii::AsciiExt;
-use std::fmt::{Display, Error, Formatter};
-use std::old_io::{IoError, IoResult};
+use std::fmt::Error as FmtError;
+use std::fmt::{Display, Formatter};
+use std::io::{Error, Result};
+use std::result::Result as StdResult;
 
 pub mod game;
 pub mod monster;
@@ -71,19 +73,19 @@ pub mod utils {
     }
 }
 
-pub type BotResult<T> = Result<T, BotError>;
+pub type BotResult<T> = StdResult<T, BotError>;
 
 #[derive(Debug, PartialEq)]
 pub enum BotError {
     InvalidInput(String),
-    Io(IoError),
+    Io(Error),
     NotFound(String),
     PasswordIncorrect,
     Propagated(String, String),
 }
 
 impl Display for BotError {
-    fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
+    fn fmt(&self, fmt: &mut Formatter) -> StdResult<(), FmtError> {
         match self {
             &BotError::InvalidInput(ref s) => write!(fmt, "{}", s),
             &BotError::Io(ref io_err) => write!(fmt, "{:?}", io_err),
@@ -94,7 +96,7 @@ impl Display for BotError {
     }
 }
 
-pub fn as_io<T>(res: IoResult<T>) -> BotResult<T> {
+pub fn as_io<T>(res: Result<T>) -> BotResult<T> {
     if res.is_ok() {
         Ok(res.unwrap())
     } else {

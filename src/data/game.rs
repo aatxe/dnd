@@ -1,5 +1,6 @@
 use std::collections::HashMap;
-use std::old_io::IoResult;
+use std::io::Result;
+use std::io::prelude::*;
 use std::num::ToPrimitive;
 use data::player::Player;
 use data::{BotResult, as_io};
@@ -33,9 +34,9 @@ impl Game {
         }
     }
 
-    pub fn password_hash(password: &str) -> IoResult<String> {
+    pub fn password_hash(password: &str) -> Result<String> {
         let mut hasher = Hasher::new(Type::SHA512);
-        try!(hasher.write_str(password));
+        try!(hasher.write_all(password.as_bytes()));
         Ok(hasher.finish().to_hex())
     }
 

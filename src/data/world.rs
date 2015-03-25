@@ -1,7 +1,7 @@
 use std::borrow::ToOwned;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
-use std::old_io::{InvalidInput, IoError, IoResult};
+use std::io::{Error, ErrorKind, Result};
 use data::{BotResult, Entity, as_io};
 use data::BotError::{Io, NotFound};
 use data::game::Game;
@@ -38,13 +38,13 @@ impl World {
         let nick = String::from_str(nickname);
         try!(as_io(self.users[nick].save()));
         self.users.remove(&nick);
-        Ok(self.user_channels[nick].as_slice())
+        Ok(&self.user_channels[nick])
     }
 
     pub fn get_user(&mut self, nickname: &str) -> BotResult<&mut Player> {
         let nick = String::from_str(nickname);
         if self.users.contains_key(&nick) {
-            Ok(&mut self.users[nick])
+            Ok(self.users.get_mut(&nick).unwrap())
         } else {
             Err(NotFound(String::from_str("User not found.")))
         }
@@ -62,7 +62,7 @@ impl World {
     pub fn get_game(&mut self, chan: &str) -> BotResult<&mut Game> {
         let ch = String::from_str(chan);
         if self.games.contains_key(&ch) {
-            Ok(&mut self.games[ch])
+            Ok(self.games.get_mut(&ch).unwrap())
         } else {
             Err(NotFound(String::from_str("Game not found.")))
         }
@@ -82,37 +82,31 @@ impl World {
         if identifier.starts_with("@") {
             let i: usize = match identifier[1..].parse() {
                 Ok(n) => n,
-                Err(m) => return Err(Io(IoError {
-                    kind: InvalidInput,
-                    desc: "Non-integer identifier.",
-                    detail: Some(format!("{}", m)),
-                })),
+                Err(m) => return Err(Io(Error::new(
+                    ErrorKind::InvalidInput, "Non-integer identifier.", Some(format!("{}", m))
+                ))),
             };
             if chan.is_some() {
                 let chan_str = String::from_str(chan.unwrap());
                 if self.monsters.contains_key(&chan_str) && i < self.monsters[chan_str].len() {
-                    Ok(&mut self.monsters[chan_str][i] as &mut Entity)
+                    Ok(self.monsters.get_mut(&chan_str).unwrap().get_mut(i).unwrap() as &mut Entity)
                 } else {
                     Err(NotFound(String::from_str("No such monster.")))
                 }
             } else {
-                Err(Io(IoError {
-                    kind: InvalidInput,
-                    desc: "Monsters require a channel.",
-                    detail: None,
-                }))
+                Err(Io(Error::new(ErrorKind::InvalidInput, "Monsters require a channel.", None)))
             }
         } else {
             let nick = String::from_str(identifier);
             if self.users.contains_key(&nick) {
-                Ok(&mut self.users[nick] as &mut Entity)
+                Ok(self.users.get_mut(&nick).unwrap() as &mut Entity)
             } else {
                 Err(NotFound(String::from_str("User not found.")))
             }
         }
     }
 
-    pub fn save_all(&self) -> IoResult<()> {
+    pub fn save_all(&self) -> Result<()> {
         for user in self.users.values() {
             try!(user.save());
         }

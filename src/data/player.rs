@@ -1,7 +1,9 @@
 use std::borrow::ToOwned;
-use std::error::Error;
-use std::old_io::fs::{File, mkdir_recursive};
-use std::old_io::{FilePermission, InvalidInput, IoError, IoResult};
+use std::error::Error as StdError;
+use std::fs::{File, create_dir_all};
+use std::io::{Error, ErrorKind, Result};
+use std::io::prelude::*;
+use std::path::Path;
 use std::num::ToPrimitive;
 use data::{BotResult, Entity, RollType, as_io};
 use data::RollType::{Basic, Strength, Dexterity, Constitution, Wisdom, Intellect, Charisma};
@@ -52,30 +54,29 @@ impl Player {
         }
     }
 
-    pub fn load(username: &str) -> IoResult<Player> {
+    pub fn load(username: &str) -> Result<Player> {
         let mut path = "users/".to_owned();
         path.push_str(username);
         path.push_str(".json");
         let mut file = try!(File::open(&Path::new(&path)));
-        let data = try!(file.read_to_string());
-        decode(&data).map_err(|e| IoError {
-            kind: InvalidInput,
-            desc: "Failde to decode player data.",
-            detail: Some(e.description().to_owned()),
-        })
+        let mut data = String::new();
+        try!(file.read_to_string(&mut data));
+        decode(&data).map_err(|e| Error::new(
+            ErrorKind::InvalidInput, "Failed to decode player data.", 
+            Some(e.description().to_owned())
+        ))
     }
 
-    pub fn save(&self) -> IoResult<()> {
+    pub fn save(&self) -> Result<()> {
         let mut path = "users/".to_owned();
-        try!(mkdir_recursive(&Path::new(&path), FilePermission::all()));
+        try!(create_dir_all(&Path::new(&path)));
         path.push_str(&self.username);
         path.push_str(".json");
-        let mut f = File::create(&Path::new(&path));
-        f.write_str(&try!(encode(self).map_err(|e| IoError {
-            kind: InvalidInput,
-            desc: "Failed to encode player data.",
-            detail: Some(e.description().to_owned()),
-        }))[..])
+        let mut f = try!(File::create(&Path::new(&path)));
+        f.write_all(try!(encode(self).map_err(|e| Error::new(
+            ErrorKind::InvalidInput, "Failed to encode player data.", 
+            Some(e.description().to_owned())
+        ))).as_bytes())
     }
 
     pub fn add_feat(&mut self, feat: &str) {
