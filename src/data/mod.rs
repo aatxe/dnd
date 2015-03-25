@@ -154,7 +154,7 @@ mod test {
     use super::RollType::{Strength, Wisdom, Intellect};
     use super::utils;
     use super::utils::Position;
-    use std::old_io::{InvalidInput, IoError, IoResult};
+    use std::io::{Error, ErrorKind, Result};
 
     #[test]
     fn new_position() {
@@ -215,11 +215,9 @@ mod test {
     #[test]
     fn as_io() {
         assert!(super::as_io(Ok("This is okay!")).is_ok());
-        let e: IoResult<RollType> = Err(IoError {
-            kind: InvalidInput,
-            desc: "This is not okay.",
-            detail: None,
-        });
+        let e: Result<RollType> = Err(Error::new(
+            ErrorKind::InvalidInput, "This is not okay.", None
+        ));
         assert!(super::as_io(e).is_err());
     }
 }

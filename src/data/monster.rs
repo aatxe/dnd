@@ -221,7 +221,7 @@ mod test {
     #[test]
     fn basic_roll() {
         let m = Monster::create("test", 20, 30, 12, 12, 8, 12, 12, 12);
-        for _ in range(0u16, 1000) {
+        for _ in 0..1000 {
             let r = m.roll(Basic);
             assert!(r >= 1 && r <= 20);
         }
@@ -230,7 +230,7 @@ mod test {
     #[test]
     fn positive_stat_roll() {
         let m = Monster::create("test", 20, 30, 12, 12, 8, 12, 12, 12);
-        for _ in range(0u16, 1000) {
+        for _ in 0..1000 {
             let r = m.roll(Dexterity);
             println!("{}", r);
             assert!(r >= 1 && r <= 21);
@@ -240,7 +240,7 @@ mod test {
     #[test]
     fn negative_stat_roll() {
         let m = Monster::create("test", 20, 30, 12, 12, 8, 12, 12, 12);
-        for _ in range(0u16, 1000) {
+        for _ in 0..1000 {
             let r = m.roll(Constitution);
             println!("{}", r);
             assert!(r >= 1 && r <= 19);

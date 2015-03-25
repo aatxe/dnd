@@ -218,15 +218,13 @@ mod test {
     use super::process_world;
     use std::borrow::ToOwned;
     use std::default::Default;
-    use std::old_io::{MemReader, MemWriter};
+    use std::io::Cursor;
     use data::{BotResult};
     use data::BotError::Propagated;
     use data::world::World;
     use irc::client::conn::Connection;
-    use irc::client::data::Config;
-    use irc::client::server::{IrcServer, Server};
-    use irc::client::server::utils::ServerExt;
-
+    use irc::client::prelude::*;
+    
     pub fn test_helper<F>(input: &str, world_hook: F) -> BotResult<String> 
         where F: FnOnce(&mut World) -> BotResult<()> {
         let mut world = World::new();
@@ -235,7 +233,7 @@ mod test {
             owners: Some(vec!["test".to_owned()]),
             nickname: Some("test".to_owned()),  
             .. Default::default()
-        }, Connection::new(MemReader::new(input.as_bytes().to_vec()), MemWriter::new()));
+        }, Connection::new(Cursor::new(input.as_bytes().to_vec()), Vec::new()));
         for message in server.iter() {
             let message = message.unwrap();
             println!("{:?}", message);
@@ -247,7 +245,7 @@ mod test {
             let mut token_store = Vec::new();
             process_world(&server, &source, &message.command, &args, &mut token_store, &mut world).unwrap();
         }
-        let vec = server.conn().writer().get_ref().to_vec();
+        let vec = server.conn().writer().clone();
         Ok(String::from_utf8(vec).unwrap())
     }
 
