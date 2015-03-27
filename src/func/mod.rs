@@ -29,7 +29,7 @@ impl<'a, T: IrcRead, U: IrcWrite> Help<'a, T, U> {
         if args.len() != 1 && args.len() != 2 { return Err(utils::incorrect_format(resp, "help", "[command]")); }
         Ok(box Help { bot: bot, resp: resp,
                       cmd: if args.len() == 2 { Some(args[1]) } else { None }
-        } as Box<Functionality>)
+        })
     }
 }
 

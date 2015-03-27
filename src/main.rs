@@ -1,8 +1,8 @@
-#![feature(box_syntax, collections, core, io, std_misc)]
+#![feature(box_syntax, collections, core, io)]
 extern crate irc;
 extern crate openssl;
 extern crate rand;
-extern crate "rustc-serialize" as rustc_serialize;
+extern crate rustc_serialize;
 
 #[cfg(not(test))] use data::world::World;
 #[cfg(not(test))] use irc::client::prelude::*;

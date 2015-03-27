@@ -32,7 +32,7 @@ impl<'a, T: IrcRead, U: IrcWrite> Roll<'a, T, U> {
             target: try!(get_target(if args.len() > 1 { args[1] } else { "" }, user, chan, chan, world)),
             stat_str: stat_str,
             stat: stat,
-        } as Box<Functionality>)
+        })
     }
 }
 
@@ -74,7 +74,7 @@ impl<'a, T: IrcRead, U: IrcWrite> Damage<'a, T, U> {
                         format!("{} is not a valid positive integer.", args[2])
                 ));
             },
-        } as Box<Functionality>)
+        })
     }
 }
 
@@ -118,7 +118,7 @@ impl<'a, T: IrcRead, U: IrcWrite> SetTempStats<'a, T, U> {
             health: str_to_u8(args[2]), movement: str_to_u8(args[3]),
             st: str_to_u8(args[4]), dx: str_to_u8(args[5]), cn: str_to_u8(args[6]),
             ws: str_to_u8(args[7]), it: str_to_u8(args[8]), ch: str_to_u8(args[9]),
-        } as Box<Functionality>)
+        })
     }
 }
 
@@ -151,7 +151,7 @@ impl<'a, T: IrcRead, U: IrcWrite> ClearTempStats<'a, T, U> {
             chan: chan,
             target_str: args[1],
             target: try!(get_target(args[1], user, chan, chan, world)),
-        } as Box<Functionality>)
+        })
     }
 }
 
@@ -205,7 +205,7 @@ impl<'a, T: IrcRead, U: IrcWrite> Move<'a, T, U> {
                                 args[args.len() - 2], args[args.len() - 1])
                 ));
             },
-        } as Box<Functionality>)
+        })
     }
 }
 

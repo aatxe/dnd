@@ -33,7 +33,7 @@ impl<'a, T: IrcRead, U: IrcWrite> Register<'a, T, U> {
             health: str_to_u8(args[3]), movement: str_to_u8(args[4]),
             st: str_to_u8(args[5]), dx: str_to_u8(args[6]), cn: str_to_u8(args[7]),
             ws: str_to_u8(args[8]), it: str_to_u8(args[9]), ch: str_to_u8(args[10]),
-        } as Box<Functionality>)
+        })
     }
 }
 
@@ -78,7 +78,7 @@ impl<'a, T: IrcRead, U: IrcWrite> Login<'a, T, U> {
                 ));
             },
             password: args[2],
-        } as Box<Functionality>)
+        })
     }
 }
 
@@ -108,7 +108,7 @@ pub struct Logout<'a, T: IrcRead, U: IrcWrite> {
 
 impl<'a, T: IrcRead, U: IrcWrite> Logout<'a, T, U> {
     pub fn new(bot: &'a ServerExt<'a, T, U>, user: &'a str, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
-        Ok(box Logout { bot: bot, user: user, world: world } as Box<Functionality>)
+        Ok(box Logout { bot: bot, user: user, world: world })
     }
 }
 
@@ -135,7 +135,7 @@ pub struct AddFeat<'a, T: IrcRead, U: IrcWrite> {
 impl<'a, T: IrcRead, U: IrcWrite> AddFeat<'a, T, U> {
     pub fn new(bot: &'a ServerExt<'a, T, U>, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if args.len() < 2 { return Err(incorrect_format(user, "addfeat", "name of feat")); }
-        Ok(box AddFeat { bot: bot, user: user, world: world, feat_name: join_from(args, 1) } as Box<Functionality>)
+        Ok(box AddFeat { bot: bot, user: user, world: world, feat_name: join_from(args, 1) })
     }
 }
 
@@ -159,7 +159,7 @@ pub struct Save<'a, T: IrcRead, U: IrcWrite> {
 
 impl<'a, T: IrcRead, U: IrcWrite> Save<'a, T, U> {
     pub fn new(bot: &'a ServerExt<'a, T, U>, user: &'a str, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
-        Ok(box Save { bot: bot, user: user, world: world } as Box<Functionality>)
+        Ok(box Save { bot: bot, user: user, world: world })
     }
 }
 
@@ -209,7 +209,7 @@ impl<'a, T: IrcRead, U: IrcWrite> LookUpPlayer<'a, T, U> {
             } else {
                 None
             },
-        } as Box<Functionality>)
+        })
     }
 }
 
@@ -266,7 +266,7 @@ impl<'a, T: IrcRead, U: IrcWrite> AddUpdate<'a, T, U> {
                 return Err(Propagated(format!("{}", chan), format!("{} is not a valid positive integer.", args[2])));
             },
             update: update,
-        } as Box<Functionality>)
+        })
     }
 }
 

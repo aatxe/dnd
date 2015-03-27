@@ -36,9 +36,9 @@ impl World {
 
     pub fn remove_user(&mut self, nickname: &str) -> BotResult<&str> {
         let nick = String::from_str(nickname);
-        try!(as_io(self.users[nick].save()));
+        try!(as_io(self.users[&nick].save()));
         self.users.remove(&nick);
-        Ok(&self.user_channels[nick])
+        Ok(&self.user_channels[&nick])
     }
 
     pub fn get_user(&mut self, nickname: &str) -> BotResult<&mut Player> {
@@ -88,8 +88,8 @@ impl World {
             };
             if chan.is_some() {
                 let chan_str = String::from_str(chan.unwrap());
-                if self.monsters.contains_key(&chan_str) && i < self.monsters[chan_str].len() {
-                    Ok(self.monsters.get_mut(&chan_str).unwrap().get_mut(i).unwrap() as &mut Entity)
+                if self.monsters.contains_key(&chan_str) && i < self.monsters[&chan_str].len() {
+                    Ok(self.monsters.get_mut(&chan_str).unwrap().get_mut(i).unwrap())
                 } else {
                     Err(NotFound(String::from_str("No such monster.")))
                 }
@@ -99,7 +99,7 @@ impl World {
         } else {
             let nick = String::from_str(identifier);
             if self.users.contains_key(&nick) {
-                Ok(self.users.get_mut(&nick).unwrap() as &mut Entity)
+                Ok(self.users.get_mut(&nick).unwrap())
             } else {
                 Err(NotFound(String::from_str("User not found.")))
             }

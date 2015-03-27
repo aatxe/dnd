@@ -36,7 +36,7 @@ impl<'a, T: IrcRead, U: IrcWrite> AddMonster<'a, T, U> {
             health: str_to_u8(args[3]), movement: str_to_u8(args[4]),
             st: str_to_u8(args[5]), dx: str_to_u8(args[6]), cn: str_to_u8(args[7]),
             ws: str_to_u8(args[8]), it: str_to_u8(args[9]), ch: str_to_u8(args[10]),
-        } as Box<Functionality>)
+        })
     }
 }
 
@@ -79,7 +79,7 @@ impl<'a, T: IrcRead, U: IrcWrite> LookUpMonster<'a, T, U> {
             } else {
                 None
             },
-        } as Box<Functionality>)
+        })
     }
 }
 
