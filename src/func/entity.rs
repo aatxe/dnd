@@ -267,7 +267,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let mut exp = String::from_str("PRIVMSG #test :test is not a valid stat.\r\n");
+        let mut exp = "PRIVMSG #test :test is not a valid stat.\r\n".to_string();
         exp.push_str("PRIVMSG #test :Options: str dex con wis int cha (or their full names).\r\n");
         assert_eq!(data, exp);
     }
@@ -297,7 +297,7 @@ mod test {
     #[test]
     fn roll_failed_invalid_format() {
         let data = test_helper(":test!test@test PRIVMSG #test :.roll a b c\r\n", |_| { Ok(()) }).unwrap();
-        let mut exp = String::from_str("PRIVMSG #test :Incorrect format for .roll. Format is:\r\n");
+        let mut exp = "PRIVMSG #test :Incorrect format for .roll. Format is:\r\n".to_string();
         exp.push_str("PRIVMSG #test :.roll [@monster] [stat]\r\n");
         assert_eq!(data, exp);
     }
@@ -373,7 +373,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG #test :Test (@0) now has temporary Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }.\r\n");
+        let exp = "PRIVMSG #test :Test (@0) now has temporary Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }.\r\n".to_string();
         assert_eq!(data, exp);
     }
 
@@ -398,7 +398,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let mut exp = String::from_str("PRIVMSG #test :Stats must be non-zero positive integers. Format is:\r\n");
+        let mut exp = "PRIVMSG #test :Stats must be non-zero positive integers. Format is:\r\n".to_string();
         exp.push_str("PRIVMSG #test :.temp target health movement str dex con wis int cha\r\n");
         assert_eq!(data, exp);
     }
@@ -414,7 +414,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG #test :Test (@0) has reverted to Stats { health: 14, movement: 30, strength: 12, dexterity: 10, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }.\r\n");
+        let exp = "PRIVMSG #test :Test (@0) has reverted to Stats { health: 14, movement: 30, strength: 12, dexterity: 10, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }.\r\n".to_string();
         assert_eq!(data, exp);
     }
 

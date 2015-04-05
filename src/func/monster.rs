@@ -132,7 +132,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let mut exp = String::from_str("PRIVMSG test :Stats must be non-zero positive integers. Format is:\r\n");
+        let mut exp = "PRIVMSG test :Stats must be non-zero positive integers. Format is:\r\n".to_string();
         exp.push_str("PRIVMSG test :addmonster chan name health movement str dex con wis int cha\r\n");
         assert_eq!(data, exp);
     }
@@ -146,7 +146,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG test :Test (@0): Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }\r\n");
+        let exp = "PRIVMSG test :Test (@0): Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }\r\n".to_string();
         assert_eq!(data, exp);
     }
 
@@ -197,7 +197,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG test :Test (@0): Temp. Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }\r\n");
+        let exp = "PRIVMSG test :Test (@0): Temp. Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 }\r\n".to_string();
         assert_eq!(data, exp);
     }
 
@@ -224,7 +224,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG test :Test (@0): Position(0, 0)\r\n");
+        let exp = "PRIVMSG test :Test (@0): Position(0, 0)\r\n".to_string();
         assert_eq!(data, exp);
     }
 }

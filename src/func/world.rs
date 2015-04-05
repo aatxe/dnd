@@ -88,7 +88,7 @@ mod test {
     fn create_success() {
         let data = test_helper(":test!test@test PRIVMSG test :create #test Dungeons and Tests\r\n",
                                |_| { Ok(()) }).unwrap();
-        let mut exp = String::from_str("JOIN #test\r\n");
+        let mut exp = "JOIN #test\r\n".to_string();
         exp.push_str("TOPIC #test :Dungeons and Tests\r\n");
         exp.push_str("MODE #test +i\r\n");
         exp.push_str("PRIVMSG test :Campaign created named Dungeons and Tests.\r\n");

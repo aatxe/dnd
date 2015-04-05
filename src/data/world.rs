@@ -1,4 +1,3 @@
-use std::borrow::ToOwned;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::io::{Error, ErrorKind, Result};
@@ -26,50 +25,50 @@ impl World {
     }
 
     pub fn is_user_logged_in(&self, nickname: &str) -> bool {
-        self.users.contains_key(&String::from_str(nickname))
+        self.users.contains_key(&nickname.to_string())
     }
 
     pub fn add_user(&mut self, nickname: &str, chan: &str, player: Player) {
-        self.users.insert(nickname.to_owned(), player);
-        self.user_channels.insert(nickname.to_owned(), chan.to_owned());
+        self.users.insert(nickname.to_string(), player);
+        self.user_channels.insert(nickname.to_string(), chan.to_string());
     }
 
     pub fn remove_user(&mut self, nickname: &str) -> BotResult<&str> {
-        let nick = String::from_str(nickname);
+        let nick = nickname.to_string();
         try!(as_io(self.users[&nick].save()));
         self.users.remove(&nick);
         Ok(&self.user_channels[&nick])
     }
 
     pub fn get_user(&mut self, nickname: &str) -> BotResult<&mut Player> {
-        let nick = String::from_str(nickname);
+        let nick = nickname.to_string();
         if self.users.contains_key(&nick) {
             Ok(self.users.get_mut(&nick).unwrap())
         } else {
-            Err(NotFound(String::from_str("User not found.")))
+            Err(NotFound("User not found.".to_string()))
         }
     }
 
     pub fn game_exists(&self, chan: &str) -> bool {
-        self.games.contains_key(&String::from_str(chan))
+        self.games.contains_key(&chan.to_string())
     }
 
     pub fn add_game(&mut self, name: &str, dm_nick: &str, chan: &str) {
         let game = Game::new(&name, &dm_nick);
-        self.games.insert(String::from_str(chan), game);
+        self.games.insert(chan.to_string(), game);
     }
 
     pub fn get_game(&mut self, chan: &str) -> BotResult<&mut Game> {
-        let ch = String::from_str(chan);
+        let ch = chan.to_string();
         if self.games.contains_key(&ch) {
             Ok(self.games.get_mut(&ch).unwrap())
         } else {
-            Err(NotFound(String::from_str("Game not found.")))
+            Err(NotFound("Game not found.".to_string()))
         }
     }
 
     pub fn add_monster(&mut self, monster: Monster, chan: &str) -> usize {
-        let chan = String::from_str(chan);
+        let chan = chan.to_string();
         let result = match self.monsters.entry(chan) {
             Vacant(entry) => entry.insert(Vec::new()),
             Occupied(entry) => entry.into_mut(),
@@ -87,21 +86,21 @@ impl World {
                 ))),
             };
             if chan.is_some() {
-                let chan_str = String::from_str(chan.unwrap());
+                let chan_str = chan.unwrap().to_string();
                 if self.monsters.contains_key(&chan_str) && i < self.monsters[&chan_str].len() {
                     Ok(self.monsters.get_mut(&chan_str).unwrap().get_mut(i).unwrap())
                 } else {
-                    Err(NotFound(String::from_str("No such monster.")))
+                    Err(NotFound("No such monster.".to_string()))
                 }
             } else {
                 Err(Io(Error::new(ErrorKind::InvalidInput, "Monsters require a channel.")))
             }
         } else {
-            let nick = String::from_str(identifier);
+            let nick = identifier.to_string();
             if self.users.contains_key(&nick) {
                 Ok(self.users.get_mut(&nick).unwrap())
             } else {
-                Err(NotFound(String::from_str("User not found.")))
+                Err(NotFound("User not found.".to_string()))
             }
         }
     }

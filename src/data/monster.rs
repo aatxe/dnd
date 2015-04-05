@@ -19,7 +19,7 @@ impl Monster {
     pub fn create(name: &str, health: u8, movement: u8, strength: u8, dexterity: u8,
                   constitution: u8, wisdom: u8, intellect: u8, charisma: u8) -> Monster {
         Monster {
-            name: String::from_str(name),
+            name: name.to_string(),
             stats: Stats::new(health, movement, strength, dexterity, constitution, wisdom,
                               intellect, charisma),
             temp_stats: None,
@@ -112,7 +112,7 @@ mod test {
     fn create_monster() {
         let m = Monster::create("test", 20, 30, 12, 12, 12, 12, 12, 12);
         let n = Monster {
-            name: String::from_str("test"),
+            name: "test".to_string(),
             stats: Stats::new(20, 30, 12, 12, 12, 12, 12, 12),
             temp_stats: None,
             position: Position(0, 0),

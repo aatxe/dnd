@@ -84,7 +84,7 @@ impl<'a, T: IrcRead, U: IrcWrite> Login<'a, T, U> {
 
 impl<'a, T: IrcRead, U: IrcWrite> Functionality for Login<'a, T, U> {
     fn do_func(&mut self) -> BotResult<()> {
-        if let Some(game) = self.world.games.get_mut(&String::from_str(self.chan)) {
+        if let Some(game) = self.world.games.get_mut(&self.chan.to_string()) {
             let res = game.login(self.player.clone(), self.user, self.password);
             if res.is_ok() {
                 try!(as_io(self.bot.send_privmsg(self.user, try!(res))));
@@ -309,7 +309,7 @@ mod test {
     fn register_failed_invalid_stats() {
         let data = test_helper(":test!test@test PRIVMSG test :register test5 test 20 30 12 -12 a 12 12 12\r\n",
                     |_| { Ok(()) }).unwrap();
-        let mut exp = String::from_str("PRIVMSG test :Stats must be non-zero positive integers. Format is:\r\n");
+        let mut exp = "PRIVMSG test :Stats must be non-zero positive integers. Format is:\r\n".to_string();
         exp.push_str("PRIVMSG test :register username password health movement str dex con wis int cha\r\n");
         assert_eq!(data, exp);
     }
@@ -322,7 +322,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let mut exp = String::from_str("PRIVMSG test :Login successful.\r\n");
+        let mut exp = "PRIVMSG test :Login successful.\r\n".to_string();
         exp.push_str("INVITE test #test\r\n");
         assert_eq!(data, exp);
     }
@@ -356,7 +356,7 @@ mod test {
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
                 let p = try!(as_io(Player::load("login")));
-                try!(if let Some(game) = world.games.get_mut(&String::from_str("#test")) {
+                try!(if let Some(game) = world.games.get_mut(&"#test".to_string()) {
                     game.login(p.clone(), "test", "test")
                 } else {
                     Ok("")
@@ -365,7 +365,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let mut exp = String::from_str("PRIVMSG test :You can only be logged into one account at once.\r\n");
+        let mut exp = "PRIVMSG test :You can only be logged into one account at once.\r\n".to_string();
         exp.push_str("PRIVMSG test :Use logout to log out.\r\n");
         assert_eq!(data, exp);
     }
@@ -376,7 +376,7 @@ mod test {
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
                 let p = try!(as_io(Player::load("login")));
-                try!(if let Some(game) = world.games.get_mut(&String::from_str("#test")) {
+                try!(if let Some(game) = world.games.get_mut(&"#test".to_string()) {
                     game.login(p.clone(), "test", "test")
                 } else {
                     Ok("")
@@ -400,7 +400,7 @@ mod test {
             |world| {
                 world.add_game("Dungeons and Tests", "test", "#test");
                 let p = try!(as_io(Player::load("login")));
-                try!(if let Some(game) = world.games.get_mut(&String::from_str("#test")) {
+                try!(if let Some(game) = world.games.get_mut(&"test".to_string()) {
                     game.login(p.clone(), "test", "test")
                 } else {
                     Ok("")
@@ -415,7 +415,7 @@ mod test {
     #[test]
     fn add_feat_failed_invalid_format() {
         let data = test_helper(":test!test@test PRIVMSG test :addfeat\r\n", |_| { Ok(()) }).unwrap();
-        let mut exp = String::from_str("PRIVMSG test :Incorrect format for addfeat. Format is:\r\n");
+        let mut exp = "PRIVMSG test :Incorrect format for addfeat. Format is:\r\n".to_string();
         exp.push_str("PRIVMSG test :addfeat name of feat\r\n");
         assert_eq!(data, exp);
     }
@@ -455,7 +455,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG test :test (test): Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 } Feats []\r\n");
+        let exp = "PRIVMSG test :test (test): Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 } Feats []\r\n".to_string();
         assert_eq!(data, exp);
     }
 
@@ -527,7 +527,7 @@ mod test {
                 Ok(())
             }
         ).unwrap();
-        let exp = String::from_str("PRIVMSG #test :test (test): Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 } Feats []\r\n");
+        let exp = "PRIVMSG #test :test (test): Stats { health: 20, movement: 30, strength: 12, dexterity: 12, constitution: 12, wisdom: 12, intellect: 12, charisma: 12 } Feats []\r\n".to_string();
         assert_eq!(data, exp);
     }
 

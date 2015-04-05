@@ -27,7 +27,7 @@ impl Player {
                   dexterity: u8, constitution: u8, wisdom: u8, intellect: u8, charisma: u8)
                   -> BotResult<Player> {
         Ok(Player {
-            username: String::from_str(username),
+            username: username.to_string(),
             password: try!(as_io(Game::password_hash(password))),
             stats: Stats::new(health, movement, strength, dexterity, constitution, wisdom,
                               intellect, charisma),
@@ -42,8 +42,8 @@ impl Player {
                        dexterity: u8, constitution: u8, wisdom: u8, intellect: u8, charisma: u8)
                        -> Player {
         Player {
-            username: String::from_str(username),
-            password: String::from_str(password),
+            username: username.to_string(),
+            password: password.to_string(),
             stats: Stats::new(health, movement, strength, dexterity, constitution, wisdom,
                               intellect, charisma),
             feats: Vec::new(),
@@ -76,7 +76,7 @@ impl Player {
     }
 
     pub fn add_feat(&mut self, feat: &str) {
-        self.feats.push(String::from_str(feat))
+        self.feats.push(feat.to_string())
     }
 }
 
@@ -164,7 +164,7 @@ mod test {
     fn create_player() {
         let p = Player::create("test", "test", 20, 30, 12, 12, 12, 12, 12, 12).unwrap();
         let m = Player {
-            username: String::from_str("test"),
+            username: "test".to_string(),
             password: Game::password_hash("test").unwrap(),
             stats: Stats::new(20, 30, 12, 12, 12, 12, 12, 12),
             feats: Vec::new(),

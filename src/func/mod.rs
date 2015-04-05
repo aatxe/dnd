@@ -67,7 +67,7 @@ impl<'a, T: IrcRead, U: IrcWrite> Functionality for Help<'a, T, U> {
             };
             as_io(self.bot.send_privmsg(self.resp, &format!("Format: {} {}", self.cmd.unwrap(), format)))
         } else {
-            let mut s = String::from_str("List of Commands:\r\n");
+            let mut s = "List of Commands:\r\n".to_string();
             s.push_str("Channel commands: .roll .lookup .update .increase .temp .cleartemp .damage .move\r\n");
             s.push_str("Query commands: register login create logout addfeat roll saveall save lookup mlookup addmonster\r\n");
             s.push_str(&format!("If you need additional help, use {}help [command].", if self.resp.starts_with("#") { "." } else { "" }));
@@ -197,9 +197,9 @@ mod utils {
     pub fn permissions_test(user: &str, chan: &str, world: &mut World) -> BotResult<()> {
         let res = world.get_game(chan);
         if res.is_err() {
-            Err(Propagated(String::from_str(user), format!("There is no game in {}.", chan)))
+            Err(Propagated(user.to_string(), format!("There is no game in {}.", chan)))
         } else if !try!(res).is_dm(user) {
-            Err(Propagated(String::from_str(user), String::from_str("You must be the DM to do that!")))
+            Err(Propagated(user.to_string(), "You must be the DM to do that!".to_string()))
         } else {
             Ok(())
         }
@@ -348,7 +348,7 @@ mod test {
     #[test]
     fn general_help_in_channel() {
         let data = test_helper(":test!test@test PRIVMSG #test :.help\r\n", |_| { Ok(()) }).unwrap();
-        let mut exp = String::from_str("PRIVMSG #test :List of Commands:\r\n");
+        let mut exp = "PRIVMSG #test :List of Commands:\r\n".to_string();
         exp.push_str("PRIVMSG #test :Channel commands: .roll .lookup .update .increase .temp .cleartemp .damage .move\r\n");
         exp.push_str("PRIVMSG #test :Query commands: register login create logout addfeat roll saveall save lookup mlookup addmonster\r\n");
         exp.push_str("PRIVMSG #test :If you need additional help, use .help [command].\r\n");
@@ -358,7 +358,7 @@ mod test {
     #[test]
     fn general_help_in_query() {
         let data = test_helper(":test!test@test PRIVMSG test :help\r\n", |_| { Ok(()) }).unwrap();
-        let mut exp = String::from_str("PRIVMSG test :List of Commands:\r\n");
+        let mut exp = "PRIVMSG test :List of Commands:\r\n".to_string();
         exp.push_str("PRIVMSG test :Channel commands: .roll .lookup .update .increase .temp .cleartemp .damage .move\r\n");
         exp.push_str("PRIVMSG test :Query commands: register login create logout addfeat roll saveall save lookup mlookup addmonster\r\n");
         exp.push_str("PRIVMSG test :If you need additional help, use help [command].\r\n");

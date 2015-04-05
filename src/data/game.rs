@@ -18,15 +18,15 @@ pub struct Game {
 impl Game {
     pub fn new(name: &str, dm_nick: &str) -> Game {
         Game {
-            name: String::from_str(name),
-            dm_nick: String::from_str(dm_nick),
+            name: name.to_string(),
+            dm_nick: dm_nick.to_string(),
             users: HashMap::new(),
         }
     }
 
     pub fn login(&mut self, account: Player, nickname: &str, password: &str) -> BotResult<&str> {
         if account.password == try!(as_io(Game::password_hash(password))) {
-            self.users.insert(String::from_str(nickname), account);
+            self.users.insert(nickname.to_string(), account);
             Ok("Login successful.")
         } else {
             Err(PasswordIncorrect)
@@ -49,8 +49,7 @@ impl Game {
     }
 
     pub fn is_dm(&self, nickname: &str) -> bool {
-        let nick = String::from_str(nickname);
-        nick.eq(&self.dm_nick)
+        &self.dm_nick == nickname
     }
 }
 
@@ -61,7 +60,8 @@ mod test {
 
     #[test]
     fn password_hash() {
-        let s = String::from_str("ee26b0dd4af7e749aa1a8ee3c10ae9923f618980772e473f8819a5d4940e0db27ac185f8a0e1d5f84f88bc887fd67b143732c304cc5fa9ad8e6f57f50028a8ff");
+        let s = "ee26b0dd4af7e749aa1a8ee3c10ae9923f618980772e473f8819a5d4940e0db27ac185f8a0e1d5f84\
+                 f88bc887fd67b143732c304cc5fa9ad8e6f57f50028a8ff".to_string();
         let h = Game::password_hash("test").unwrap();
         assert_eq!(h, s);
     }

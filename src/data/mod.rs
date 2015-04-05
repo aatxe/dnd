@@ -206,9 +206,9 @@ mod test {
 
     #[test]
     fn distance() {
-        assert_eq!(Position(0, 0).distance(&Position(5, 4)).unwrap(), 6);
-        assert_eq!(Position(0, 0).distance(&Position(6, 0)).unwrap(), 6);
-        assert_eq!(Position(0, 0).distance(&Position(0, 6)).unwrap(), 6);
+        assert_eq!(Position(0, 0).distance(&Position(5, 4)), 6);
+        assert_eq!(Position(0, 0).distance(&Position(6, 0)), 6);
+        assert_eq!(Position(0, 0).distance(&Position(0, 6)), 6);
     }
 
     #[test]
