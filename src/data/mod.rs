@@ -12,7 +12,6 @@ pub mod stats;
 pub mod world;
 
 pub mod utils {
-    use super::BotResult;
     use std::ops::{Add, Sub};
     use std::num::{Float, Int};
 
@@ -28,8 +27,8 @@ pub mod utils {
 
         // FIXME: distance doesn't work the way we'd want it to.
         // e.g. (0, 0).distance(5, 5) is 7, when we want it to be 5.
-        pub fn distance(&self, rhs: &Position) -> BotResult<i32> {
-            Ok((self.distance_sq(rhs) as f32).sqrt().floor() as i32)
+        pub fn distance(&self, rhs: &Position) -> i32 {
+            (self.distance_sq(rhs) as f32).sqrt().floor() as i32
         }
     }
 

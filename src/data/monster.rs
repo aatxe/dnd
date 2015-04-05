@@ -66,7 +66,7 @@ impl Entity for Monster {
     }
 
     fn do_move(&mut self, pos: Position) -> BotResult<()> {
-        if try!(self.position.distance(&pos)) <= self.stats().movement as i32 / 5 {
+        if self.position.distance(&pos) <= self.stats().movement as i32 / 5 {
             self.position = pos;
             Ok(())
         } else {
