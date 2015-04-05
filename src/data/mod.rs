@@ -1,4 +1,5 @@
 use std::ascii::AsciiExt;
+use std::error::Error as StdError;
 use std::fmt::Error as FmtError;
 use std::fmt::{Display, Formatter};
 use std::io::{Error, Result};
@@ -17,7 +18,7 @@ pub mod utils {
     use std::ops::{Add, Sub};
     use std::num::{Float, Int, ToPrimitive, from_f32};
 
-    #[derive(Copy, RustcDecodable, RustcEncodable, Debug, PartialEq, Clone)]
+    #[derive(Clone, Copy, RustcDecodable, RustcEncodable, Debug, PartialEq)]
     pub struct Position(pub i32, pub i32);
 
     impl Position {
@@ -75,13 +76,40 @@ pub mod utils {
 
 pub type BotResult<T> = StdResult<T, BotError>;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum BotError {
     InvalidInput(String),
     Io(Error),
     NotFound(String),
     PasswordIncorrect,
     Propagated(String, String),
+}
+
+impl PartialEq<BotError> for BotError {
+    fn eq(&self, other: &BotError) -> bool {
+        match self {
+            &BotError::InvalidInput(ref a) => match other {
+                &BotError::InvalidInput(ref b) => a == b,
+                _ => false,
+            },
+            &BotError::Io(ref a) => match other {
+                &BotError::Io(ref b) => a.kind() == b.kind() && a.description() == b.description(),
+                _ => false,
+            },
+            &BotError::NotFound(ref a) => match other {
+                &BotError::NotFound(ref b) => a == b,
+                _ => false,
+            },
+            &BotError::PasswordIncorrect => match other {
+                &BotError::PasswordIncorrect => true,
+                _ => false,
+            },
+            &BotError::Propagated(ref a, ref b) => match other {
+                &BotError::Propagated(ref c, ref d) => a == c && b == d,
+                _ => false,
+            },
+        }
+    }
 }
 
 impl Display for BotError {
@@ -116,7 +144,7 @@ pub trait Entity {
     fn clear_temp_stats(&mut self);
 }
 
-#[derive(Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum RollType {
     Basic,
     Strength,
@@ -216,7 +244,7 @@ mod test {
     fn as_io() {
         assert!(super::as_io(Ok("This is okay!")).is_ok());
         let e: Result<RollType> = Err(Error::new(
-            ErrorKind::InvalidInput, "This is not okay.", None
+            ErrorKind::InvalidInput, "This is not okay." 
         ));
         assert!(super::as_io(e).is_err());
     }

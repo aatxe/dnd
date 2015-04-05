@@ -82,8 +82,8 @@ impl World {
         if identifier.starts_with("@") {
             let i: usize = match identifier[1..].parse() {
                 Ok(n) => n,
-                Err(m) => return Err(Io(Error::new(
-                    ErrorKind::InvalidInput, "Non-integer identifier.", Some(format!("{}", m))
+                Err(_) => return Err(Io(Error::new(
+                    ErrorKind::InvalidInput, "Non-integer identifier."
                 ))),
             };
             if chan.is_some() {
@@ -94,7 +94,7 @@ impl World {
                     Err(NotFound(String::from_str("No such monster.")))
                 }
             } else {
-                Err(Io(Error::new(ErrorKind::InvalidInput, "Monsters require a channel.", None)))
+                Err(Io(Error::new(ErrorKind::InvalidInput, "Monsters require a channel.")))
             }
         } else {
             let nick = String::from_str(identifier);
