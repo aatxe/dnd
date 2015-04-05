@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::io::Result;
 use std::io::prelude::*;
-use std::num::ToPrimitive;
 use data::player::Player;
 use data::{BotResult, as_io};
 use data::BotError::PasswordIncorrect;
@@ -43,10 +42,9 @@ impl Game {
     pub fn roll() -> u8 {
         let d20 = Range::new(1i8, 21i8);
         let mut rng = thread_rng();
-        match d20.ind_sample(&mut rng).to_u8() {
-            Some(0) => 1,
-            Some(n) => n,
-            None => 1,
+        match d20.ind_sample(&mut rng) as u8 {
+            0 => 1,
+            n => n,
         }
     }
 

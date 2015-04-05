@@ -3,7 +3,6 @@ use std::fs::{File, create_dir_all};
 use std::io::{Error, ErrorKind, Result};
 use std::io::prelude::*;
 use std::path::Path;
-use std::num::ToPrimitive;
 use data::{BotResult, Entity, RollType, as_io};
 use data::RollType::{Basic, Strength, Dexterity, Constitution, Wisdom, Intellect, Charisma};
 use data::game::Game;
@@ -112,10 +111,9 @@ impl Entity for Player {
             Wisdom => d20.ind_sample(&mut rng) + Stats::calc_bonus(self.stats.wisdom),
             Intellect => d20.ind_sample(&mut rng) + Stats::calc_bonus(self.stats.intellect),
             Charisma => d20.ind_sample(&mut rng) + Stats::calc_bonus(self.stats.charisma),
-        }.to_u8() {
-            Some(0) => 1,
-            Some(n) => n,
-            None => 1,
+        } as u8 {
+            0 => 1,
+            n => n,
         }
     }
 

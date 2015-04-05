@@ -1,4 +1,3 @@
-use std::num::ToPrimitive;
 use data::{BotResult, Entity, RollType};
 use data::BotError::InvalidInput;
 use data::RollType::{Basic, Strength, Dexterity, Constitution, Wisdom, Intellect, Charisma};
@@ -60,10 +59,9 @@ impl Entity for Monster {
             Wisdom => d20.ind_sample(&mut rng) + Stats::calc_bonus(self.stats.wisdom),
             Intellect => d20.ind_sample(&mut rng) + Stats::calc_bonus(self.stats.intellect),
             Charisma => d20.ind_sample(&mut rng) + Stats::calc_bonus(self.stats.charisma),
-        }.to_u8() {
-            Some(0) => 1,
-            Some(n) => n,
-            None => 1,
+        } as u8 {
+            0 => 1,
+            n => n,
         }
     }
 

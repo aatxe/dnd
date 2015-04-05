@@ -12,11 +12,9 @@ pub mod stats;
 pub mod world;
 
 pub mod utils {
-    use super::{BotResult};
-    use super::BotError::InvalidInput;
-    use std::borrow::ToOwned;
+    use super::BotResult;
     use std::ops::{Add, Sub};
-    use std::num::{Float, Int, ToPrimitive, from_f32};
+    use std::num::{Float, Int};
 
     #[derive(Clone, Copy, RustcDecodable, RustcEncodable, Debug, PartialEq)]
     pub struct Position(pub i32, pub i32);
@@ -31,12 +29,7 @@ pub mod utils {
         // FIXME: distance doesn't work the way we'd want it to.
         // e.g. (0, 0).distance(5, 5) is 7, when we want it to be 5.
         pub fn distance(&self, rhs: &Position) -> BotResult<i32> {
-            if let Some(n) = self.distance_sq(rhs).to_f32() {
-                if let Some(x) = from_f32(n.sqrt().floor()) {
-                    return Ok(x)
-                }
-            }
-            Err(InvalidInput("Something went wrong calculating the distance.".to_owned()))
+            Ok((self.distance_sq(rhs) as f32).sqrt().floor() as i32)
         }
     }
 
