@@ -108,8 +108,10 @@ fn tokenize<'a>(line: &'a str, vec: &'a mut Vec<String>) -> BotResult<Vec<&'a st
 pub fn process_world<'a, T: IrcRead, U: IrcWrite>(bot: &'a ServerExt<'a, T, U>, source: &'a str, 
     command: &str, args: &[&'a str], token_store: &'a mut Vec<String>, world: &'a mut World) 
     -> Result<()> {
-    match (command, args) {
-        ("PRIVMSG", [chan, msg]) => {
+    match (command, args.len()) {
+        ("PRIVMSG", 2) => { // FIXME: replace this with slice patterns when stabilized
+            let chan = args[0];
+            let msg = args[1];
             let user = source.find('!').map_or("", |i| &source[..i]);
             let tokens = match tokenize(msg, token_store) {
                 Err(InvalidInput(msg)) => return bot.send_privmsg(user, &msg),
@@ -156,8 +158,8 @@ pub fn process_world<'a, T: IrcRead, U: IrcWrite>(bot: &'a ServerExt<'a, T, U>, 
                 try!(bot.send_privmsg(&resp, &msg));
             }
         },
-        ("NOTICE", [_, suffix]) => {
-            if suffix.starts_with("***") {
+        ("NOTICE", 2) => { // TODO: replace this with slice patterns when stabilized
+            if args[1].starts_with("***") {
                 try!(bot.identify());
             }
         }
