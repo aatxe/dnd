@@ -27,9 +27,9 @@ pub struct Help<'a, T: IrcRead, U: IrcWrite> {
 impl<'a, T: IrcRead, U: IrcWrite> Help<'a, T, U> {
     pub fn new(bot: &'a ServerExt<'a, T, U>, resp: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 1 && args.len() != 2 { return Err(utils::incorrect_format(resp, "help", "[command]")); }
-        Ok(box Help { bot: bot, resp: resp,
+        Ok(Box::new(Help { bot: bot, resp: resp,
                       cmd: if args.len() == 2 { Some(args[1]) } else { None }
-        })
+        }))
     }
 }
 

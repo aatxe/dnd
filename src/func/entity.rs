@@ -26,13 +26,13 @@ impl<'a, T: IrcRead, U: IrcWrite> Roll<'a, T, U> {
         } else {
             (None, Some(Basic))
         };
-        Ok(box Roll {
+        Ok(Box::new(Roll {
             bot: bot,
             chan: chan,
             target: try!(get_target(if args.len() > 1 { args[1] } else { "" }, user, chan, chan, world)),
             stat_str: stat_str,
             stat: stat,
-        })
+        }))
     }
 }
 
@@ -61,7 +61,7 @@ pub struct Damage<'a, T: IrcRead, U: IrcWrite> {
 impl<'a, T: IrcRead, U: IrcWrite> Damage<'a, T, U> {
     pub fn new(bot: &'a ServerExt<'a, T, U>, user: &'a str, chan: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 { return Err(incorrect_format(chan, ".damage", "target value")); }
-        Ok(box Damage {
+        Ok(Box::new(Damage {
             bot: bot,
             chan: chan,
             target_str: args[1],
@@ -74,7 +74,7 @@ impl<'a, T: IrcRead, U: IrcWrite> Damage<'a, T, U> {
                         format!("{} is not a valid positive integer.", args[2])
                 ));
             },
-        })
+        }))
     }
 }
 
@@ -110,7 +110,7 @@ impl<'a, T: IrcRead, U: IrcWrite> SetTempStats<'a, T, U> {
         }
         try!(validate_from(args.clone(), 3, chan, ".temp",
                            "target health movement str dex con wis int cha"));
-        Ok(box SetTempStats {
+        Ok(Box::new(SetTempStats {
             bot: bot,
             chan: chan,
             target_str: args[1],
@@ -118,7 +118,7 @@ impl<'a, T: IrcRead, U: IrcWrite> SetTempStats<'a, T, U> {
             health: str_to_u8(args[2]), movement: str_to_u8(args[3]),
             st: str_to_u8(args[4]), dx: str_to_u8(args[5]), cn: str_to_u8(args[6]),
             ws: str_to_u8(args[7]), it: str_to_u8(args[8]), ch: str_to_u8(args[9]),
-        })
+        }))
     }
 }
 
@@ -146,12 +146,12 @@ impl<'a, T: IrcRead, U: IrcWrite> ClearTempStats<'a, T, U> {
         } else if args.len() != 2 {
             return Err(incorrect_format(chan, ".cleartemp", "target"));
         }
-        Ok(box ClearTempStats {
+        Ok(Box::new(ClearTempStats {
             bot: bot,
             chan: chan,
             target_str: args[1],
             target: try!(get_target(args[1], user, chan, chan, world)),
-        })
+        }))
     }
 }
 
@@ -191,7 +191,7 @@ impl<'a, T: IrcRead, U: IrcWrite> Move<'a, T, U> {
         } else {
             (user, to_pos(args[1], args[2]))
         };
-        Ok(box Move {
+        Ok(Box::new(Move {
             bot: bot,
             chan: chan,
             target_str: target,
@@ -205,7 +205,7 @@ impl<'a, T: IrcRead, U: IrcWrite> Move<'a, T, U> {
                                 args[args.len() - 2], args[args.len() - 1])
                 ));
             },
-        })
+        }))
     }
 }
 

@@ -28,7 +28,7 @@ impl<'a, T: IrcRead, U: IrcWrite> AddMonster<'a, T, U> {
         }
         try!(validate_from(args.clone(), 3, user, "addmonster",
                            "chan name health movement str dex con wis int cha"));
-        Ok(box AddMonster {
+        Ok(Box::new(AddMonster {
             bot: bot,
             user: user,
             world: world,
@@ -36,7 +36,7 @@ impl<'a, T: IrcRead, U: IrcWrite> AddMonster<'a, T, U> {
             health: str_to_u8(args[3]), movement: str_to_u8(args[4]),
             st: str_to_u8(args[5]), dx: str_to_u8(args[6]), cn: str_to_u8(args[7]),
             ws: str_to_u8(args[8]), it: str_to_u8(args[9]), ch: str_to_u8(args[10]),
-        })
+        }))
     }
 }
 
@@ -68,7 +68,7 @@ impl<'a, T: IrcRead, U: IrcWrite> LookUpMonster<'a, T, U> {
         } else if !args[2].starts_with("@") {
             return Err(Propagated(format!("{}", user), format!("{} is not a valid monster.", args[2])));
         }
-        Ok(box LookUpMonster {
+        Ok(Box::new(LookUpMonster {
             bot: bot,
             user: user,
             world: world,
@@ -79,7 +79,7 @@ impl<'a, T: IrcRead, U: IrcWrite> LookUpMonster<'a, T, U> {
             } else {
                 None
             },
-        })
+        }))
     }
 }
 

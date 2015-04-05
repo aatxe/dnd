@@ -18,7 +18,7 @@ pub struct Create<'a, T: IrcRead, U: IrcWrite> {
 impl<'a, T: IrcRead, U: IrcWrite> Create<'a, T, U> {
     pub fn new(bot: &'a ServerExt<'a, T, U>, user: &'a str, args: Vec<&'a str>, world: &'a mut World) -> BotResult<Box<Functionality + 'a>> {
         if args.len() < 3 { return Err(incorrect_format(user, "create", "channel campaign name")); }
-        Ok(box Create { bot: bot, user: user, world: world, chan: args[1], title: join_from(args, 2) })
+        Ok(Box::new(Create { bot: bot, user: user, world: world, chan: args[1], title: join_from(args, 2) }))
     }
 }
 
@@ -46,7 +46,7 @@ pub struct PrivateRoll<'a, T: IrcRead, U: IrcWrite> {
 
 impl<'a, T: IrcRead, U: IrcWrite> PrivateRoll<'a, T, U> {
     pub fn new(bot: &'a ServerExt<'a, T, U>, user: &'a str) -> BotResult<Box<Functionality + 'a>> {
-        Ok(box PrivateRoll { bot: bot, user: user })
+        Ok(Box::new(PrivateRoll { bot: bot, user: user }))
     }
 }
 
@@ -67,7 +67,7 @@ impl<'a, T: IrcRead, U: IrcWrite> SaveAll<'a, T, U> {
         if !bot.config().is_owner(user) {
             Err(Propagated(format!("{}", user), format!("You must own the bot to do that!")))
         } else {
-            Ok(box SaveAll { bot: bot, user: user, world: world })
+            Ok(Box::new(SaveAll { bot: bot, user: user, world: world }))
         }
     }
 }

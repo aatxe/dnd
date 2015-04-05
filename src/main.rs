@@ -1,4 +1,3 @@
-#![feature(box_syntax)]
 extern crate irc;
 extern crate openssl;
 extern crate rand;
