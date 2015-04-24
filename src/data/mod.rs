@@ -13,8 +13,7 @@ pub mod world;
 
 pub mod utils {
     use std::ops::{Add, Sub};
-    use std::num::{Float, Int};
-
+    
     #[derive(Clone, Copy, RustcDecodable, RustcEncodable, Debug, PartialEq)]
     pub struct Position(pub i32, pub i32);
 
