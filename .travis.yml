@@ -1,4 +1,5 @@
 language: rust
+sudo: false
 script:
   - chmod +x mktestconfig.sh
   - ./mktestconfig.sh
